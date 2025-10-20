@@ -188,7 +188,7 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
             <button
               onClick={handleSendOtp}
               disabled={loading}
-              className="w-full bg-blue-600 text-white cursor-pointer font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
+              className="w-full bg-green-600 text-white cursor-pointer font-semibold py-2 rounded-lg hover:bg-green-700 transition"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -264,7 +264,7 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(idx, e.target.value)}
-                  className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition"
                 />
               ))}
             </div>

@@ -10,6 +10,8 @@ import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
 import CartPill from "../components/general-components/CartPill";
 import BottomNavbar from "../components/general-components/BottomNavbar";
+import ShoppingHeader from "@/components/general-components/ShoppingHeader";
+import { Poppins } from 'next/font/google';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,6 +26,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-poppins',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
 export default function RootLayout({ children }) {
@@ -42,14 +51,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <link rel="icon" type="image/png" href="/LOGO-png 3.svg"></link>
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${poppins.className} antialiased`}>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
-              {showWebAppNavbar ? <WebAppNavbar /> : <Header />}
+              {showWebAppNavbar ? <ShoppingHeader /> : <Header />}
               <main>{children}</main>
-              <CartPill />
-              <BottomNavbar />
+              {showWebAppNavbar && <BottomNavbar />}
             </CartProvider>
           </AuthProvider>
         </ToastProvider>
