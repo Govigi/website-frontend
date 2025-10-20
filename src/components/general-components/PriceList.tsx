@@ -10,13 +10,13 @@ import { config } from "@/libs/utils/config";
 export default function PriceList() {
   const { cartItems, addToCart, incrementQuantity, decreaseQuantity } =
     useCart();
-  const [category, setCategory] = useState("Vegetables");
+  const [category, setCategory] = useState("Vegetable");
   const [products, setProducts] = useState([]);
   const [slideIndex, setSlideIndex] = useState(0);
   const backendURL = config.backend_url;
 
   const fetchProducts = async () => {
-    localStorage.setItem("category", "Vegetables");
+    localStorage.setItem("category", "Vegetable");
     try {
       const res = await axios.get(`${backendURL}/getAllProducts`);
       setProducts(res.data.products);
@@ -49,13 +49,13 @@ export default function PriceList() {
       <div className="bg-green-50 p-4 rounded-xl flex justify-center space-x-6 mb-10">
         <button
           className={`flex flex-col items-center px-6 py-4 rounded-xl transition ${
-            category === "Vegetables"
+            category === "Vegetable"
               ? "bg-white shadow border border-green-500"
               : ""
           }`}
           onClick={() => {
-            setCategory("Vegetables");
-            localStorage.setItem("category", "Vegetables");
+            setCategory("Vegetable");
+            localStorage.setItem("category", "Vegetable");
             setSlideIndex(0);
           }}
         >
@@ -82,7 +82,7 @@ export default function PriceList() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">{category}</h2>
-        {category === "Vegetables" ? (
+        {category === "Vegetable" ? (
           <Link
             href="/webapp"
             className="text-green-600 cursor-pointer font-medium"

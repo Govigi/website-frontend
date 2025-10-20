@@ -8,6 +8,7 @@ import LoginCard from "./LoginCard";
 import { UserIcon } from "@phosphor-icons/react";
 
 export default function Header() {
+
   const router = useRouter();
   const [showLogin, setShowLogin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -15,51 +16,10 @@ export default function Header() {
   return (
     <>
       <nav className="h-20 bg-white/20 backdrop-blur-md shadow-sm sticky top-0 z-50 w-full border-b border-gray-200 transition duration-300">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
           {/* Left Side - Logo + Desktop Menu */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center space-x-2">
-              <Image
-                src="/LOGO-png 3.svg"
-                alt="Go-Vigi Logo"
-                width={200}
-                height={200}
-                className="h-25 w-25 object-contain"
-              />
-            </Link>
-
-            <div className="hidden md:flex space-x-6 text-sm font-semibold text-black">
-              <Link href="/" className="hover:text-green-600">
-                Home
-              </Link>
-              <Link href="/#about" className="hover:text-green-600">
-                About us
-              </Link>
-              <Link href="/#services" className="hover:text-green-600">
-                Services
-              </Link>
-              <Link href="/#contact" className="hover:text-green-600">
-                Contact us
-              </Link>
-              <button
-                onClick={() => router.push("/webapp")}
-                className="cursor-pointer hover:text-green-600"
-              >
-                Browse catalogue
-              </button>
-            </div>
-          </div>
-
-          {/* Login Button */}
-          <button
-            onClick={() => setShowLogin(true)}
-            className="md:flex py-2 items-center space-x-2 bg-green-600 text-white font-semibold px-4 rounded-lg cursor-pointer flex flex-row"
-          >
-            <UserIcon size={20} color="#ffffff" />
-            <span className="font-medium">Login</span>
-          </button>
-
-          {/* Mobile Menu Button */}
+            {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden"
@@ -89,6 +49,44 @@ export default function Header() {
               )}
             </svg>
           </button>
+            <Link href="/" className="flex items-center space-x-2">
+              <Image
+                src="/LOGO-png 3.svg"
+                alt="Go-Vigi Logo"
+                width={200}
+                height={200}
+                className="h-25 w-25 object-contain"
+              />
+            </Link>
+
+            <div className="hidden md:flex space-x-6 text-md font-semibold text-gray-800">
+              <button
+                onClick={() => router.push("/webapp")}
+                className="cursor-pointer"
+              >
+                Browse catalogue
+              </button>
+            </div>
+            <div className="hidden md:flex space-x-6 text-md font-semibold text-gray-800">
+              <Link href="/#about" className="cursor-pointer">
+                About us
+              </Link>
+            </div>
+            <div className="hidden md:flex space-x-6 text-md font-semibold text-gray-800">
+              <Link href="/#services" className="cursor-pointer">
+                Services
+              </Link>
+            </div>
+          </div>
+
+          {/* Login Button */}
+          <button
+            onClick={() => setShowLogin(true)}
+            className="md:flex md:py-2 items-center space-x-2 bg-green-600 text-white font-semibold md:px-16 px-4 py-2 rounded-lg cursor-pointer flex flex-row"
+          >
+            <span className="font-bold">Login/Signup</span>
+          </button>
+
         </div>
       </nav>
 
