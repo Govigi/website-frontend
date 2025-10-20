@@ -69,11 +69,11 @@ export default function RootLayout({ children }) {
               {/* ✅ Wrap header with Suspense */}
               <Suspense fallback={null}>
                 {showWebAppNavbar ? <ShoppingHeader /> : <Header />}
+
+                <main>{children}</main>
+
+                {showWebAppNavbar && <BottomNavbar />}
               </Suspense>
-
-              <main>{children}</main>
-
-              {showWebAppNavbar && <BottomNavbar />}
             </CartProvider>
           </AuthProvider>
         </ToastProvider>
