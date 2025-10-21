@@ -1,27 +1,56 @@
 "use client";
 import {
-  IconBasketCheck,
-  IconHome,
-  IconSearch,
-  IconUser,
-} from "@tabler/icons-react";
+  HomeIcon,
+  WalletIcon,
+  ShoppingBagIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
+import {
+  HomeIcon as HomeIconSolid,
+  WalletIcon as WalletIconSolid,
+  ShoppingBagIcon as ShoppingBagIconSolid,
+  UserIcon as UserIconSolid,
+} from "@heroicons/react/24/solid";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function BottomNavbar() {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: "/webapp", icon: IconHome, label: "Home" },
-    { href: "/search", icon: IconSearch, label: "Search" },
-    { href: "/orders", icon: IconBasketCheck, label: "Orders" },
-    { href: "/profile", icon: IconUser, label: "Profile" },
+  type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
+  const navItems: Array<{
+    href: string;
+    label: string;
+    outline: IconComponent;
+    solid: IconComponent;
+  }> = [
+    {
+      href: "/webapp",
+      label: "Shop",
+      outline: ShoppingBagIcon,
+      solid: ShoppingBagIconSolid
+    },
+    {
+      href: "/orders",
+      label: "Orders",
+      outline: ShoppingBagIcon,
+      solid: ShoppingBagIconSolid,
+    },
+    {
+      href: "/search",
+      label: "Wallet",
+      outline: WalletIcon,
+      solid: WalletIconSolid,
+    },
+    { href: "/profile", label: "Profile", outline: UserIcon, solid: UserIconSolid },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 md:hidden">
       <ul className="flex justify-around items-center py-2">
-        {navItems.map(({ href, icon: Icon, label }) => {
+        {navItems.map(({ href, outline: OutlineIcon, solid: SolidIcon, label }) => {
           const isActive = pathname === href;
 
           return (
@@ -29,24 +58,21 @@ export default function BottomNavbar() {
               <Link
                 href={href}
                 className="flex flex-col items-center p-1 transition-colors duration-200"
+                aria-current={isActive ? "page" : undefined}
               >
                 <div
-                  className={`p-2 rounded-full mb-1 transition-all duration-300 w-12 h-8 flex items-center justify-center ${
-                    isActive
-                      ? "bg-green-500 text-white transform scale-110"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={"p-2 rounded-full mb-1 transition-all duration-300 w-12 h-8 flex items-center justify-center"}
                 >
-                  <Icon
-                    size={20}
-                    stroke={1.5}
-                    className={isActive ? "text-white" : "text-current"}
-                  />
+                  {isActive ? (
+                    <SolidIcon className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <OutlineIcon className="w-6 h-6 text-gray-600" />
+                  )}
                 </div>
                 <span
-                  className={`text-xs font-medium transition-colors ${
-                    isActive ? "text-green-600" : "text-gray-600"
-                  }`}
+                  className={
+                    "text-xs font-bold transition-colors duration-200 text-gray-700"
+                  }
                 >
                   {label}
                 </span>
