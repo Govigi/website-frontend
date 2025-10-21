@@ -15,10 +15,8 @@ export default function ShoppingHeader() {
     const searchParams = useSearchParams();
     const [search, setSearch] = useState("");
     const { cartItems } = useCart();
-    const cartItemsCount = cartItems.reduce(
-        (total, item) => total + item.quantity,
-        0
-    );
+
+    const cartItemsCount = cartItems.length;
 
     const searchQuery = searchParams.get("search")?.trim() || "";
 
@@ -72,6 +70,7 @@ export default function ShoppingHeader() {
                 </div>
 
                 <div
+                    onClick={() => router.push("/cart")}
                     className={`relative flex items-center justify-center w-12 h-12 p-3 border border-gray-200 rounded-full hover:bg-gray-50 transition-all duration-200 cursor-pointer group ${cartItemsCount > 0 ? "bg-green-600 hover:bg-green-700" : ""
                         }`}
                 >
@@ -80,13 +79,13 @@ export default function ShoppingHeader() {
                             }`}
                     />
                     {cartItemsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-black border border-white text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 bg-black border-2 border-white text-white text-[10px] font-medium flex-col rounded-full w-5 h-5 flex items-center justify-center">
                             {cartItemsCount}
                         </span>
                     )}
                 </div>
 
-                <div className="rounded-full p-4 border border-gray-200 hidden sm:block">
+                <div className="rounded-full items-center w-12 h-12 p-3 border border-gray-200 hidden sm:block">
                     <ListBulletIcon className="w-6 h-6 text-black" />
                 </div>
             </form>

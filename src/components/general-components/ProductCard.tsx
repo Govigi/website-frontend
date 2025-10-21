@@ -5,6 +5,7 @@ import { useAuth } from "../../libs/context/AuthContext";
 import { useToast } from "../../libs/context/ToastContext";
 import { Heart, Loader2 } from "lucide-react";
 import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/solid";
 
 export default function ProductCard({
   item,
@@ -118,7 +119,7 @@ export default function ProductCard({
       )}
 
       {/* Product Image */}
-      <div className="relative flex justify-center items-center w-full h-28 sm:h-32 mb-3 mt-4">
+      <div className="relative flex justify-center items-center w-full h-28 sm:h-28 mb-3 mt-4">
         {!imageLoaded && !imageError && (
           <Loader2 className="w-5 h-5 text-green-500 animate-spin" />
         )}
@@ -133,7 +134,7 @@ export default function ProductCard({
           <img
             src={item.image?.url || "/placeholder-product.png"}
             alt={item.name}
-            className={`w-full h-full object-contain transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"
+            className={`w-[100px] h-[100px] object-contain transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"
               } ${isOutOfStock ? "grayscale opacity-50" : ""}`}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
@@ -158,9 +159,9 @@ export default function ProductCard({
 
       {/* Footer */}
       {webapp && (
-        <div className="mt-3 pt-2 border-t border-gray-100 flex justify-between items-center">
+        <div className="mt-3 pt-2 border-t border-gray-100 flex justify-end items-center">
           {/* Price */}
-          <div className="flex flex-col items-start">
+          {/* <div className="flex flex-col items-start">
             <span className="text-sm font-semibold text-gray-800">
               {formatPrice(item.price)}
             </span>
@@ -169,14 +170,14 @@ export default function ProductCard({
                 {formatPrice(item.originalPrice)}
               </span>
             )}
-          </div>
+          </div> */}
 
           {/* Cart Action */}
           {!isInCart ? (
             <button
               onClick={() => setShowWeightModal(true)}
               disabled={isOutOfStock || isLoading}
-              className={`w-[70px] h-[34px] flex items-center justify-center rounded-md border font-medium text-xs sm:text-sm transition-all
+              className={`w-[50%] h-[34px] flex items-center justify-center rounded-md border font-medium text-xs sm:text-sm transition-all
                 ${isOutOfStock
                   ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
                   : isLoading
@@ -187,8 +188,14 @@ export default function ProductCard({
               {isLoading ? "Adding..." : "ADD"}
             </button>
           ) : (
-            <div className="flex items-center justify-between w-[70px] h-[34px] bg-green-600 text-white rounded-md overflow-hidden">
-              <button
+            <div className="w-full flex justify-center">
+              <div className="flex items-center justify-center w-[50%] h-[34px] bg-green-100 text-green-700 rounded-md mr-2 border border-green-200 overflow-hidden">
+                <div className="p-3 text-xs font-medium">
+                  {cartQuantity} KG
+                </div>
+              </div>
+              <div className="flex items-center justify-center w-[50%] h-[34px] bg-green-600 text-white rounded-md overflow-hidden">
+                {/* <button
                 onClick={() => decreaseQuantity(item)}
                 className="flex-1 h-full text-sm font-bold hover:bg-green-700"
               >
@@ -203,7 +210,17 @@ export default function ProductCard({
                 className="flex-1 h-full text-sm font-bold hover:bg-green-700 disabled:opacity-50"
               >
                 +
-              </button>
+              </button> */}
+                <button
+                  onClick={() => {
+                    // Later this can open a weight/quantity edit modal
+                    setShowWeightModal(true);
+                  }}
+                  className="w-full cursor-pointer h-[34px] bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-all"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -249,8 +266,8 @@ export default function ProductCard({
                       key={weight}
                       onClick={() => handleWeightSelect(weight)}
                       className={`py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${selectedWeight === weight
-                          ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-green-300"
+                        ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-green-300"
                         }`}
                     >
                       {weight} kg
@@ -280,12 +297,30 @@ export default function ProductCard({
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowWeightModal(false)}
-                  className="flex-1 py-2.5 text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition cursor:pointer"
-                >
-                  Cancel
-                </button>
+                {
+                  !isInCart && (
+                    <button
+                      onClick={() => setShowWeightModal(false)}
+                      className="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+                    >
+                      Cancel
+                    </button>
+                  )
+                }
+                {
+                  isInCart && (
+                    <button
+                      onClick={() => {
+                        removeFromCart(item);
+                        setShowWeightModal(false);
+                      }}
+                      className="flex flex-row items-center flex-1 justify-center py-2.5 text-red-500 border bg-red-50 border-red-500 rounded-lg text-sm font-medium cursor-pointer transition"
+                    >
+                      <TrashIcon className="w-4 h-4 inline-block mr-1" />
+                      Remove
+                    </button>
+                  )
+                }
                 <button
                   onClick={handleAddWithWeight}
                   disabled={isLoading || getFinalWeight() <= 0}
