@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import Header from "../components/general-components/Header";
 import WebAppNavbar from "../components/general-components/WebAppNavbar";
@@ -10,6 +10,8 @@ import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
 import CartPill from "../components/general-components/CartPill";
 import BottomNavbar from "../components/general-components/BottomNavbar";
+import ShoppingHeader from "@/components/general-components/ShoppingHeader";
+import { Suspense } from "react";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,8 +28,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-poppins",
+  weight: [
+    "100",
+    "200",
+    "300",
+    "400",
+    "500",
+    "600",
+    "700",
+    "800",
+    "900",
+  ],
+});
+
 export default function RootLayout({ children }) {
   const pathname = usePathname();
+
   const showWebAppNavbar =
     pathname.startsWith("/webapp") ||
     pathname.startsWith("/search") ||
@@ -41,15 +61,19 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <link rel="icon" type="image/png" href="/LOGO-png 3.svg"></link>
-      <body className={`${inter.variable} antialiased`}>
+      <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
+      <body className={`${poppins.className} antialiased`}>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
-              {showWebAppNavbar ? <WebAppNavbar /> : <Header />}
-              <main>{children}</main>
-              <CartPill />
-              <BottomNavbar />
+              {/* ✅ Wrap header with Suspense */}
+              <Suspense fallback={null}>
+                {showWebAppNavbar ? <ShoppingHeader /> : <Header />}
+
+                <main>{children}</main>
+
+                {showWebAppNavbar && <BottomNavbar />}
+              </Suspense>
             </CartProvider>
           </AuthProvider>
         </ToastProvider>
