@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import { Phone, Mail, Globe, MessageCircle } from "lucide-react";
 
@@ -17,26 +17,44 @@ export default function Invoice({
   shippingCharges,
 }) {
   const invoiceRef = useRef(null);
+
   const subtotal = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const totalTax = products.reduce(
     (sum, p) => sum + (p.price * p.quantity * p.taxRate) / 100,
     0
   );
   const grandTotal = subtotal + shippingCharges + totalTax;
-  const downloadPDF = () => {
-    const input = invoiceRef.current;
-    html2canvas(input, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-    }).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
+
+  const downloadPDF = async () => {
+    const node = invoiceRef.current;
+    if (!node) return;
+
+    try {
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+      });
+      
       const pdf = new jsPDF("p", "mm", "a4");
+      const imgProps = pdf.getImageProperties(dataUrl);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      let position = 0;
+      // const imgWidth = pdfWidth;
+      // const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(dataUrl, "PNG", 0, position, pdfWidth, pdfHeight);
+
+      // while (position + imgHeight > pdfHeight) {
+      //   position -= pdfHeight;
+      //   pdf.addPage();
+      //   pdf.addImage(dataUrl, "PNG", 0, position, imgWidth, imgHeight);
+      // }
       pdf.save(`invoice-${orderId}.pdf`);
-    });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   return (
