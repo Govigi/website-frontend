@@ -9,6 +9,7 @@ import {
 import { ListBulletIcon } from "@heroicons/react/24/solid";
 import { useCart } from "../core/Cart/CartContext";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ShoppingHeader() {
     const router = useRouter();
@@ -40,13 +41,15 @@ export default function ShoppingHeader() {
 
     return (
         <header className="w-full bg-white/80 backdrop-blur-md flex items-center shadow-xs justify-between sm:px-8 gap-4 rounded-b-4xl px-2 fixed top-0 z-50">
-            <Image
+            <Link href="/webapp">
+              <Image
                 src="/LOGO-png 3.svg"
-                alt="Logo"
+                alt="GoVigi Logo"
                 width={100}
                 height={40}
                 className="hidden sm:block"
-            />
+              />
+            </Link>
 
             <form
                 onSubmit={handleSubmit}
