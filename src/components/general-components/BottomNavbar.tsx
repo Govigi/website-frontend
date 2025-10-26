@@ -33,18 +33,23 @@ export default function BottomNavbar() {
       solid: ShoppingBagIconSolid
     },
     {
-      href: "/orders",
+      href: "/ordershistory",
       label: "Orders",
       outline: ShoppingBagIcon,
       solid: ShoppingBagIconSolid,
     },
     {
-      href: "/search",
+      href: "/wallet",
       label: "Wallet",
       outline: WalletIcon,
       solid: WalletIconSolid,
     },
-    { href: "/profile", label: "Profile", outline: UserIcon, solid: UserIconSolid },
+    { 
+      href: "/profile", 
+      label: "Profile", 
+      outline: UserIcon, 
+      solid: UserIconSolid 
+    },
   ];
 
   return (
