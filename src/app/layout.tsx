@@ -4,45 +4,23 @@ import { usePathname } from "next/navigation";
 import { Geist, Geist_Mono, Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import Header from "../components/general-components/Header";
-import WebAppNavbar from "../components/general-components/WebAppNavbar";
+import BottomNavbar from "../components/general-components/BottomNavbar";
+import ShoppingHeader from "@/components/general-components/ShoppingHeader";
 import { CartProvider } from "../components/core/Cart/CartContext";
 import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
-import CartPill from "../components/general-components/CartPill";
-import BottomNavbar from "../components/general-components/BottomNavbar";
-import ShoppingHeader from "@/components/general-components/ShoppingHeader";
 import { Suspense } from "react";
+import NextTopLoader from "nextjs-progressbar";
+import ProgressBar from "@/components/general-components/ProgressBar";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 const poppins = Poppins({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-poppins",
-  weight: [
-    "100",
-    "200",
-    "300",
-    "400",
-    "500",
-    "600",
-    "700",
-    "800",
-    "900",
-  ],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export default function RootLayout({ children }) {
@@ -61,17 +39,18 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
+      <head>
+        <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
+      </head>
       <body className={`${poppins.className} antialiased`}>
+        {/* ✅ Keep loader at very top with a high zIndex */}
+        <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
-              {/* ✅ Wrap header with Suspense */}
               <Suspense fallback={null}>
                 {showWebAppNavbar ? <ShoppingHeader /> : <Header />}
-
                 <main>{children}</main>
-
                 {showWebAppNavbar && <BottomNavbar />}
               </Suspense>
             </CartProvider>
