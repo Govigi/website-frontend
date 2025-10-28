@@ -157,18 +157,6 @@ const HistorySection = () => {
 
               {/* Action buttons */}
               <div className="flex items-center justify-between pt-2">
-                <button
-                  className={` ${
-                    order.status == "delivered"
-                      ? "cursor-pointer"
-                      : "cursor-not-allowed"
-                  } border border-gray-400 text-gray-700 text-sm px-3 py-1 rounded-md flex items-center gap-1 `}
-                  onClick={() => {
-                    order.status == "delivered" && setSelectedOrder(order);
-                  }}
-                >
-                  📄 Download Invoice
-                </button>
                 <button className="bg-green-600 text-white text-sm px-4 py-1.5 rounded-md flex items-center gap-1">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -186,6 +174,23 @@ const HistorySection = () => {
                   </svg>
                   Re-order
                 </button>
+                {
+                  order.status == "delivered" ? 
+                    <button
+                      className={` ${
+                        order.status == "delivered"
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed"
+                      } border border-gray-400 text-gray-700 text-sm px-3 py-1 rounded-md flex items-center gap-1 `}
+                      onClick={() => {
+                        order.status == "delivered" && setSelectedOrder(order);
+                      }}
+                    >
+                      📄 Download Invoice
+                    </button>
+                  :
+                      <></>
+                }
               </div>
             </div>
           ))
@@ -211,6 +216,7 @@ const HistorySection = () => {
                   price: item.price,
                   taxRate: 0.1,
                 }))}
+                autoDownload = {true}
               />
             </div>
           </div>
