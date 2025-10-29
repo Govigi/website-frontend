@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { X, Trash2, Minus, Plus } from "lucide-react"; // Importing icons from lucide-react
-import { useCart } from "../../components/core/Cart/CartContext"; // Assuming this context provides cart state and actions
+import { X, Trash2, Minus, Plus } from "lucide-react";
+import { ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { useCart } from "../../components/core/Cart/CartContext";
+import Image from "next/image";
 
 export default function CartPage() {
   const {
@@ -57,16 +59,34 @@ export default function CartPage() {
       {/* Cart Items Section */}
       <div className="p-5 space-y-4">
         {cartItems.length === 0 ? (
-          <div className="text-center py-10">
-            {/* <Image
-              src="/webapp/cart.png"
-              alt="Cart"
-              width={64}
-              height={64}
-              className="mx-auto"
-            /> */}
-            <p className="text-xl font-medium">Your cart is empty</p>
-            <p className="mt-2 text-sm">Add some items to get started</p>
+          <div className="text-center py-16 px-2">
+            <div className="max-w-md mx-auto">
+              {/* Icon Container */}
+              <div className="relative mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                  <ShoppingCartIcon className="w-10 h-10 text-white" />
+                </div>
+                {/* Subtle glow effect */}
+                <div className="absolute inset-0 w-24 h-24 bg-green-200 rounded-full mx-auto blur-xl opacity-50 -z-10"></div>
+              </div>
+              {/* Text Content */}
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                  Your cart is empty
+                </h2>
+                <p className="text-gray-600">
+                  Looks like you haven't added anything to your cart yet.
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => router.push("/")}
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg transform focus:outline-none focus:ring-4 focus:ring-green-200 hover:cursor-pointer"
+              >
+                Continue Buying
+              </button>
+            </div>
           </div>
         ) : (
           cartItems.map((item) => (
