@@ -97,7 +97,7 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-green-300 
+    <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-200
       p-3 sm:p-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full">
       {/* Discount badge */}
       {getDiscountPercentage() > 0 && (
@@ -166,6 +166,7 @@ export default function ProductCard({
               onClick={() => toggleWeightModal(true)}
               disabled={isOutOfStock || isLoading}
               className={`w-[50%] h-[34px] flex items-center justify-center rounded-md border font-medium text-xs sm:text-sm transition-all
+                cursor-pointer
                 ${isOutOfStock
                   ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
                   : isLoading
