@@ -1,3 +1,6 @@
+"use client"; // ✅ Ensures this page is treated as a client component in Next.js
+
+import React from "react";
 import {
   UserCircleIcon,
   ShoppingCartIcon,
@@ -7,13 +10,12 @@ import {
   TagIcon,
   CalendarDaysIcon,
   PencilSquareIcon,
-  EnvelopeIcon,
   StarIcon,
   CheckBadgeIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/solid";
 
-export default function ProfilePage(): JSX.Element {
+export default function ProfilePage() {
   const user = {
     name: "Alex Morgan",
     email: "alex.morgan@grocerymail.com",
@@ -64,24 +66,9 @@ export default function ProfilePage(): JSX.Element {
   ];
 
   const stats = [
-    {
-      label: "Total Orders",
-      value: "24",
-      change: "+12%",
-      trend: "up",
-    },
-    {
-      label: "Avg. Order Value",
-      value: "€68.90",
-      change: "+5%",
-      trend: "up",
-    },
-    {
-      label: "Favorite Items",
-      value: "18",
-      change: "+3",
-      trend: "up",
-    },
+    { label: "Total Orders", value: "24", change: "+12%", trend: "up" },
+    { label: "Avg. Order Value", value: "€68.90", change: "+5%", trend: "up" },
+    { label: "Favorite Items", value: "18", change: "+3", trend: "up" },
   ];
 
   return (
@@ -90,7 +77,9 @@ export default function ProfilePage(): JSX.Element {
         {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your account and track your orders</p>
+          <p className="text-gray-600 mt-2">
+            Manage your account and track your orders
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -107,12 +96,14 @@ export default function ProfilePage(): JSX.Element {
                     <StarIcon className="h-6 w-6 text-white" />
                   </div>
                 </div>
-                
+
                 <div className="mt-4">
                   <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
                   <div className="flex items-center justify-center gap-2 mt-1">
                     <CheckBadgeIcon className="h-5 w-5 text-yellow-500" />
-                    <span className="text-sm font-medium text-yellow-700">{user.loyaltyTier} Member</span>
+                    <span className="text-sm font-medium text-yellow-700">
+                      {user.loyaltyTier} Member
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600 mt-2">{user.bio}</p>
                 </div>
@@ -133,17 +124,28 @@ export default function ProfilePage(): JSX.Element {
 
             {/* Quick Stats */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Shopping Stats</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Shopping Stats
+              </h3>
               <div className="space-y-4">
                 {stats.map((stat, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
                     <div>
                       <div className="text-sm text-gray-600">{stat.label}</div>
-                      <div className="text-lg font-bold text-gray-900">{stat.value}</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {stat.value}
+                      </div>
                     </div>
-                    <div className={`text-sm font-medium ${
-                      stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <div
+                      className={`text-sm font-medium ${
+                        stat.trend === "up"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
                       {stat.change}
                     </div>
                   </div>
@@ -223,15 +225,20 @@ export default function ProfilePage(): JSX.Element {
 
                 <div className="space-y-4">
                   {savedAddresses.map((addr) => (
-                    <div key={addr.id} className={`p-4 rounded-xl border-2 transition-all ${
-                      addr.primary 
-                        ? 'border-green-200 bg-green-50' 
-                        : 'border-gray-100 bg-gray-50 hover:border-gray-200'
-                    }`}>
+                    <div
+                      key={addr.id}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        addr.primary
+                          ? "border-green-200 bg-green-50"
+                          : "border-gray-100 bg-gray-50 hover:border-gray-200"
+                      }`}
+                    >
                       <div className="flex items-start gap-3">
-                        <MapPinIcon className={`h-5 w-5 mt-0.5 ${
-                          addr.primary ? 'text-green-600' : 'text-gray-400'
-                        }`} />
+                        <MapPinIcon
+                          className={`h-5 w-5 mt-0.5 ${
+                            addr.primary ? "text-green-600" : "text-gray-400"
+                          }`}
+                        />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-gray-900">{addr.label}</span>
@@ -261,7 +268,10 @@ export default function ProfilePage(): JSX.Element {
 
                 <div className="space-y-4">
                   {recentOrders.map((order) => (
-                    <div key={order.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div
+                      key={order.id}
+                      className="p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
                           <TruckIcon className="h-5 w-5 mt-0.5 text-gray-400" />
@@ -278,11 +288,13 @@ export default function ProfilePage(): JSX.Element {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            order.status === "Delivered" 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                          <div
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              order.status === "Delivered"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
                             {order.status}
                           </div>
                           <button className="text-xs text-green-600 font-medium mt-2 block">
@@ -302,8 +314,9 @@ export default function ProfilePage(): JSX.Element {
                 <div>
                   <h3 className="text-xl font-bold mb-2">Personalized Offers</h3>
                   <p className="text-green-100 max-w-2xl">
-                    Get exclusive discounts and weekly deals based on your favorites and past orders. 
-                    Check your rewards to redeem vouchers and save more on your next grocery haul.
+                    Get exclusive discounts and weekly deals based on your favorites and past
+                    orders. Check your rewards to redeem vouchers and save more on your next
+                    grocery haul.
                   </p>
                 </div>
                 <button className="bg-white text-green-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg">
