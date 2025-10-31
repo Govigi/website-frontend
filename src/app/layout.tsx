@@ -37,21 +37,22 @@ export default function RootLayout({ children }) {
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/saved-address");
 
+  const isProfilePage = pathname.startsWith("/profile");
+
   return (
     <html lang="en">
       <head>
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
       </head>
       <body className={`${poppins.className} antialiased`}>
-        {/* ✅ Keep loader at very top with a high zIndex */}
         <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
               <Suspense fallback={null}>
-                {showWebAppNavbar ? <ShoppingHeader /> : <Header />}
+                {showWebAppNavbar ? <ShoppingHeader /> : isProfilePage ? <div className="hidden"><Header /></div> : <Header />}
                 <main>{children}</main>
-                {showWebAppNavbar && <BottomNavbar />}
+                {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
               </Suspense>
             </CartProvider>
           </AuthProvider>

@@ -50,14 +50,14 @@ export default function CartPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto  font-sans">
-      {/* Header */}
-      <div className="flex justify-center items-center p-4">
-        <h1 className="text-xl font-semibold text-gray-800">Cart</h1>
+    <div className="max-w-xl mx-auto py-20 px-4">
+      {/* Header */} 
+      <div className="flex justify-start items-center p-4">
+        <h1 className="text-xl font-semibold text-gray-800">Items in Cart</h1>
       </div>
 
       {/* Cart Items Section */}
-      <div className="p-5 space-y-4">
+      <div className="p-5 space-y-4 border border-gray-200 rounded-t-xl bg-white shadow-sm">
         {cartItems.length === 0 ? (
           <div className="text-center py-16 px-2">
             <div className="max-w-md mx-auto">
