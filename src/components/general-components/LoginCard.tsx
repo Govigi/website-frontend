@@ -139,10 +139,10 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 transition-opacity duration-300">
+    <div className="fixed  inset-0 bg-black/40 flex items-center justify-center z-50 transition-opacity duration-300">
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative mx-4 animate-fade-in"
+        className="bg-white rounded-2xl sm:max-w-sm max-w-xs mx-auto  md:max-w-md p-6 shadow-xl relative  animate-fade-in"
       >
         <button
           onClick={() => {

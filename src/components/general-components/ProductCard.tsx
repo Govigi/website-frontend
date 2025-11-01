@@ -3,7 +3,7 @@ import { config } from "@/libs/utils/config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../libs/context/AuthContext";
 import { useToast } from "../../libs/context/ToastContext";
-import { Heart, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/24/solid";
 
@@ -40,14 +40,6 @@ export default function ProductCard({
   const isOutOfStock = item.stock === 0;
   const isLowStock = item.stock > 0 && item.stock <= 5;
 
-  const formatPrice = (price) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-
   const getDiscountPercentage = () =>
     item.originalPrice && item.originalPrice > item.price
       ? Math.round(
@@ -61,45 +53,41 @@ export default function ProductCard({
     }
   }, [isAuthenticated, setShowLogin]);
 
-  const handleAddToCart = async () => {
-    if (!isAuthenticated) return setShowLogin?.(true);
-
-    setIsLoading(true);
-    try {
-      await onAddToCart({ ...item, quantity });
-      setQuantity(1);
-      showToast(`${item.name} added to cart (${quantity} kg)`, "success");
-    } catch {
-      showToast("Failed to add item to cart", "error");
-    } finally {
-      setIsLoading(false);
-    }
+  // Unified modal toggle with scroll management
+  const toggleWeightModal = (open) => {
+    setShowWeightModal(open);
+    document.body.style.overflow = open ? "hidden" : "auto";
   };
 
   const handleWeightSelect = (weight) => {
     setSelectedWeight(weight);
     setCustomWeight("");
-  }
+  };
 
   const handleCustomWeightChange = (value) => {
     setCustomWeight(value);
     setSelectedWeight(null);
-  }
+  };
 
   const getFinalWeight = () => {
     return selectedWeight || parseFloat(customWeight) || 0;
-  }
+  };
 
   const handleAddWithWeight = async () => {
     const weightToAdd = getFinalWeight();
     if (weightToAdd <= 0) return;
+
+    // if (!isAuthenticated) {
+    //   toggleWeightModal(false);
+    //   return setShowLogin?.(true);
+    // }
 
     setIsLoading(true);
 
     try {
       await onAddToCart({ ...item, quantity: weightToAdd });
       setQuantity(1);
-      setShowWeightModal(false);
+      toggleWeightModal(false);
       showToast(`${item.name} added to cart (${weightToAdd} kg)`, "success");
     } catch {
       showToast("Failed to add item to cart", "error");
@@ -109,7 +97,7 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-green-300 
+    <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-200
       p-3 sm:p-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full">
       {/* Discount badge */}
       {getDiscountPercentage() > 0 && (
@@ -175,9 +163,10 @@ export default function ProductCard({
           {/* Cart Action */}
           {!isInCart ? (
             <button
-              onClick={() => setShowWeightModal(true)}
+              onClick={() => toggleWeightModal(true)}
               disabled={isOutOfStock || isLoading}
               className={`w-[50%] h-[34px] flex items-center justify-center rounded-md border font-medium text-xs sm:text-sm transition-all
+                cursor-pointer
                 ${isOutOfStock
                   ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
                   : isLoading
@@ -195,27 +184,8 @@ export default function ProductCard({
                 </div>
               </div>
               <div className="flex items-center justify-center w-[50%] h-[34px] bg-green-600 text-white rounded-md overflow-hidden">
-                {/* <button
-                onClick={() => decreaseQuantity(item)}
-                className="flex-1 h-full text-sm font-bold hover:bg-green-700"
-              >
-                -
-              </button>
-              <span className="w-6 text-center text-sm font-semibold">
-                {cartQuantity}
-              </span>
-              <button
-                onClick={() => incrementQuantity(item)}
-                disabled={item.stock && cartQuantity >= item.stock}
-                className="flex-1 h-full text-sm font-bold hover:bg-green-700 disabled:opacity-50"
-              >
-                +
-              </button> */}
                 <button
-                  onClick={() => {
-                    // Later this can open a weight/quantity edit modal
-                    setShowWeightModal(true);
-                  }}
+                  onClick={() => toggleWeightModal(true)}
                   className="w-full cursor-pointer h-[34px] bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-all"
                 >
                   Edit
@@ -227,13 +197,13 @@ export default function ProductCard({
       )}
 
       {showWeightModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-3">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl animate-scale-in border border-gray-100">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-900">Select Weight</h2>
               <button
-                onClick={() => setShowWeightModal(false)}
+                onClick={() => toggleWeightModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <XMarkIcon className="w-5 h-5 text-gray-600" />
@@ -297,30 +267,26 @@ export default function ProductCard({
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
-                {
-                  !isInCart && (
-                    <button
-                      onClick={() => setShowWeightModal(false)}
-                      className="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
-                    >
-                      Cancel
-                    </button>
-                  )
-                }
-                {
-                  isInCart && (
-                    <button
-                      onClick={() => {
-                        removeFromCart(item);
-                        setShowWeightModal(false);
-                      }}
-                      className="flex flex-row items-center flex-1 justify-center py-2.5 text-red-500 border bg-red-50 border-red-500 rounded-lg text-sm font-medium cursor-pointer transition"
-                    >
-                      <TrashIcon className="w-4 h-4 inline-block mr-1" />
-                      Remove
-                    </button>
-                  )
-                }
+                {!isInCart && (
+                  <button
+                    onClick={() => toggleWeightModal(false)}
+                    className="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                )}
+                {isInCart && (
+                  <button
+                    onClick={() => {
+                      removeFromCart(item);
+                      toggleWeightModal(false);
+                    }}
+                    className="flex flex-row items-center flex-1 justify-center py-2.5 text-red-500 border bg-red-50 border-red-500 rounded-lg text-sm font-medium cursor-pointer transition"
+                  >
+                    <TrashIcon className="w-4 h-4 inline-block mr-1" />
+                    Remove
+                  </button>
+                )}
                 <button
                   onClick={handleAddWithWeight}
                   disabled={isLoading || getFinalWeight() <= 0}
