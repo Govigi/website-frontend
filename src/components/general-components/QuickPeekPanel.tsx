@@ -16,8 +16,11 @@ import axios from "axios";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "../core/Cart/CartContext";
+import { useAuth } from "@/libs/context/AuthContext";
+import ProfileOverview from "@/components/general-components/ProfileOverview";
 
 import { config } from "@/libs/utils/config";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
 export default function QuickPeekPanel({ type, data, onClose }) {
   // type: 'cart' | 'notifications' | 'profile' | 'wishlist' | 'orders' | 'wallet' | 'addresses'
@@ -66,6 +69,8 @@ export default function QuickPeekPanel({ type, data, onClose }) {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const { isAuthenticated } = useAuth();
 
   const backendApi = config.backend_url;
 
@@ -139,28 +144,8 @@ export default function QuickPeekPanel({ type, data, onClose }) {
       )}
 
       {type === "profile" && (
-        <div className="grid grid-cols-1 gap-2">
-          <Link
-            href="/ordershistory"
-            onClick={onClose}
-            className="px-3 py-2 rounded border text-sm"
-          >
-            My Orders
-          </Link>
-          <Link
-            href="/wallet"
-            onClick={onClose}
-            className="px-3 py-2 rounded border text-sm"
-          >
-            Wallet
-          </Link>
-          <Link
-            href="/saved-address"
-            onClick={onClose}
-            className="px-3 py-2 rounded border text-sm"
-          >
-            Saved Address
-          </Link>
+        <div>
+          <ProfileOverview />
         </div>
       )}
 
@@ -351,9 +336,8 @@ function CartPreview() {
               )}
             </div>
             <span
-              className={`text-sm font-semibold ${
-                delivery === 0 ? "text-green-600" : "text-gray-800"
-              }`}
+              className={`text-sm font-semibold ${delivery === 0 ? "text-green-600" : "text-gray-800"
+                }`}
             >
               {delivery === 0 ? "FREE" : "₹50.00"}
             </span>

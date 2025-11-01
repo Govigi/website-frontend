@@ -51,13 +51,12 @@ export default function CartPage() {
 
   return (
     <div className="max-w-xl mx-auto py-20 px-4">
-      {/* Header */} 
-      <div className="flex justify-start items-center p-4">
-        <h1 className="text-xl font-semibold text-gray-800">Items in Cart</h1>
-      </div>
 
       {/* Cart Items Section */}
       <div className="p-5 space-y-4 border border-gray-200 rounded-t-xl bg-white shadow-sm">
+        <div className="flex flex-row justify-items-start items-center space-x-3 mb-4 border-b border-dashed border-gray-300 pb-2">
+          <span className="text-gray-600 font-medium">Items in your cart</span>
+        </div>
         {cartItems.length === 0 ? (
           <div className="text-center py-16 px-2">
             <div className="max-w-md mx-auto">
@@ -111,9 +110,9 @@ export default function CartPage() {
                 <h3 className="text-lg font-medium text-gray-800">
                   {item.name}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                {/* <p className="text-gray-600 text-sm">
                   ₹ {parseFloat(item.pricePerKg).toFixed(2)}
-                </p>
+                </p> */}
               </div>
 
               {/* Quantity Controls */}

@@ -9,6 +9,7 @@ import ShoppingHeader from "@/components/general-components/ShoppingHeader";
 import { CartProvider } from "../components/core/Cart/CartContext";
 import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
+import { LoginModalProvider } from "@/libs/context/LoginModalContext";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
@@ -49,11 +50,13 @@ export default function RootLayout({ children }) {
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
+              <LoginModalProvider>
               <Suspense fallback={null}>
                 {showWebAppNavbar ? <ShoppingHeader /> : isProfilePage ? <div className="hidden"><Header /></div> : <Header />}
                 <main>{children}</main>
                 {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
               </Suspense>
+              </LoginModalProvider>
             </CartProvider>
           </AuthProvider>
         </ToastProvider>

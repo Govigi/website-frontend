@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import LoginCard from "./LoginCard";
+import { useLoginModal } from "@/libs/context/LoginModalContext";
 import { UserIcon } from "@phosphor-icons/react";
 import { Label } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -12,7 +12,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 export default function Header() {
 
   const router = useRouter();
-  const [showLogin, setShowLogin] = useState(false);
+  const { open: openLogin } = useLoginModal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -70,7 +70,7 @@ export default function Header() {
 
           {/* Login Button */}
           <button
-            onClick={() => setShowLogin(true)}
+            onClick={() => openLogin()}
             className="md:flex md:py-2 items-center space-x-2 bg-green-600 text-white font-semibold md:px-16 px-4 py-2 rounded-lg cursor-pointer flex flex-row"
           >
             <span className="font-bold">Login/Signup</span>
@@ -79,12 +79,6 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* Login Modal */}
-      <LoginCard
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-        onLoginSuccess={undefined}
-      />
 
       {mobileMenuOpen && (
         <>
