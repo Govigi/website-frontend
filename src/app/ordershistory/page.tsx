@@ -3,6 +3,9 @@ import React, { useEffect, useState } from "react";
 import Invoice from "../../components/general-components/Invoice";
 import { block } from "useref/lib/buildBlockManager";
 import { config } from "@/libs/utils/config";
+import { RefreshCwIcon, X } from "lucide-react";
+import { BadgeCheck, BadgeX, ClockFading } from "lucide-react";
+import { CheckBadgeIcon,ClockIcon,XCircleIcon } from "@heroicons/react/24/solid";
 
 const HistorySection = () => {
   const [orders, setOrders] = useState([]);
@@ -44,30 +47,31 @@ const HistorySection = () => {
     fetchUserOrders();
   }, []);
 
-  const getStatusStyle = (status) => {
-    switch (status.toLowerCase()) {
-      case "processing":
-        return "text-orange-500";
-      case "delivered":
-        return "text-green-600";
-      case "cancelled":
-        return "text-red-500";
-      default:
-        return "text-gray-500";
-    }
-  };
+  const statusBadge = (status) => {
+    const statusStyles = {
+      Pending: "text-yellow-600",
+      Shipped: "text-blue-600",
+      delivered: "text-green-600",
+      Cancelled: "text-red-600",
+    };
 
-  const getStatusDot = (status) => {
-    switch (status.toLowerCase()) {
-      case "processing":
-        return "bg-orange-500";
-      case "delivered":
-        return "bg-green-600";
-      case "cancelled":
-        return "bg-red-500";
-      default:
-        return "bg-gray-400";
-    }
+    const statusIconStyles = {
+      Pending: "bg-yellow-100",
+      Shipped: "bg-blue-100",
+      Delivered: "bg-green-100",
+      Cancelled: "bg-red-100",
+    };
+
+    return (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${statusStyles[status]}`}>
+        <span className={`px-1 py-1 rounded-full text-xs font-medium`}>
+           {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+        {status.toLowerCase() === "delivered" && <CheckBadgeIcon className="w-4.5 h-4.5 text-green-500" />}
+        {status.toLowerCase() === "cancelled" && <XCircleIcon className="w-4.5 h-4.5 text-red-500" />}
+        {status.toLowerCase() === "pending" && <ClockIcon className="w-4.5 h-4.5 text-yellow-500" />}
+      </span>
+    );
   };
 
   if (loading) {
@@ -75,9 +79,9 @@ const HistorySection = () => {
   }
 
   return (
-    <div className="h-full w-full bg-white rounded-tl-lg rounded-bl-lg p-6 overflow-y-auto items-center justify-center mx-auto">
-      <div className="justify-center items-center mx-auto">
-        <h2 className="text-xl font-semibold mb-4 text-center">History</h2>
+    <div className="h-full w-full bg-white rounded-tl-lg rounded-bl-lg py-10 pb-20 px-4 overflow-y-auto">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-xl font-semibold mb-6 text-center">Order History</h2>
 
         {orders.length === 0 ? (
           <div className="text-center text-gray-500 mt-20">
@@ -85,140 +89,72 @@ const HistorySection = () => {
             <p className="text-sm">Your past orders will appear here.</p>
           </div>
         ) : (
-          orders.map((order, index) => (
-            <div
-              key={index}
-              className="border border-gray-200 p-4 mb-4 rounded-md shadow-sm space-y-2 relative"
-            >
-              {/* Status */}
-              <div className="absolute right-4 top-4 flex items-center space-x-1">
-                <span
-                  className={`w-2 h-2 rounded-full ${getStatusDot(
-                    order.status
-                  )}`}
-                />
-                <span
-                  className={`text-sm font-medium ${getStatusStyle(
-                    order.status
-                  )}`}
-                >
-                  {order.status}
-                </span>
-              </div>
+          <div className="space-y-4">
+            {orders.map((order, index) => (
+              <div
+                key={index}
+                className="bg-white border border-gray-200 rounded-xl p-2 hover:shadow-sm transition-shadow duration-200"
+              >
+                {/* Header with Order ID and Status */}
+                <div className="flex items-center justify-between mb-3 rounded-tl-md p-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-black">Order ID:</span>
+                      <span className="text-xs text-gray-500">
+                        #{order._id.slice(-12)}
+                      </span>
+                    </div>
 
-              <p className="text-sm text-gray-500">
-                <strong>Order ID:</strong> {order._id.slice(-10)}
-              </p>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-black">Order Date:</span>
+                      <span className="text-xs text-gray-500">
+                        {order.createdAt
+                          ? new Date(order.createdAt).toLocaleString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                          : "—"}
+                      </span>
+                    </div>
 
-              {/* Quantities */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Total Items</p>
-                  <p className="text-base font-semibold">
-                    {order.items.length}
-                  </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div>{statusBadge(order.status)}</div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Quantity</p>
-                  <p className="text-base font-semibold">
-                    {order.items.reduce(
-                      (total, item) => total + item.quantityKg,
-                      0
-                    )}{" "}
-                    Kg’s
-                  </p>
-                </div>
-              </div>
 
-              {/* Amount and Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Total amount</p>
-                  <p className="text-base font-semibold">
-                    ₹ {order.totalAmount}
-                  </p>
+                <hr className="my-2 border-gray-200" />
+
+                {/* Order Details */}
+                <div className="grid grid-cols-3 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Items</p>
+                    <p className="text-sm font-semibold">{order.items.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Quantity</p>
+                    <p className="text-sm font-semibold">
+                      {order.items.reduce((total, item) => total + item.quantityKg, 0)} kg
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Amount</p>
+                    <p className="text-sm font-semibold text-green-600">₹{order.totalAmount}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Ordered On</p>
-                  <p className="text-base font-semibold">
-                    {new Date(order.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    ,{" "}
-                    {new Date(order.createdAt).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-md flex items-center space-x-2 transition-colors">
+                    <RefreshCwIcon className="w-4 h-4" />
+                    <span>Reorder</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center justify-between pt-2">
-                <button className="bg-green-600 text-white text-sm px-4 py-1.5 rounded-md flex items-center gap-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 4v6h6M20 20v-6h-6"
-                    />
-                  </svg>
-                  Re-order
-                </button>
-                {
-                  order.status == "delivered" ? 
-                    <button
-                      className={` ${
-                        order.status == "delivered"
-                          ? "cursor-pointer"
-                          : "cursor-not-allowed"
-                      } border border-gray-400 text-gray-700 text-sm px-3 py-1 rounded-md flex items-center gap-1 `}
-                      onClick={() => {
-                        order.status == "delivered" && setSelectedOrder(order);
-                      }}
-                    >
-                      📄 Download Invoice
-                    </button>
-                  :
-                      <></>
-                }
-              </div>
-            </div>
-          ))
-        )}
-
-        {/* 🔽 Invoice Modal */}
-        {selectedOrder && (
-          <div className="fixed h-full inset-0 z-50 flex justify-center items-center p-2 bg-white overflow-auto">
-            <div className="relative p-6 rounded-lg w-full max-w-3xl h-full">
-              <Invoice
-                orderId={selectedOrder._id.slice(-10)}
-                orderDate={new Date(
-                  selectedOrder.createdAt
-                ).toLocaleDateString()}
-                invoiceDate={new Date().toLocaleDateString()}
-                customerName={selectedOrder?.name}
-                mobile={selectedOrder?.contact}
-                address={`${selectedOrder.address[0]?.city}, ${selectedOrder.address[0]?.state} - ${selectedOrder.address[0]?.pincode}`}
-                shippingCharges={20}
-                products={selectedOrder.items.map((item) => ({
-                  name: item.name,
-                  quantity: item.quantityKg,
-                  price: item.price,
-                  taxRate: 0.1,
-                }))}
-                autoDownload = {true}
-              />
-            </div>
+            ))}
           </div>
         )}
       </div>
