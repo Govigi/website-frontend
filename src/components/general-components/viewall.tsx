@@ -74,7 +74,7 @@ export default function ViewAll({ webapp, setShowLogin }) {
   };
 
   useEffect(() => {
-    fetchCategories();
+    // fetchCategories();
   }, []);
 
   // Read category from localStorage
