@@ -28,7 +28,6 @@ export default function ViewAll({ webapp }) {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.trim() || "";
 
-  // ✅ Main fetch logic
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -37,10 +36,8 @@ export default function ViewAll({ webapp }) {
 
       console.log("Fetched products:", fetched);
 
-      // Safe name checking
       fetched = fetched.filter((item) => item.name || item.productName || item.title);
 
-      // 🔍 Apply search filter if any
       if (searchQuery) {
         fetched = fetched.filter((item) => {
           const name = (item.name || item.productName || item.title || "").toLowerCase();
@@ -48,7 +45,6 @@ export default function ViewAll({ webapp }) {
         });
       }
 
-      // 🧩 Filter by category if stored
       if (category) {
         fetched = fetched.filter((item) =>
           (item.category || "").toLowerCase().includes(category.toLowerCase())

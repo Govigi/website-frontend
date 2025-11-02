@@ -36,9 +36,25 @@ export default function RootLayout({ children }) {
     pathname.startsWith("/wallet") ||
     pathname.startsWith("/ordershistory") ||
     pathname.startsWith("/checkout") ||
-    pathname.startsWith("/saved-address");
+    pathname.startsWith("/saved-address") ||
+    pathname.startsWith("/profile");
 
   const isProfilePage = pathname.startsWith("/profile");
+
+  // Determine page title and if it's webapp
+  const isWebApp = pathname.startsWith("/webapp");
+  
+  const getPageTitle = () => {
+    if (pathname.startsWith("/cart")) return "Cart";
+    if (pathname.startsWith("/wishlist")) return "Wishlist";
+    if (pathname.startsWith("/notifications")) return "Notifications";
+    if (pathname.startsWith("/wallet")) return "Wallet";
+    if (pathname.startsWith("/ordershistory")) return "My Orders";
+    if (pathname.startsWith("/checkout")) return "Checkout";
+    if (pathname.startsWith("/saved-address")) return "Saved Addresses";
+    if (pathname.startsWith("/profile")) return "Profile";
+    return "";
+  };
 
   return (
     <html lang="en">
@@ -52,7 +68,7 @@ export default function RootLayout({ children }) {
             <CartProvider>
               <LoginModalProvider>
               <Suspense fallback={null}>
-                {showWebAppNavbar ? <ShoppingHeader /> : isProfilePage ? <div className="hidden"><Header /></div> : <Header />}
+                {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
                 <main>{children}</main>
                 {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
               </Suspense>

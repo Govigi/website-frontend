@@ -1,16 +1,16 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import Invoice from "../../components/general-components/Invoice";
-import { block } from "useref/lib/buildBlockManager";
+import React, { useEffect, useState, useMemo } from "react";
 import { config } from "@/libs/utils/config";
-import { RefreshCwIcon, X } from "lucide-react";
-import { BadgeCheck, BadgeX, ClockFading } from "lucide-react";
-import { CheckBadgeIcon,ClockIcon,XCircleIcon } from "@heroicons/react/24/solid";
+import { CheckBadgeIcon, ClockIcon, XCircleIcon, TruckIcon, ShoppingBagIcon, MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const HistorySection = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [showFilter, setShowFilter] = useState(false);
   const backendApi = config.backend_url;
 
   const fetchUserOrders = async () => {
@@ -47,115 +47,266 @@ const HistorySection = () => {
     fetchUserOrders();
   }, []);
 
-  const statusBadge = (status) => {
-    const statusStyles = {
-      Pending: "text-yellow-600",
-      Shipped: "text-blue-600",
-      delivered: "text-green-600",
-      Cancelled: "text-red-600",
-    };
+  // Filter and search
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const matchesSearch = 
+        order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.items.some(item => item.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = selectedStatus === "all" || order.status.toLowerCase() === selectedStatus.toLowerCase();
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, selectedStatus]);
 
-    const statusIconStyles = {
-      Pending: "bg-yellow-100",
-      Shipped: "bg-blue-100",
-      Delivered: "bg-green-100",
-      Cancelled: "bg-red-100",
+  const getStatusConfig = (status) => {
+    const configs = {
+      delivered: {
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        borderColor: "border-green-200",
+        icon: CheckBadgeIcon,
+      },
+      cancelled: {
+        color: "text-red-600",
+        bgColor: "bg-red-50",
+        borderColor: "border-red-200",
+        icon: XCircleIcon,
+      },
+      pending: {
+        color: "text-yellow-600",
+        bgColor: "bg-yellow-50",
+        borderColor: "border-yellow-200",
+        icon: ClockIcon,
+      },
+      shipped: {
+        color: "text-blue-600",
+        bgColor: "bg-blue-50",
+        borderColor: "border-blue-200",
+        icon: TruckIcon,
+      },
     };
-
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${statusStyles[status]}`}>
-        <span className={`px-1 py-1 rounded-full text-xs font-medium`}>
-           {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
-        {status.toLowerCase() === "delivered" && <CheckBadgeIcon className="w-4.5 h-4.5 text-green-500" />}
-        {status.toLowerCase() === "cancelled" && <XCircleIcon className="w-4.5 h-4.5 text-red-500" />}
-        {status.toLowerCase() === "pending" && <ClockIcon className="w-4.5 h-4.5 text-yellow-500" />}
-      </span>
-    );
+    return configs[status.toLowerCase()] || configs.pending;
   };
 
   if (loading) {
-    return <p className="text-center text-gray-500 mt-4">Loading orders...</p>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-3"></div>
+          <p className="text-gray-600 text-sm">Loading orders...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="h-full w-full bg-white rounded-tl-lg rounded-bl-lg py-10 pb-20 px-4 overflow-y-auto">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-xl font-semibold mb-6 text-center">Order History</h2>
-
-        {orders.length === 0 ? (
-          <div className="text-center text-gray-500 mt-20">
-            <p className="text-base font-medium">No orders yet</p>
-            <p className="text-sm">Your past orders will appear here.</p>
+    <div className="bg-white">
+      {/* Search and Filter Bar - Fixed */}
+      <div className="fixed top-0 left-0 right-0 z-20 bg-white border-b border-gray-200 p-4 shadow-sm mt-16">
+        <div className="flex gap-2 items-center">
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search orders or products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-green-600 placeholder-gray-400"
+            />
           </div>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order, index) => (
-              <div
-                key={index}
-                className="bg-white border border-gray-200 rounded-xl p-2 hover:shadow-sm transition-shadow duration-200"
-              >
-                {/* Header with Order ID and Status */}
-                <div className="flex items-center justify-between mb-3 rounded-tl-md p-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-black">Order ID:</span>
-                      <span className="text-xs text-gray-500">
-                        #{order._id.slice(-12)}
-                      </span>
-                    </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className="p-2 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <FunnelIcon className="w-4 h-4 text-gray-600" />
+            </button>
 
-                    <div className="flex flex-col">
-                      <span className="text-xs text-black">Order Date:</span>
-                      <span className="text-xs text-gray-500">
-                        {order.createdAt
-                          ? new Date(order.createdAt).toLocaleString(undefined, {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                          : "—"}
-                      </span>
-                    </div>
-
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div>{statusBadge(order.status)}</div>
-                  </div>
-                </div>
-
-                <hr className="my-2 border-gray-200" />
-
-                {/* Order Details */}
-                <div className="grid grid-cols-3 gap-4 mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Items</p>
-                    <p className="text-sm font-semibold">{order.items.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Quantity</p>
-                    <p className="text-sm font-semibold">
-                      {order.items.reduce((total, item) => total + item.quantityKg, 0)} kg
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Amount</p>
-                    <p className="text-sm font-semibold text-green-600">₹{order.totalAmount}</p>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-md flex items-center space-x-2 transition-colors">
-                    <RefreshCwIcon className="w-4 h-4" />
-                    <span>Reorder</span>
+            {/* Filter Dropdown */}
+            {showFilter && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-30">
+                <div className="p-3 space-y-2">
+                  <button
+                    onClick={() => {
+                      setSelectedStatus("all");
+                      setShowFilter(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedStatus === "all" ? "bg-green-50 text-green-700 font-medium" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    All Orders
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedStatus("pending");
+                      setShowFilter(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedStatus === "pending" ? "bg-yellow-50 text-yellow-700 font-medium" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedStatus("shipped");
+                      setShowFilter(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedStatus === "shipped" ? "bg-blue-50 text-blue-700 font-medium" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    Shipped
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedStatus("delivered");
+                      setShowFilter(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedStatus === "delivered" ? "bg-green-50 text-green-700 font-medium" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    Delivered
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedStatus("cancelled");
+                      setShowFilter(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedStatus === "cancelled" ? "bg-red-50 text-red-700 font-medium" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    Cancelled
                   </button>
                 </div>
               </div>
-            ))}
+            )}
           </div>
+        </div>
+      </div>
+
+      {/* Scrollable Orders Container - Takes remaining space */}
+      <div className="px-4 pt-28 pb-24">
+        {/* Orders List */}
+        {filteredOrders.length === 0 ? (
+          <div className="text-center py-12 border border-gray-200 rounded-md">
+            <ShoppingBagIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-600 font-medium text-sm">No orders found</p>
+            <p className="text-gray-500 text-xs mt-1">Try adjusting your search or filter</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+          {filteredOrders.map((order, index) => {
+            const statusConfig = getStatusConfig(order.status);
+            const StatusIcon = statusConfig.icon;
+            const totalQuantity = order.items.reduce((total, item) => total + item.quantityKg, 0);
+            const isExpanded = expandedOrder === order._id;
+
+            return (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-md overflow-hidden hover:border-gray-300 transition-all duration-200"
+              >
+                {/* Order Summary Card */}
+                <div
+                  onClick={() => setExpandedOrder(isExpanded ? null : order._id)}
+                  className="p-3.5 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Order #{order._id.slice(-8)}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {new Date(order.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
+                      <StatusIcon className={`w-3.5 h-3.5 ${statusConfig.color}`} />
+                      <span className={statusConfig.color}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stats Grid - Clean UI */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Items */}
+                    <div className="rounded-lg p-3 text-center bg-white border border-gray-200">
+                      <div className="text-xl font-bold text-blue-600">{order.items.length}</div>
+                      <div className="text-xs text-gray-600 font-medium mt-1">Total Items</div>
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="rounded-lg p-3 text-center bg-white border border-gray-200">
+                      <div className="text-xl font-bold text-green-600">{totalQuantity}</div>
+                      <div className="text-xs text-gray-600 font-medium mt-1">Total kg</div>
+                    </div>
+                  </div>
+
+                  {/* View Products & Reorder Buttons */}
+                  <div className="flex gap-2 mt-3">
+                    <button className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded text-sm font-medium bg-green-50 border border-green-300 text-green-700 hover:bg-green-100 transition-colors">
+                      <ShoppingBagIcon className="w-4 h-4" />
+                      <span>Reorder</span>
+                    </button>
+                    <button className="flex-1 flex items-center justify-between gap-2 px-2.5 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+                      <span>{isExpanded ? "Hide Products" : "View Products"}</span>
+                      <ChevronRightIcon className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded Products View - Grid Layout */}
+                {isExpanded && (
+                  <div className="border-t border-gray-200 bg-white p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4">Products in Order</h4>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                      {order.items.slice(0, 2).map((item, itemIndex) => (
+                        <div key={itemIndex} className="flex flex-col p-3 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all">
+                          <div className="w-full h-20 bg-white rounded-md flex items-center justify-center overflow-hidden border border-gray-200 mb-2">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-contain p-1"
+                              onError={(e) => {
+                                e.currentTarget.src = "/api/placeholder/64/64";
+                              }}
+                            />
+                          </div>
+
+                          {/* Product Info - Combined Card */}
+                          <div className="flex-1 flex flex-col justify-between">
+                            <h5 className="text-xs font-semibold text-gray-900 line-clamp-2 leading-tight mb-2">{item.name}</h5>
+                            <div className="inline-flex items-center justify-center px-2 py-1 bg-green-50 text-green-700 rounded-md text-xs font-bold border border-green-200">
+                              {item.quantityKg} kg
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex flex-col p-3 bg-gradient-to-br from-green-50 to-white rounded-lg border-2 border-dashed border-green-300 hover:border-green-400 hover:shadow-sm transition-all cursor-pointer items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-green-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <p className="text-sm font-semibold text-green-700 text-center">View More</p>
+                        <p className="text-xs text-green-600 text-center">{order.items.length > 2 ? `+${order.items.length - 2} items` : "All items"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
         )}
       </div>
     </div>

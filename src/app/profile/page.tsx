@@ -77,10 +77,6 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 sm:p-6">
       {/* Mobile: show the compact ProfileOverview page */}
       <div className="max-w-screen-sm mx-auto block lg:hidden">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600 mt-1">Manage your account</p>
-        </div>
         <ProfileOverview />
       </div>
 
