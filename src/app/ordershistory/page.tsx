@@ -1,10 +1,12 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { config } from "@/libs/utils/config";
 import { CheckBadgeIcon, ClockIcon, XCircleIcon, TruckIcon, ShoppingBagIcon, MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const HistorySection = () => {
+  const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState(null);
@@ -214,12 +216,14 @@ const HistorySection = () => {
               >
                 {/* Order Summary Card */}
                 <div
-                  onClick={() => setExpandedOrder(isExpanded ? null : order._id)}
-                  className="p-3.5 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  className="p-3.5 hover:bg-gray-50/50 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Order #{order._id.slice(-8)}</h3>
+                    <div 
+                      onClick={() => router.push(`/ordershistory/${order._id}`)}
+                      className="cursor-pointer flex-1"
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors">Order #{order._id.slice(-8)}</h3>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {new Date(order.createdAt).toLocaleDateString("en-US", {
                           month: "short",
@@ -257,7 +261,10 @@ const HistorySection = () => {
                       <ShoppingBagIcon className="w-4 h-4" />
                       <span>Reorder</span>
                     </button>
-                    <button className="flex-1 flex items-center justify-between gap-2 px-2.5 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+                    <button 
+                      onClick={() => setExpandedOrder(isExpanded ? null : order._id)}
+                      className="flex-1 flex items-center justify-between gap-2 px-2.5 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
                       <span>{isExpanded ? "Hide Products" : "View Products"}</span>
                       <ChevronRightIcon className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                     </button>
@@ -293,13 +300,16 @@ const HistorySection = () => {
                         </div>
                       ))}
 
-                      <div className="flex flex-col p-3 bg-gradient-to-br from-green-50 to-white rounded-lg border-2 border-dashed border-green-300 hover:border-green-400 hover:shadow-sm transition-all cursor-pointer items-center justify-center">
+                      <button 
+                        onClick={() => router.push(`/ordershistory/${order._id}`)}
+                        className="flex flex-col p-3 bg-gradient-to-br from-green-50 to-white rounded-lg border-2 border-dashed border-green-300 hover:border-green-400 hover:shadow-sm transition-all cursor-pointer items-center justify-center"
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-green-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         <p className="text-sm font-semibold text-green-700 text-center">View More</p>
                         <p className="text-xs text-green-600 text-center">{order.items.length > 2 ? `+${order.items.length - 2} items` : "All items"}</p>
-                      </div>
+                      </button>
                     </div>
                   </div>
                 )}
