@@ -70,7 +70,7 @@ export default function ViewAll({ webapp }) {
   };
 
   useEffect(() => {
-    fetchCategories();
+    // fetchCategories();
   }, []);
 
   // Read category from localStorage
