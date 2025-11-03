@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { useCart } from "../../components/core/Cart/CartContext";
 import ProductCard from "../../components/general-components/ProductCard";
 import { useAuth } from "../../libs/context/AuthContext";
-import LoginCard from "../../components/general-components/LoginCard";
 import { config } from "@/libs/utils/config";
 
 export default function SearchProPage() {
@@ -20,7 +19,6 @@ export default function SearchProPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const backendURL = config.backend_url;
 
   const fetchProducts = async () => {
@@ -96,7 +94,6 @@ export default function SearchProPage() {
                 item={item}
                 onAddToCart={addToCart}
                 webapp={true}
-                setShowLogin={setShowLogin}
                 cartItems={cartItems}
                 incrementQuantity={incrementQuantity}
                 decreaseQuantity={decreaseQuantity}
@@ -111,13 +108,7 @@ export default function SearchProPage() {
         )}
       </section>
 
-      {showLogin && (
-        <LoginCard
-          isOpen={showLogin}
-          onClose={() => setShowLogin(false)}
-          onLoginSuccess={undefined}
-        />
-      )}
+      {/* Global Login modal is provided via context provider */}
     </>
   );
 }

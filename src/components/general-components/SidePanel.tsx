@@ -18,7 +18,7 @@ export default function SidePanel({
       <button
         aria-label="Close panel"
         onClick={onClose}
-        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${
+        className={`absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-200 ${
           open ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -31,7 +31,7 @@ export default function SidePanel({
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between p-3 shadow-sm">
+        {/* <div className="flex items-center justify-between p-3 shadow-sm">
           <span className="text-base font-bold">{title}</span>
           <button
             onClick={onClose}
@@ -53,7 +53,7 @@ export default function SidePanel({
               />
             </svg>
           </button>
-        </div>
+        </div> */}
         <div className="p-4 h-[calc(100%-57px)] overflow-y-auto">
           {children}
         </div>

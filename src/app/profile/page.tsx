@@ -1,6 +1,8 @@
 "use client"; // ✅ Ensures this page is treated as a client component in Next.js
 
 import React from "react";
+import dynamic from "next/dynamic";
+import ProfileOverview from "@/components/general-components/ProfileOverview";
 import {
   UserCircleIcon,
   ShoppingCartIcon,
@@ -73,14 +75,13 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600 mt-2">
-            Manage your account and track your orders
-          </p>
-        </div>
+      {/* Mobile: show the compact ProfileOverview page */}
+      <div className="max-w-screen-sm mx-auto block lg:hidden">
+        <ProfileOverview />
+      </div>
+
+      {/* Desktop: show rich profile dashboard */}
+      <div className="max-w-6xl mx-auto hidden lg:block">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Profile & Stats */}
