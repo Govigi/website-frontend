@@ -7,7 +7,7 @@ import { useCart } from "../core/Cart/CartContext";
 import ProductCard from "./ProductCard";
 import { useSearchParams } from "next/navigation";
 
-export default function ViewAll({ webapp, setShowLogin }) {
+export default function ViewAll({ webapp }) {
   const {
     cartItems,
     addToCart,
@@ -28,7 +28,6 @@ export default function ViewAll({ webapp, setShowLogin }) {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.trim() || "";
 
-  // ✅ Main fetch logic
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -37,10 +36,8 @@ export default function ViewAll({ webapp, setShowLogin }) {
 
       console.log("Fetched products:", fetched);
 
-      // Safe name checking
       fetched = fetched.filter((item) => item.name || item.productName || item.title);
 
-      // 🔍 Apply search filter if any
       if (searchQuery) {
         fetched = fetched.filter((item) => {
           const name = (item.name || item.productName || item.title || "").toLowerCase();
@@ -48,7 +45,6 @@ export default function ViewAll({ webapp, setShowLogin }) {
         });
       }
 
-      // 🧩 Filter by category if stored
       if (category) {
         fetched = fetched.filter((item) =>
           (item.category || "").toLowerCase().includes(category.toLowerCase())
@@ -105,7 +101,7 @@ export default function ViewAll({ webapp, setShowLogin }) {
     : 0;
 
   return (
-    <section className="px-4 md:px-10 py-20 max-w-[1220px] mx-auto items-center overflow-hidden">
+    <section className="px-4 md:px-10 max-w-[1220px] mx-auto items-center overflow-hidden">
       <div className="flex flex-row justify-between items-center mb-5">
         <h2 className="text-sm font-bold text-left">
           Buy Bulk Fresh{" "}
@@ -122,7 +118,7 @@ export default function ViewAll({ webapp, setShowLogin }) {
             : "No products available."}
         </p>
       ) : (
-        <div className="flex flex-row md:flex-row gap-4 border border-gray-100 h-[calc(100vh-140px)]">
+        <div className="flex flex-row md:flex-row gap-4 border border-gray-100 h-[calc(100vh-140px)] pb-20 md:pb-0">
           {/* Categories Sidebar - Scrollable on mobile */}
           <div className="px-4 py-2 border-r border-gray-100 overflow-y-auto md:h-full">
             <div className="mb-6">
@@ -147,7 +143,6 @@ export default function ViewAll({ webapp, setShowLogin }) {
                 item={item}
                 onAddToCart={addToCart}
                 webapp={webapp}
-                setShowLogin={setShowLogin}
                 cartItems={cartItems}
                 incrementQuantity={incrementQuantity}
                 decreaseQuantity={decreaseQuantity}

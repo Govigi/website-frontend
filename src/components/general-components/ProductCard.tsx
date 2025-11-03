@@ -2,6 +2,7 @@
 import { config } from "@/libs/utils/config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../libs/context/AuthContext";
+import { useLoginModal } from "@/libs/context/LoginModalContext";
 import { useToast } from "../../libs/context/ToastContext";
 import { Loader2 } from "lucide-react";
 import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -11,7 +12,6 @@ export default function ProductCard({
   item,
   onAddToCart,
   webapp,
-  setShowLogin,
   onQuickView,
   cartItems,
   incrementQuantity,
@@ -30,6 +30,7 @@ export default function ProductCard({
 
   const { showToast } = useToast();
   const { isAuthenticated } = useAuth();
+  const { open: openLogin } = useLoginModal();
   const backendURL = config.backend_url;
 
   // Cart info
@@ -47,11 +48,7 @@ export default function ProductCard({
       )
       : 0;
 
-  useEffect(() => {
-    if (isAuthenticated && typeof setShowLogin === "function") {
-      setShowLogin(false);
-    }
-  }, [isAuthenticated, setShowLogin]);
+  // No local login modal state; global login modal manages itself
 
   // Unified modal toggle with scroll management
   const toggleWeightModal = (open) => {
@@ -179,7 +176,7 @@ export default function ProductCard({
           ) : (
             <div className="w-full flex justify-center">
               <div className="flex items-center justify-center w-[50%] h-[34px] bg-green-100 text-green-700 rounded-md mr-2 border border-green-200 overflow-hidden">
-                <div className="p-3 text-xs font-medium">
+                <div className="p-1 text-xs font-medium">
                   {cartQuantity} KG
                 </div>
               </div>
