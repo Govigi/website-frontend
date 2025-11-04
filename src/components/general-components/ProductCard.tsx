@@ -194,37 +194,37 @@ export default function ProductCard({
       )}
 
       {showWeightModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-3">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl animate-scale-in border border-gray-100">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-md w-full max-w-sm shadow-lg border border-gray-200">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Select Weight</h2>
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">Select Weight</h2>
               <button
                 onClick={() => toggleWeightModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors active:scale-95"
               >
                 <XMarkIcon className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
             {/* Product Info */}
-            <div className="p-4 border-b border-gray-100 flex items-center gap-3">
+            <div className="p-5 border-b border-gray-200 flex items-center gap-3">
               <img
                 src={item.image?.url || "/placeholder-product.png"}
                 alt={item.name}
-                className="w-14 h-14 object-contain rounded-lg bg-gray-50 p-2"
+                className="w-14 h-14 object-contain rounded-md bg-gray-50 p-2"
               />
-              <div className="text-left">
-                <h4 className="font-medium text-gray-900 text-sm line-clamp-1">{item.name}</h4>
-                <p className="text-xs text-gray-500 mt-1">Choose preferred weight</p>
+              <div className="text-left flex-1">
+                <h4 className="font-semibold text-gray-900 text-sm line-clamp-1">{item.name}</h4>
+                <p className="text-xs text-gray-600 mt-1">Choose your preferred weight</p>
               </div>
             </div>
 
             {/* Weight Selection */}
-            <div className="p-4 space-y-5">
-              {/* Popular Weights */}
+            <div className="p-5 space-y-5">
+              {/* Quick Select */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-2.5 uppercase tracking-wide">
                   Quick Select
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -232,9 +232,9 @@ export default function ProductCard({
                     <button
                       key={weight}
                       onClick={() => handleWeightSelect(weight)}
-                      className={`py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${selectedWeight === weight
+                      className={`py-2.5 rounded-md border text-sm font-medium transition-all duration-200 active:scale-95 ${selectedWeight === weight
                         ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-green-300"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-green-400"
                         }`}
                     >
                       {weight} kg
@@ -243,9 +243,9 @@ export default function ProductCard({
                 </div>
               </div>
 
-              {/* Custom Input */}
+              {/* Custom Weight */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-2.5 uppercase tracking-wide">
                   Custom Weight
                 </label>
                 <div className="flex items-center gap-2">
@@ -256,18 +256,18 @@ export default function ProductCard({
                     value={customWeight}
                     onChange={(e) => handleCustomWeightChange(e.target.value)}
                     placeholder="0.0"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-center text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                    className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-center text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   />
-                  <span className="text-gray-600 text-sm font-medium">kg</span>
+                  <span className="text-gray-700 text-sm font-medium">kg</span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-2">
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-3 border-t border-gray-200">
                 {!isInCart && (
                   <button
                     onClick={() => toggleWeightModal(false)}
-                    className="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+                    className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors active:scale-95"
                   >
                     Cancel
                   </button>
@@ -278,23 +278,23 @@ export default function ProductCard({
                       removeFromCart(item);
                       toggleWeightModal(false);
                     }}
-                    className="flex flex-row items-center flex-1 justify-center py-2.5 text-red-500 border bg-red-50 border-red-500 rounded-lg text-sm font-medium cursor-pointer transition"
+                    className="flex flex-row items-center flex-1 justify-center py-2.5 text-red-600 border border-red-300 bg-red-50 rounded-md text-sm font-medium hover:bg-red-100 transition-colors active:scale-95 gap-1.5"
                   >
-                    <TrashIcon className="w-4 h-4 inline-block mr-1" />
+                    <TrashIcon className="w-4 h-4" />
                     Remove
                   </button>
                 )}
                 <button
                   onClick={handleAddWithWeight}
                   disabled={isLoading || getFinalWeight() <= 0}
-                  className="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:bg-gray-300 transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-md text-sm font-medium transition-colors active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <ShoppingCartIcon className="w-4 h-4" />
                   )}
-                  {isLoading ? "Adding..." : "Add"}
+                  {isLoading ? "Adding..." : "Add to Cart"}
                 </button>
               </div>
             </div>

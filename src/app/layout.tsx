@@ -61,7 +61,7 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
       </head>
-      <body className={`${poppins.className} antialiased`}>
+      <body className={`${poppins.className} antialiased md:overflow-auto overflow-hidden`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
         <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
@@ -69,7 +69,9 @@ export default function RootLayout({ children }) {
               <LoginModalProvider>
               <Suspense fallback={null}>
                 {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
-                <main>{children}</main>
+                <main className="flex-1 overflow-y-auto pb-20 md:pb-0 md:flex-none md:overflow-visible">
+                  {children}
+                </main>
                 {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
               </Suspense>
               </LoginModalProvider>
