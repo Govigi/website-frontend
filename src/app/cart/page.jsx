@@ -11,7 +11,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto pb-20 md:pb-0 px-4">
+    <div className="max-w-xl mx-auto pb-0 md:pb-0 px-4">
       <CartComponent variant="full" />
     </div>
   );

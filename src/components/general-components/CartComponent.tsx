@@ -1,9 +1,14 @@
 "use client";
 
 import { useCart } from "../core/Cart/CartContext";
-import { Minus, Plus, X } from "@phosphor-icons/react";
-import { ShoppingCartIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { useAuth } from "@/libs/context/AuthContext";
+import { Minus, Plus, X, MapPinArea } from "@phosphor-icons/react";
+import { ShoppingCartIcon, ChevronRightIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
+import axios from "axios";
+import { config } from "@/libs/utils/config";
 
 interface CartComponentProps {
     variant?: "full" | "preview"; // 'full' for cart page, 'preview' for sidebar
@@ -17,7 +22,82 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         updateQuantity,
         removeFromCart,
     } = useCart();
+    const { logout } = useAuth();
+    const { openPanel: globalOpenPanel, closePanel: globalClosePanel } = useGlobalBottomPanel();
+    const [selectedAddress, setSelectedAddress] = useState(null);
+    const [addresses, setAddresses] = useState([]);
+    const [inputValues, setInputValues] = useState({}); // Track input values separately
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const router = useRouter();
+    const backendApi = config.backend_url;
+    
+    // Fetch addresses on mount
+    useEffect(() => {
+        fetchAddresses();
+    }, []);
+
+    const fetchAddresses = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (token) {
+                const parsedToken = JSON.parse(token);
+                const res = await axios.post(`${backendApi}/getAddress`, { token: parsedToken });
+                const fetchedAddresses = res.data?.addresses || [];
+                setAddresses(fetchedAddresses);
+                // Set first address as default
+                if (fetchedAddresses.length > 0) {
+                    setSelectedAddress(0);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch addresses", err);
+            if (err.response?.status === 500) logout();
+        }
+    };
+
+    // Address selection panel content
+    const getAddressPanel = () => (
+        <div className="space-y-3 p-4">
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-gray-600 font-medium">Your Addresses</p>
+                <button
+                    onClick={() => router.push("/saved-address")}
+                    className="flex items-center gap-1 text-green-600 hover:text-green-700 font-semibold text-xs transition-colors"
+                >
+                    <Plus weight="bold" className="w-4 h-4" />
+                    Add New
+                </button>
+            </div>
+            {addresses && addresses.length > 0 ? (
+                addresses.map((addr, idx) => (
+                    <div
+                        key={idx}
+                        onClick={() => {
+                            setSelectedAddress(idx);
+                            setTimeout(() => globalClosePanel(), 300);
+                        }}
+                        className={`p-3 border rounded-md cursor-pointer transition-all relative ${
+                            selectedAddress === idx
+                                ? "border-green-500 bg-gradient-to-br from-green-100"
+                                : "border-gray-200 bg-white hover:border-gray-300"
+                        }`}
+                        style={selectedAddress === idx ? {
+                            backgroundImage: "radial-gradient(circle at top right, #dcfce7, #ffffff)"
+                        } : {}}
+                    >
+                        {selectedAddress === idx && (
+                            <div className="absolute top-2 right-2">
+                                <CheckBadgeIcon className="w-5 h-5 text-green-600" />
+                            </div>
+                        )}
+                        <p className="font-semibold text-sm text-gray-900">{addr.name}</p>
+                        <p className="text-xs text-gray-600 mt-1">{addr.contact}</p>
+                        <p className="text-xs text-gray-600">{addr.city}, {addr.state} {addr.pincode}</p>
+                    </div>
+                ))
+            ) : null}
+        </div>
+    );
 
     if (!cartItems?.length) {
         return (
@@ -58,26 +138,76 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
 
     const totalQuantity = cartItems.reduce((sum, item) => sum + getItemQuantity(item), 0);
 
+    const handlePlaceOrder = async () => {
+        if (selectedAddress === null || !addresses[selectedAddress]) {
+            alert("Please select a delivery address");
+            return;
+        }
+
+        if (cartItems.length === 0) {
+            alert("Your cart is empty");
+            return;
+        }
+
+        setIsPlacingOrder(true);
+
+        try {
+            const token = localStorage.getItem("token");
+            const selectedAddr = addresses[selectedAddress];
+
+            const orderPayload = {
+                token: token ? JSON.parse(token) : null,
+                phone: selectedAddr?.contact ?? "",
+                name: selectedAddr?.name ?? "",
+                email: selectedAddr?.email ?? "",
+                address: {
+                    city: selectedAddr?.city,
+                    landmark: selectedAddr?.landmark,
+                    state: selectedAddr?.state,
+                    pincode: selectedAddr?.pincode,
+                    fullAddress: `${selectedAddr?.landmark || ""}, ${selectedAddr?.city}, ${selectedAddr?.state} - ${selectedAddr?.pincode}`,
+                },
+                items: cartItems.map((item) => ({
+                    productId: item._id,
+                    name: getItemName(item),
+                    quantityKg: getItemQuantity(item),
+                    image: getItemImage(item),
+                    price: getItemPrice(item),
+                })),
+                totalAmount: cartItems.reduce(
+                    (total, item) => total + getItemQuantity(item) * getItemPrice(item),
+                    0
+                ),
+                scheduledDate: new Date().toISOString().split("T")[0],
+            };
+
+            const res = await axios.post(`${backendApi}/createOrder`, orderPayload);
+
+            if (res.status === 200 || res.status === 201) {
+                // Clear cart
+                localStorage.removeItem("cart");
+                
+                // Show success message and redirect
+                alert("Order placed successfully!");
+                
+                // Redirect to order history after 1 second
+                setTimeout(() => {
+                    router.push("/ordershistory");
+                }, 1000);
+            }
+        } catch (err) {
+            console.error("Failed to place order", err);
+            alert(err.response?.data?.message || "Failed to place order. Please try again.");
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
     return (
         <div className={variant === "full" ? "flex flex-col h-full bg-white" : "space-y-3"}>
-            {/* Header - Full Variant */}
-            {/* {variant === "full" && (
-                <div className="px-4 py-3 border-b border-gray-100 sticky top-0 bg-white">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-lg font-bold text-gray-900">My Cart</h1>
-                            <p className="text-xs text-gray-500 mt-0.5">{cartItems.length} items</p>
-                        </div>
-                        <div className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-xs font-bold">
-                            {totalQuantity} kg
-                        </div>
-                    </div>
-                </div>
-            )} */}
-
             {/* Scrollable Items Container */}
-            <div className={variant === "full" ? "flex-1 overflow-y-auto pb-32 px-4 pt-3" : ""}>
-                <div className={`space-y-3 ${variant === "full" ? "" : ""}`}>
+            <div className={variant === "full" ? "flex-1 overflow-y-auto pb-32" : ""}>
+                <div className={`space-y-3 ${variant === "full" ? "pt-4" : ""}`}>
                     {cartItems.map((item, i) => {
                         const qty = getItemQuantity(item);
                         const price = getItemPrice(item);
@@ -127,14 +257,34 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                                                 <input
                                                     type="number"
                                                     min="0"
-                                                    value={qty}
+                                                    value={inputValues[i] !== undefined ? inputValues[i] : qty}
                                                     onChange={(e) => {
-                                                        const newQty = Number(e.target.value);
-                                                        if (Number.isNaN(newQty) || newQty < 0) return;
-                                                        if (newQty === 0) {
+                                                        // Allow user to type freely - store raw input value
+                                                        setInputValues(prev => ({
+                                                            ...prev,
+                                                            [i]: e.target.value
+                                                        }));
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        const finalValue = e.target.value;
+                                                        
+                                                        // Clear the input state
+                                                        setInputValues(prev => {
+                                                            const newState = { ...prev };
+                                                            delete newState[i];
+                                                            return newState;
+                                                        });
+                                                        
+                                                        // Only process if user entered something
+                                                        if (finalValue === "") {
                                                             removeFromCart(item);
                                                         } else {
-                                                            updateQuantity(item, newQty);
+                                                            const newQty = Number(finalValue);
+                                                            if (!Number.isNaN(newQty) && newQty > 0) {
+                                                                updateQuantity(item, newQty);
+                                                            } else if (newQty === 0 || Number.isNaN(newQty)) {
+                                                                removeFromCart(item);
+                                                            }
                                                         }
                                                     }}
                                                     className="w-8 h-7 text-center border-0 text-xs font-bold text-gray-900 bg-white rounded-md focus:outline-none"
@@ -169,32 +319,70 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                 </div>
             </div>
 
-            {/* Bottom Summary - Fixed */}
+            {/* Fixed Checkout Bar - Above Bottom (No navbar on cart page) */}
             {variant === "full" && (
-                <div className="bg-white border-t border-gray-200 p-4 shadow-md">
-                    <div className="flex items-center justify-start gap-2 mb-4">
-                        <div className="h-5 w-1.5 bg-green-500 rounded-full">
-                        </div>
-                        <p className="text-md text-black font-bold">Cart Summary</p>
-                    </div>
-                    <div className="max-w-xl mx-auto">
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div className="bg-green-50 rounded-md p-3 border border-green-200">
-                                <p className="text-xs text-gray-600 font-medium">Total Quantity</p>
-                                <p className="text-2xl font-bold text-green-600 mt-1">{totalQuantity} kg</p>
-                            </div>
-                            <div className="bg-blue-50 rounded-md p-3 border border-blue-200">
-                                <p className="text-xs text-gray-600 font-medium">Total Items</p>
-                                <p className="text-2xl font-bold text-blue-600 mt-1">{cartItems.length}</p>
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+                    <div className="px-3 py-3">
+                        {/* Address Selection */}
+                        <div className="w-full pb-3 mb-3 border-b border-gray-200">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 flex-1 min-w-0">
+                                    <MapPinArea size={32} color="#16a34a" weight="duotone" className="flex-shrink-0 mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-gray-900 mb-0.5">
+                                            Delivering to {selectedAddress !== null && addresses[selectedAddress]
+                                                ? addresses[selectedAddress].name
+                                                : "Select Address"}
+                                        </p>
+                                        {selectedAddress !== null && addresses[selectedAddress] && (
+                                            <p className="text-xs text-gray-500 line-clamp-1">
+                                                {addresses[selectedAddress].city}, {addresses[selectedAddress].state} {addresses[selectedAddress].pincode}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => globalOpenPanel(
+                                        "Select Delivery Address",
+                                        getAddressPanel()
+                                    )}
+                                    className="text-xs font-semibold text-green-600 hover:text-green-700 transition-colors whitespace-nowrap flex-shrink-0"
+                                >
+                                    Change
+                                </button>
                             </div>
                         </div>
 
-                        {/* Checkout Button */}
-                        <button className="w-full py-3 px-4 bg-green-50 border border-green-400 text-green-600 font-semibold rounded-md flex items-center justify-center gap-2 cursor-pointer">
-                            <span>Checkout</span>
-                            <ChevronRightIcon className="w-5 h-5" />
-                        </button>
+                        {/* Action Buttons Row */}
+                        <div className="flex items-center gap-2">
+                            {/* Add More Button */}
+                            <button
+                                onClick={() => router.push("/webapp")}
+                                className="flex-1 px-3 py-2.5 bg-green-50 border border-green-200 text-green-700 text-xs sm:text-sm font-semibold rounded-md hover:bg-green-100 transition-colors flex items-center justify-center gap-1.5"
+                            >
+                                <Plus weight="bold" className="w-4 h-4" />
+                                <span>Add More</span>
+                            </button>
+
+                            {/* Place Order Button */}
+                            <button 
+                                onClick={handlePlaceOrder}
+                                disabled={isPlacingOrder || selectedAddress === null}
+                                className="flex-1 px-3 sm:px-6 py-2.5 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-1 cursor-pointer text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isPlacingOrder ? (
+                                    <>
+                                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        <span>Placing...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Place Order</span>
+                                        <ChevronRightIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
