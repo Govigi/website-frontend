@@ -10,6 +10,7 @@ import { CartProvider } from "../components/core/Cart/CartContext";
 import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
 import { LoginModalProvider } from "@/libs/context/LoginModalContext";
+import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
@@ -61,17 +62,21 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
       </head>
-      <body className={`${poppins.className} antialiased`}>
+      <body className={`${poppins.className} antialiased md:overflow-auto overflow-hidden`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
         <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
               <LoginModalProvider>
-              <Suspense fallback={null}>
-                {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
-                <main>{children}</main>
-                {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
-              </Suspense>
+                <BottomPanelProvider>
+                  <Suspense fallback={null}>
+                    {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
+                    <main className="flex-1 overflow-y-auto md:pb-0 md:flex-none md:overflow-visible">
+                      {children}
+                    </main>
+                    {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
+                  </Suspense>
+                </BottomPanelProvider>
               </LoginModalProvider>
             </CartProvider>
           </AuthProvider>
