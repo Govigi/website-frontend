@@ -50,7 +50,7 @@ const HistorySection = () => {
 
   // Filter and search
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
+    const filtered = orders.filter(order => {
       const matchesSearch = 
         order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.items.some(item => item.name?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -59,6 +59,8 @@ const HistorySection = () => {
       
       return matchesSearch && matchesStatus;
     });
+    
+    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [orders, searchTerm, selectedStatuses]);
 
   const getStatusConfig = (status) => {

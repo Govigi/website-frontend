@@ -144,7 +144,7 @@ export default function OrderDetailPage() {
   const totalQuantity = order?.items?.reduce((sum, item) => sum + (getItemQuantity(item) || 0), 0) || 0;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen pb-20 md:pb-0">
       <main className="p-4 sm:p-6 sm:max-w-7xl sm:mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
 
