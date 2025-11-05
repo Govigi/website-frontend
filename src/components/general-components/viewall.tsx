@@ -21,7 +21,7 @@ export default function ViewAll({ webapp }) {
   const [quantity, setQuantity] = useState(1);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(""); // Default to empty (All Products)
   const [loading, setLoading] = useState(false);
   const backendURL = config.backend_url;
 
@@ -73,16 +73,6 @@ export default function ViewAll({ webapp }) {
     fetchCategories();
   }, []);
 
-  // Read category from localStorage
-  useEffect(() => {
-    const savedCategory = localStorage.getItem("category");
-    if (savedCategory) {
-      const formatted =
-        savedCategory.charAt(0).toUpperCase() + savedCategory.slice(1);
-      setCategory(formatted);
-    }
-  }, []);
-
   // Fetch products when category or search changes
   useEffect(() => {
     fetchProducts();
@@ -101,14 +91,10 @@ export default function ViewAll({ webapp }) {
     : 0;
 
   return (
-    <section className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-
-      {/* Main Content Area */}
+    <section className="h-[calc(100vh-90px)] flex flex-col bg-gray-50 overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - Fixed, Always Visible */}
         <aside className="w-20 md:w-24 lg:w-28 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           <div className="py-3 md:py-4 px-1 md:px-2 w-full">
-            {/* All Products Option */}
             <button
               onClick={() => setCategory("")}
               className={`w-full mb-3 md:mb-4 flex flex-col items-center transition-all ${
@@ -117,7 +103,7 @@ export default function ViewAll({ webapp }) {
             >
               <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-md overflow-hidden mb-1.5 md:mb-2 border-2 transition-all flex items-center justify-center bg-gray-50 ${
                 !category 
-                  ? 'border-green-500 shadow-md' 
+                  ? 'border-green-500 shadow-sm' 
                   : 'border-gray-200'
               }`}>
                 <svg className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +187,7 @@ export default function ViewAll({ webapp }) {
 
               {/* Responsive Grid */}
               <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4 lg:gap-5">
+                <div className="grid grid-cols-2 pb-15 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4 lg:gap-5">
                   {products.map((item) => (
                     <ProductCard
                       key={item._id}

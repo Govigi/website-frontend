@@ -10,6 +10,7 @@ import { CartProvider } from "../components/core/Cart/CartContext";
 import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
 import { LoginModalProvider } from "@/libs/context/LoginModalContext";
+import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
@@ -67,13 +68,15 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <CartProvider>
               <LoginModalProvider>
-              <Suspense fallback={null}>
-                {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
-                <main className="flex-1 overflow-y-auto pb-20 md:pb-0 md:flex-none md:overflow-visible">
-                  {children}
-                </main>
-                {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
-              </Suspense>
+                <BottomPanelProvider>
+                  <Suspense fallback={null}>
+                    {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
+                    <main className="flex-1 overflow-y-auto md:pb-0 md:flex-none md:overflow-visible">
+                      {children}
+                    </main>
+                    {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
+                  </Suspense>
+                </BottomPanelProvider>
               </LoginModalProvider>
             </CartProvider>
           </AuthProvider>

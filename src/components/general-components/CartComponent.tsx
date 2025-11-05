@@ -1,9 +1,14 @@
 "use client";
 
 import { useCart } from "../core/Cart/CartContext";
+import { useAuth } from "@/libs/context/AuthContext";
 import { Minus, Plus, X } from "@phosphor-icons/react";
-import { ShoppingCartIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, ChevronRightIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
+import axios from "axios";
+import { config } from "@/libs/utils/config";
 
 interface CartComponentProps {
     variant?: "full" | "preview"; // 'full' for cart page, 'preview' for sidebar
@@ -17,7 +22,74 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         updateQuantity,
         removeFromCart,
     } = useCart();
+    const { logout } = useAuth();
+    const { openPanel: globalOpenPanel, closePanel: globalClosePanel } = useGlobalBottomPanel();
+    const [selectedAddress, setSelectedAddress] = useState(null);
+    const [addresses, setAddresses] = useState([]);
     const router = useRouter();
+    const backendApi = config.backend_url;
+    
+    // Fetch addresses on mount
+    useEffect(() => {
+        fetchAddresses();
+    }, []);
+
+    const fetchAddresses = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (token) {
+                const parsedToken = JSON.parse(token);
+                const res = await axios.post(`${backendApi}/getAddress`, { token: parsedToken });
+                setAddresses(res.data?.addresses || []);
+            }
+        } catch (err) {
+            console.error("Failed to fetch addresses", err);
+            if (err.response?.status === 500) logout();
+        }
+    };
+
+    // Address selection panel content
+    const getAddressPanel = () => (
+        <div className="space-y-2 p-4">
+            <p className="text-sm text-gray-600 font-medium mb-3">Your Addresses</p>
+            {addresses && addresses.length > 0 ? (
+                addresses.map((addr, idx) => (
+                    <div
+                        key={idx}
+                        onClick={() => {
+                            setSelectedAddress(idx);
+                            setTimeout(() => globalClosePanel(), 300);
+                        }}
+                        className={`p-3 border rounded-md cursor-pointer transition-all relative ${
+                            selectedAddress === idx
+                                ? "border-green-500 bg-green-50"
+                                : "border-gray-200 bg-white hover:border-gray-300"
+                        }`}
+                    >
+                        {selectedAddress === idx && (
+                            <div className="absolute top-2 right-2">
+                                <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-xs">✓</span>
+                                </div>
+                            </div>
+                        )}
+                        <p className="font-semibold text-sm text-gray-900">{addr.name}</p>
+                        <p className="text-xs text-gray-600 mt-1">{addr.contact}</p>
+                        <p className="text-xs text-gray-600">{addr.city}, {addr.state} {addr.pincode}</p>
+                    </div>
+                ))
+            ) : null}
+            
+            {/* Add New Address Button */}
+            <button
+                onClick={() => router.push("/saved-address")}
+                className="w-full p-3 border-2 border-dashed border-green-300 rounded-md text-green-700 font-semibold text-sm hover:bg-green-50 transition-colors flex items-center justify-center gap-2 mt-3"
+            >
+                <Plus weight="bold" className="w-4 h-4" />
+                Add New Address
+            </button>
+        </div>
+    );
 
     if (!cartItems?.length) {
         return (
@@ -60,24 +132,35 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
 
     return (
         <div className={variant === "full" ? "flex flex-col h-full bg-white" : "space-y-3"}>
-            {/* Header - Full Variant */}
-            {/* {variant === "full" && (
-                <div className="px-4 py-3 border-b border-gray-100 sticky top-0 bg-white">
+            {/* Cart Header - Full Variant */}
+            {variant === "full" && (
+                <div className="sticky top-[-1] z-10 px-4 py-3 border-b border-gray-200 bg-white">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-lg font-bold text-gray-900">My Cart</h1>
-                            <p className="text-xs text-gray-500 mt-0.5">{cartItems.length} items</p>
+                        <div className="flex items-center gap-4">
+                            <div className="text-center">
+                                <p className="text-xs text-gray-600 font-medium">Items</p>
+                                <p className="text-lg font-bold text-gray-900">{cartItems.length}</p>
+                            </div>
+                            <div className="w-px h-8 bg-gray-200"></div>
+                            <div className="text-center">
+                                <p className="text-xs text-gray-600 font-medium">Quantity</p>
+                                <p className="text-lg font-bold text-green-600">{totalQuantity} kg</p>
+                            </div>
                         </div>
-                        <div className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-xs font-bold">
-                            {totalQuantity} kg
-                        </div>
+                        <button
+                            onClick={() => router.push("/webapp")}
+                            className="px-3 py-2 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold rounded-md hover:bg-green-100 transition-colors flex items-center gap-1.5"
+                        >
+                            <Plus weight="bold" className="w-4 h-4" />
+                            Add More
+                        </button>
                     </div>
                 </div>
-            )} */}
+            )}
 
             {/* Scrollable Items Container */}
-            <div className={variant === "full" ? "flex-1 overflow-y-auto pb-32 px-4 pt-3" : ""}>
-                <div className={`space-y-3 ${variant === "full" ? "" : ""}`}>
+            <div className={variant === "full" ? "flex-1 overflow-y-auto pb-32" : ""}>
+                <div className={`space-y-3 ${variant === "full" ? "px-4 pt-4" : ""}`}>
                     {cartItems.map((item, i) => {
                         const qty = getItemQuantity(item);
                         const price = getItemPrice(item);
@@ -169,31 +252,34 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                 </div>
             </div>
 
-            {/* Bottom Summary - Fixed */}
+            {/* Fixed Checkout Bar - Above Bottom Navbar */}
             {variant === "full" && (
-                <div className="bg-white border-t border-gray-200 p-4 shadow-md">
-                    <div className="flex items-center justify-start gap-2 mb-4">
-                        <div className="h-5 w-1.5 bg-green-500 rounded-full">
-                        </div>
-                        <p className="text-md text-black font-bold">Cart Summary</p>
-                    </div>
-                    <div className="max-w-xl mx-auto">
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div className="bg-green-50 rounded-md p-3 border border-green-200">
-                                <p className="text-xs text-gray-600 font-medium">Total Quantity</p>
-                                <p className="text-2xl font-bold text-green-600 mt-1">{totalQuantity} kg</p>
+                <div className="fixed bottom-19 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+                    {/* Place Order Row */}
+                    <div className="px-4 py-3 flex items-center gap-2 min-w-0">
+                        {/* Selected Address Display */}
+                        <button
+                            onClick={() => globalOpenPanel(
+                                "Select Delivery Address",
+                                getAddressPanel()
+                            )}
+                            className="flex-1 flex items-center gap-2 min-w-0 text-left hover:bg-gray-50 transition-colors py-1"
+                        >
+                            <MapPinIcon className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs text-gray-600 leading-tight">Deliver to</p>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                                    {selectedAddress !== null && addresses[selectedAddress]
+                                        ? `${addresses[selectedAddress].name}, ${addresses[selectedAddress].city}`
+                                        : "Select"}
+                                </p>
                             </div>
-                            <div className="bg-blue-50 rounded-md p-3 border border-blue-200">
-                                <p className="text-xs text-gray-600 font-medium">Total Items</p>
-                                <p className="text-2xl font-bold text-blue-600 mt-1">{cartItems.length}</p>
-                            </div>
-                        </div>
+                        </button>
 
-                        {/* Checkout Button */}
-                        <button className="w-full py-3 px-4 bg-green-50 border border-green-400 text-green-600 font-semibold rounded-md flex items-center justify-center gap-2 cursor-pointer">
-                            <span>Checkout</span>
-                            <ChevronRightIcon className="w-5 h-5" />
+                        {/* Place Order Button */}
+                        <button className="px-3 sm:px-6 py-2.5 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap text-xs sm:text-sm flex-shrink-0">
+                            <span>Place Order</span>
+                            <ChevronRightIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
                     </div>
                 </div>
