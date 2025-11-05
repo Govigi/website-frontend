@@ -14,6 +14,7 @@ import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
+import ServiceWorkerRegister from "@/components/core/ServiceWorkerRegister";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
@@ -61,8 +62,14 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#16a34a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Govigi" />
       </head>
       <body className={`${poppins.className} antialiased md:overflow-auto overflow-hidden`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+        <ServiceWorkerRegister />
         <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
