@@ -160,7 +160,7 @@ export default function PWADebug() {
             <h2 className="text-xl font-bold text-yellow-700 mb-3">⚠️ Important Notes</h2>
             <ul className="text-sm space-y-2 text-gray-700">
               <li>✅ All items should show GREEN checkmarks</li>
-              <li>⚠️ HTTP won't show install prompt (localhost is OK for testing)</li>
+              <li>⚠️ HTTP won&apos;t show install prompt (localhost is OK for testing)</li>
               <li>📱 Mobile Chrome usually shows prompt after 2-3 visits</li>
               <li>🔄 Try hard refresh: Ctrl+Shift+R (or Cmd+Shift+R on Mac)</li>
               <li>🗑️ Clear site data from Chrome: Settings → Cookies → {window.location.hostname}</li>
@@ -172,7 +172,7 @@ export default function PWADebug() {
           <div className="mt-8 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
             <h2 className="text-xl font-bold text-blue-700 mb-3">💡 Manual Installation</h2>
             <p className="text-sm text-gray-700 mb-4">
-              If automatic prompt doesn't show, you can manually install:
+              If automatic prompt doesn&apos;t show, you can manually install:
             </p>
             <button
               onClick={() => {
