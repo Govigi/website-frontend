@@ -28,6 +28,7 @@ self.addEventListener('install', event => {
     ])
   );
   self.skipWaiting();
+  console.log('[Service Worker] Skip waiting triggered - will control page immediately');
 });
 
 // Activate Service Worker
@@ -43,9 +44,11 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+      console.log('[Service Worker] Claiming all clients');
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
 // Fetch Event - Network first for API, Cache first for static assets
