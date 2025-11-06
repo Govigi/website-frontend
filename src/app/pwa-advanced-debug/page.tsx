@@ -320,7 +320,7 @@ export default function PWADebugAdvanced() {
               <li>2. Deploy to production with HTTPS enabled</li>
               <li>3. Test on mobile device (wait 2-3 visits)</li>
               <li>4. Look for &quot;Install app&quot; prompt in Chrome menu (⋮)</li>
-              <li>5. On iOS, use Share → "Add to Home Screen"</li>
+              <li>5. On iOS, use Share → &quot;Add to Home Screen&quot;</li>
             </ol>
           </div>
         </div>
