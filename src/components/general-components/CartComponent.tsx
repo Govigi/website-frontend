@@ -21,6 +21,7 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         decreaseQuantity,
         updateQuantity,
         removeFromCart,
+        clearCart,
     } = useCart();
     const { logout } = useAuth();
     const { openPanel: globalOpenPanel, closePanel: globalClosePanel } = useGlobalBottomPanel();
@@ -184,8 +185,9 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
             const res = await axios.post(`${backendApi}/createOrder`, orderPayload);
 
             if (res.status === 200 || res.status === 201) {
-                // Clear cart
+                // Clear cart from both localStorage and context
                 localStorage.removeItem("cart");
+                clearCart();
                 
                 // Show success message and redirect
                 alert("Order placed successfully!");
