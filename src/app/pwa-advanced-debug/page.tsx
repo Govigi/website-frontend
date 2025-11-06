@@ -297,7 +297,7 @@ export default function PWADebugAdvanced() {
                   <li>Hard refresh: Ctrl+Shift+R or Cmd+Shift+R</li>
                   <li>Clear site data: Chrome settings → Privacy → Cookies</li>
                   <li>Check DevTools console for errors</li>
-                  <li>On mobile, check Chrome menu (⋮) → "Install app"</li>
+                  <li>On mobile, check Chrome menu (⋮) → &quot;Install app&quot;</li>
                 </ul>
               </div>
               <div>
@@ -319,7 +319,7 @@ export default function PWADebugAdvanced() {
               <li>1. If showing ✅ INSTALLABLE - everything is ready</li>
               <li>2. Deploy to production with HTTPS enabled</li>
               <li>3. Test on mobile device (wait 2-3 visits)</li>
-              <li>4. Look for "Install app" prompt in Chrome menu (⋮)</li>
+              <li>4. Look for &quot;Install app&quot; prompt in Chrome menu (⋮)</li>
               <li>5. On iOS, use Share → "Add to Home Screen"</li>
             </ol>
           </div>
