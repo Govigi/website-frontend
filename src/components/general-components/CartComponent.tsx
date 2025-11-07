@@ -22,6 +22,7 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         decreaseQuantity,
         updateQuantity,
         removeFromCart,
+        clearCart,
     } = useCart();
     const { isAuthenticated, logout } = useAuth();
     const { showAlert } = useAlert();
