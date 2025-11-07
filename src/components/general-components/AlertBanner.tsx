@@ -15,10 +15,10 @@ export const AlertBanner: React.FC = () => {
   const alert = alerts[0];
 
   const typeStyles = {
-    info: "bg-blue-50 border border-blue-300 text-blue-900",
-    warning: "bg-yellow-50 border border-yellow-300 text-yellow-900",
-    error: "bg-red-50 border border-red-300 text-red-900",
-    success: "bg-green-50 border border-green-300 text-green-900",
+    info: "bg-blue-50 border-b border-blue-300 text-blue-800",
+    warning: "bg-yellow-50 border border-yellow-300 text-yellow-800",
+    error: "bg-red-50 border border-red-300 text-red-800",
+    success: "bg-green-50 border border-green-300 text-green-800",
   };
 
   const iconStyles = {
@@ -29,10 +29,10 @@ export const AlertBanner: React.FC = () => {
   };
 
   const actionButtonStyles = {
-    info: "bg-blue-600 hover:bg-blue-700 text-white",
-    warning: "bg-yellow-600 hover:bg-yellow-700 text-white",
-    error: "bg-red-600 hover:bg-red-700 text-white",
-    success: "bg-green-600 hover:bg-green-700 text-white",
+    info: "text-blue-900 underline cursor-pointer",
+    warning: "text-yellow-900 underline cursor-pointer",
+    error: "text-red-900 underline cursor-pointer",
+    success: "text-green-900 underline cursor-pointer",
   };
 
   const getIcon = () => {
@@ -47,7 +47,7 @@ export const AlertBanner: React.FC = () => {
         );
       case "error":
         return (
-          <XCircleIcon className={`w-5 h-5 ${iconStyles.error}`} />
+            <XCircleIcon className={`w-5 h-5 ${iconStyles.error}`} />
         );
       case "success":
         return (
@@ -58,27 +58,25 @@ export const AlertBanner: React.FC = () => {
 
   return (
     <div 
-      className={`w-full ${typeStyles[alert.type]} transition-all duration-300 px-2 py-1 rounded-lg`}
+      className={`w-full ${typeStyles[alert.type]} transition-all duration-300 px-2 py-1`}
     >
       <div className={`flex items-center gap-3 ${!alert.dismissible ? "flex-row-reverse" : ""}`}>
-        {/* Icon */}
+
         <div className="flex-shrink-0">
           {getIcon()}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           {alert.title && (
-            <p className="font-semibold text-sm">
+            <p className="font-semibold text-xs">
               {alert.title}
             </p>
           )}
-          <p className={`text-sm ${alert.title ? "opacity-90" : "pt-2"}`}>
+          <p className={`text-xs ${alert.title ? "opacity-90" : "pt-2"}`}>
             {alert.message}
           </p>
         </div>
 
-        {/* Action Button or Close Button */}
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           {alert.action && (
             <button
@@ -86,7 +84,7 @@ export const AlertBanner: React.FC = () => {
                 alert.action?.onClick();
                 removeAlert(alert.id);
               }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${actionButtonStyles[alert.type]}`}
+              className={`px-2 py-1 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${actionButtonStyles[alert.type]}`}
             >
               {alert.action.text}
             </button>
@@ -104,7 +102,6 @@ export const AlertBanner: React.FC = () => {
         </div>
       </div>
 
-      {/* Alert Count Indicator */}
       {alerts.length > 1 && (
         <div className="text-xs opacity-75 mt-2 ml-8">
           +{alerts.length - 1} more alert{alerts.length - 1 > 1 ? "s" : ""}

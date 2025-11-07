@@ -6,13 +6,14 @@ import "./globals.css";
 import Header from "../components/general-components/Header";
 import BottomNavbar from "../components/general-components/BottomNavbar";
 import ShoppingHeader from "@/components/general-components/ShoppingHeader";
+import { AlertBanner } from "@/components/general-components/AlertBanner";
 import { CartProvider } from "../components/core/Cart/CartContext";
 import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
 import { LoginModalProvider } from "@/libs/context/LoginModalContext";
 import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { AlertProvider } from "@/libs/context/AlertContext";
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import ProgressBar from "@/components/general-components/ProgressBar";
 import ServiceWorkerRegister from "@/components/core/ServiceWorkerRegister";
 
@@ -28,6 +29,9 @@ const poppins = Poppins({
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
+  const headerWrapperRef = useRef<HTMLDivElement | null>(null);
+  const bottomWrapperRef = useRef<HTMLDivElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
 
   const showWebAppNavbar =
     pathname.startsWith("/webapp") ||
@@ -56,6 +60,32 @@ export default function RootLayout({ children }) {
     return "";
   };
 
+  // Dynamically size the scrollable main area to fit between header and bottom nav
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const root = document.documentElement;
+
+    const recompute = () => {
+      const headerH = headerWrapperRef.current?.offsetHeight ?? 0;
+      const bottomH = bottomWrapperRef.current?.offsetHeight ?? 0;
+      root.style.setProperty("--header-h", `${headerH}px`);
+      root.style.setProperty("--bottom-h", `${bottomH}px`);
+    };
+
+    recompute();
+
+    const ro = new ResizeObserver(() => recompute());
+    if (headerWrapperRef.current) ro.observe(headerWrapperRef.current);
+    if (bottomWrapperRef.current) ro.observe(bottomWrapperRef.current);
+    window.addEventListener("resize", recompute);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", recompute);
+    };
+  }, [pathname]);
+
   return (
     <html lang="en">
       <head>
@@ -70,9 +100,17 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Govigi" />
       </head>
-      <body className={`${poppins.className} antialiased md:overflow-auto overflow-hidden`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <body
+        className={`${poppins.className} antialiased`}
+        style={{
+          height: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         <ServiceWorkerRegister />
-        <ProgressBar/>
+        <ProgressBar />
         <ToastProvider>
           <AlertProvider>
             <AuthProvider>
@@ -80,27 +118,30 @@ export default function RootLayout({ children }) {
                 <LoginModalProvider>
                   <BottomPanelProvider>
                     <Suspense fallback={null}>
-                      {/* Header Section */}
-                      {showWebAppNavbar ? (
-                        <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} />
-                      ) : (
-                        <Header />
-                      )}
+                      <div id="header-wrapper" ref={headerWrapperRef} className="flex-shrink-0">
+                        <AlertBanner />
+                        {showWebAppNavbar ? (
+                          <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} />
+                        ) : (
+                          <Header />
+                        )}
+                      </div>
 
-                      {/* Main Scrollable Content */}
                       <main
-                        className="flex-1 overflow-y-auto overflow-x-hidden md:overflow-visible"
+                        id="page-content"
+                        ref={mainRef}
+                        className="overflow-y-auto overflow-x-hidden md:overflow-visible"
                         style={{
                           WebkitOverflowScrolling: "touch",
                           minHeight: 0,
+                          height: "calc(100dvh - var(--header-h, 0px) - var(--bottom-h, 0px))",
                         }}
                       >
                         {children}
                       </main>
 
-                      {/* Bottom Navigation (fixed at bottom) */}
                       {(showWebAppNavbar || isProfilePage) && (
-                        <div className="flex-shrink-0">
+                        <div id="bottom-navbar-wrapper" ref={bottomWrapperRef} className="flex-shrink-0">
                           <BottomNavbar />
                         </div>
                       )}

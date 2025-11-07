@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
 import axios from "axios";
 import { config } from "@/libs/utils/config";
+import { useLoginModal } from "@/libs/context/LoginModalContext";
 
 interface CartComponentProps {
     variant?: "full" | "preview"; // 'full' for cart page, 'preview' for sidebar
@@ -34,6 +35,7 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
     const router = useRouter();
     const backendApi = config.backend_url;
     const alertShownRef = useRef(false);
+    const {open: openLoginModal} = useLoginModal();
 
     // Show alert in header when not authenticated and on full variant (only once per component mount)
     useEffect(() => {
@@ -54,7 +56,7 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                 action:{
                     text: "Sign In",
                     onClick: () => {
-                        router.push("/login");
+                        openLoginModal();
                     }
                 }
             });

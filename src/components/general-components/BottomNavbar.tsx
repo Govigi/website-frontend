@@ -12,7 +12,6 @@ import { usePathname } from "next/navigation";
 export default function BottomNavbar() {
   const pathname = usePathname();
 
-  // Hide navbar on cart page for better checkout UX
   if (pathname === "/cart") {
     return null;
   }
@@ -58,7 +57,6 @@ export default function BottomNavbar() {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden">
       <ul className="flex justify-around items-center py-2">
         {navItems.map(({ href, icon: Icon, label, activeColor, inactiveColor }) => {
-          // Check if pathname starts with the href (handles nested routes)
           const isActive = pathname === href || pathname.startsWith(href + "/");
 
           return (

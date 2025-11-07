@@ -91,7 +91,7 @@ export default function ViewAll({ webapp }) {
     : 0;
 
   return (
-    <section className="h-[calc(100vh-90px)] flex flex-col bg-white overflow-hidden">
+    <section className="h-full min-h-0 flex flex-col bg-white overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-20 md:w-24 lg:w-28 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           <div className="py-3 md:py-4 px-1 md:px-2 w-full">

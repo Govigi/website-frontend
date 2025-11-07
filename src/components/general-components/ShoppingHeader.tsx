@@ -9,7 +9,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { ListBulletIcon } from "@heroicons/react/24/solid";
 import { useCart } from "../core/Cart/CartContext";
-import { AlertBanner } from "./AlertBanner";
 import Image from "next/image";
 import Link from "next/link";
 import SidePanel from "./SidePanel";
@@ -82,7 +81,7 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
 
     return (
         <>
-            <header className="p-3 md:p-0 w-full bg-white sticky top-0 z-50 shadow-xs">
+            <header className="p-2 md:p-0 w-full bg-white sticky top-0 z-50 shadow-xs">
 
                 <div className="hidden sm:flex items-center justify-between px-8 gap-4 py-4 bg-white/80 backdrop-blur-md">
                     <Link href="/webapp">
@@ -140,7 +139,7 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                 </div>
 
                 {/* Mobile Header */}
-                <div className="sm:hidden flex items-center justify-between py-2 bg-white/80 backdrop-blur-md">
+                <div className="sm:hidden flex items-center justify-between bg-white/80 backdrop-blur-md">
                     {isWebApp ? (
                         // Mobile /webapp page - Search + Cart
                         <div className="flex items-center justify-between w-full gap-3">
@@ -203,7 +202,6 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                         </div>
                     )}
                 </div>
-                <AlertBanner />
             </header>
             <SidePanel
                 open={panelOpen}

@@ -98,9 +98,13 @@ export default function ProductCard({
     <div className="group relative bg-white border-b border-gray-200
       px-3 sm:px-4 py-3 sm:py-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full">
       {getDiscountPercentage() > 0 && (
-        <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-sm">
-          -{getDiscountPercentage()}%
-        </span>
+        <div className="absolute top-2 left-0 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-r-lg shadow-md overflow-hidden">
+          <div className="px-3 py-1.5 flex items-center justify-center whitespace-nowrap">
+            <span className="text-[11px] sm:text-xs font-bold tracking-wide">
+              {getDiscountPercentage()}% OFF
+            </span>
+          </div>
+        </div>
       )}
 
       <div className="relative flex justify-center items-center w-full h-28 sm:h-28 mb-3 mt-4">
@@ -126,15 +130,28 @@ export default function ProductCard({
         )}
       </div>
 
-      <div className="flex-1 text-left space-y-1">
+      <div className="flex-1 text-left space-y-1.5">
         <h3 className="font-medium text-sm sm:text-base text-gray-900 line-clamp-2">
           {item.name}
         </h3>
         <p className="text-gray-500 text-xs">1 Kg</p>
+
+        {/* Price Display */}
+        <div className="flex items-baseline gap-1 pt-1">
+          <span className="text-sm font-semibold text-gray-900">
+            ₹{item.price || 0}
+          </span>
+          {item.originalPrice && item.originalPrice > item.price && (
+            <span className="text-xs text-gray-400 line-through">
+              ₹{item.originalPrice}
+            </span>
+          )}
+        </div>
+
         {isOutOfStock ? (
           <p className="text-xs text-red-500 font-medium">Out of Stock</p>
         ) : isLowStock ? (
-          <p className="text-xs text-orange-500 font-medium">
+          <p className="text-xs text-yellow-600 font-medium">
             Only {item.stock} left
           </p>
         ) : null}
@@ -143,18 +160,6 @@ export default function ProductCard({
       {/* Footer */}
       {webapp && (
         <div className="mt-3 pt-2 border-t border-dashed border-gray-100 flex justify-end items-center">
-          {/* Price */}
-          {/* <div className="flex flex-col items-start">
-            <span className="text-sm font-semibold text-gray-800">
-              {formatPrice(item.price)}
-            </span>
-            {item.originalPrice && item.originalPrice > item.price && (
-              <span className="text-[11px] text-gray-400 line-through">
-                {formatPrice(item.originalPrice)}
-              </span>
-            )}
-          </div> */}
-
           {!isInCart ? (
             <button
               onClick={() => toggleWeightModal(true)}
