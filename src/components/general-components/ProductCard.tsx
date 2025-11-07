@@ -7,6 +7,7 @@ import { useToast } from "../../libs/context/ToastContext";
 import { Loader2 } from "lucide-react";
 import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/24/solid";
+import { PlusIcon } from "@phosphor-icons/react";
 
 export default function ProductCard({
   item,
@@ -94,16 +95,14 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-200
-      p-3 sm:p-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full">
-      {/* Discount badge */}
+    <div className="group relative bg-white border-b border-gray-200
+      px-3 sm:px-4 py-3 sm:py-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full">
       {getDiscountPercentage() > 0 && (
         <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-sm">
           -{getDiscountPercentage()}%
         </span>
       )}
 
-      {/* Product Image */}
       <div className="relative flex justify-center items-center w-full h-28 sm:h-28 mb-3 mt-4">
         {!imageLoaded && !imageError && (
           <Loader2 className="w-5 h-5 text-green-500 animate-spin" />
@@ -127,7 +126,6 @@ export default function ProductCard({
         )}
       </div>
 
-      {/* Product Details */}
       <div className="flex-1 text-left space-y-1">
         <h3 className="font-medium text-sm sm:text-base text-gray-900 line-clamp-2">
           {item.name}
@@ -144,7 +142,7 @@ export default function ProductCard({
 
       {/* Footer */}
       {webapp && (
-        <div className="mt-3 pt-2 border-t border-gray-100 flex justify-end items-center">
+        <div className="mt-3 pt-2 border-t border-dashed border-gray-100 flex justify-end items-center">
           {/* Price */}
           {/* <div className="flex flex-col items-start">
             <span className="text-sm font-semibold text-gray-800">
@@ -157,21 +155,22 @@ export default function ProductCard({
             )}
           </div> */}
 
-          {/* Cart Action */}
           {!isInCart ? (
             <button
               onClick={() => toggleWeightModal(true)}
               disabled={isOutOfStock || isLoading}
-              className={`w-[50%] h-[34px] flex items-center justify-center rounded-md border font-medium text-xs sm:text-sm transition-all
+              className={`h-[32px] w-[32px] flex items-center justify-center rounded-md border font-semibold transition-all
                 cursor-pointer
                 ${isOutOfStock
                   ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
                   : isLoading
-                    ? "bg-green-400 text-white border-green-400"
-                    : "bg-white text-green-600 border-green-600 hover:bg-green-50"
+                    ? "bg-green-500 text-white border-green-500"
+                    : "bg-green-50 text-green-600 border-green-600 hover:bg-green-50"
                 }`}
             >
-              {isLoading ? "Adding..." : "ADD"}
+              {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 
+                <PlusIcon size={14} weight="bold" />
+              }
             </button>
           ) : (
             <div className="w-full flex justify-center">

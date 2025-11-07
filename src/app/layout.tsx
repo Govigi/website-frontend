@@ -11,8 +11,8 @@ import { AuthProvider } from "../libs/context/AuthContext";
 import { ToastProvider } from "../libs/context/ToastContext";
 import { LoginModalProvider } from "@/libs/context/LoginModalContext";
 import { BottomPanelProvider } from "@/components/core/BottomPanel";
+import { AlertProvider } from "@/libs/context/AlertContext";
 import { Suspense } from "react";
-import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -41,10 +41,8 @@ export default function RootLayout({ children }) {
     pathname.startsWith("/profile");
 
   const isProfilePage = pathname.startsWith("/profile");
-
-  // Determine page title and if it's webapp
   const isWebApp = pathname.startsWith("/webapp");
-  
+
   const getPageTitle = () => {
     if (pathname.startsWith("/cart")) return "Cart";
     if (pathname.startsWith("/wishlist")) return "Wishlist";
@@ -61,25 +59,49 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
       </head>
-      <body className={`${poppins.className} antialiased md:overflow-auto overflow-hidden`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-        <ProgressBar/>
+      <body
+        className={`${poppins.className} antialiased flex flex-col h-screen overflow-hidden bg-white`}
+      >
+        <ProgressBar />
         <ToastProvider>
-          <AuthProvider>
-            <CartProvider>
-              <LoginModalProvider>
-                <BottomPanelProvider>
-                  <Suspense fallback={null}>
-                    {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
-                    <main className="flex-1 overflow-y-auto md:pb-0 md:flex-none md:overflow-visible">
-                      {children}
-                    </main>
-                    {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
-                  </Suspense>
-                </BottomPanelProvider>
-              </LoginModalProvider>
-            </CartProvider>
-          </AuthProvider>
+          <AlertProvider>
+            <AuthProvider>
+              <CartProvider>
+                <LoginModalProvider>
+                  <BottomPanelProvider>
+                    <Suspense fallback={null}>
+                      {/* Header Section */}
+                      {showWebAppNavbar ? (
+                        <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} />
+                      ) : (
+                        <Header />
+                      )}
+
+                      {/* Main Scrollable Content */}
+                      <main
+                        className="flex-1 overflow-y-auto overflow-x-hidden md:overflow-visible"
+                        style={{
+                          WebkitOverflowScrolling: "touch",
+                          minHeight: 0,
+                        }}
+                      >
+                        {children}
+                      </main>
+
+                      {/* Bottom Navigation (fixed at bottom) */}
+                      {(showWebAppNavbar || isProfilePage) && (
+                        <div className="flex-shrink-0">
+                          <BottomNavbar />
+                        </div>
+                      )}
+                    </Suspense>
+                  </BottomPanelProvider>
+                </LoginModalProvider>
+              </CartProvider>
+            </AuthProvider>
+          </AlertProvider>
         </ToastProvider>
       </body>
     </html>

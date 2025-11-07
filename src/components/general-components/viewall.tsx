@@ -91,7 +91,7 @@ export default function ViewAll({ webapp }) {
     : 0;
 
   return (
-    <section className="h-[calc(100vh-90px)] flex flex-col bg-gray-50 overflow-hidden">
+    <section className="h-[calc(100vh-90px)] flex flex-col bg-white overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-20 md:w-24 lg:w-28 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           <div className="py-3 md:py-4 px-1 md:px-2 w-full">
@@ -151,7 +151,7 @@ export default function ViewAll({ webapp }) {
         </aside>
         
         {/* Products Area - Scrollable */}
-        <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="flex-1 overflow-y-auto bg-white">
           {loading ? (
             <div className="flex items-center justify-center h-full py-20">
               <div className="text-center">
@@ -187,21 +187,30 @@ export default function ViewAll({ webapp }) {
 
               {/* Responsive Grid */}
               <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-2 pb-15 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4 lg:gap-5">
-                  {products.map((item) => (
-                    <ProductCard
-                      key={item._id}
-                      item={item}
-                      onAddToCart={addToCart}
-                      webapp={webapp}
-                      cartItems={cartItems}
-                      incrementQuantity={incrementQuantity}
-                      decreaseQuantity={decreaseQuantity}
-                      updateQuantity={updateQuantity}
-                      removeFromCart={removeFromCart}
-                      onQuickView={undefined}
-                    />
-                  ))}
+                <div className="grid grid-cols-2 pb-15 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-0">
+                  {products.map((item, index) => {
+                    const isFirstColumn = index % (typeof window !== 'undefined' ? 
+                      (window.innerWidth >= 1536 ? 6 : 
+                       window.innerWidth >= 1280 ? 5 :
+                       window.innerWidth >= 1024 ? 4 :
+                       window.innerWidth >= 768 ? 3 :
+                       window.innerWidth >= 640 ? 3 : 2) : 2) === 0;
+                    return (
+                      <div key={item._id} className={isFirstColumn ? "" : "border-l border-gray-200"}>
+                        <ProductCard
+                          item={item}
+                          onAddToCart={addToCart}
+                          webapp={webapp}
+                          cartItems={cartItems}
+                          incrementQuantity={incrementQuantity}
+                          decreaseQuantity={decreaseQuantity}
+                          updateQuantity={updateQuantity}
+                          removeFromCart={removeFromCart}
+                          onQuickView={undefined}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

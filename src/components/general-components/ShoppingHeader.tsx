@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ListBulletIcon } from "@heroicons/react/24/solid";
 import { useCart } from "../core/Cart/CartContext";
+import { AlertBanner } from "./AlertBanner";
 import Image from "next/image";
 import Link from "next/link";
 import SidePanel from "./SidePanel";
@@ -81,9 +82,9 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
 
     return (
         <>
-            <header className="w-full bg-white/80 backdrop-blur-md shadow-xs sticky top-0 z-50">
-                {/* Desktop Header - No changes */}
-                <div className="hidden sm:flex items-center justify-between px-8 gap-4 rounded-b-4xl">
+            <header className="p-3 md:p-0 w-full bg-white sticky top-0 z-50 shadow-xs">
+
+                <div className="hidden sm:flex items-center justify-between px-8 gap-4 py-4 bg-white/80 backdrop-blur-md">
                     <Link href="/webapp">
                         <Image
                             src="/LOGO-png 3.svg"
@@ -139,7 +140,7 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                 </div>
 
                 {/* Mobile Header */}
-                <div className="sm:hidden flex items-center justify-between px-4 py-3 rounded-b-4xl">
+                <div className="sm:hidden flex items-center justify-between py-2 bg-white/80 backdrop-blur-md">
                     {isWebApp ? (
                         // Mobile /webapp page - Search + Cart
                         <div className="flex items-center justify-between w-full gap-3">
@@ -177,7 +178,7 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                     ) : (
                         // Mobile other pages - Chevron + Title + Cart
                         <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => router.back()}
                                     className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
@@ -202,6 +203,7 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                         </div>
                     )}
                 </div>
+                <AlertBanner />
             </header>
             <SidePanel
                 open={panelOpen}

@@ -2,10 +2,11 @@
 
 import { useCart } from "../core/Cart/CartContext";
 import { useAuth } from "@/libs/context/AuthContext";
+import { useAlert } from "@/libs/context/AlertContext";
 import { Minus, Plus, X, MapPinArea } from "@phosphor-icons/react";
-import { ShoppingCartIcon, ChevronRightIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
+import { ShoppingCartIcon, ChevronRightIcon, CheckBadgeIcon, TruckIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
 import axios from "axios";
 import { config } from "@/libs/utils/config";
@@ -22,7 +23,8 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         updateQuantity,
         removeFromCart,
     } = useCart();
-    const { logout } = useAuth();
+    const { isAuthenticated, logout } = useAuth();
+    const { showAlert } = useAlert();
     const { openPanel: globalOpenPanel, closePanel: globalClosePanel } = useGlobalBottomPanel();
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [addresses, setAddresses] = useState([]);
@@ -30,8 +32,35 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const router = useRouter();
     const backendApi = config.backend_url;
-    
-    // Fetch addresses on mount
+    const alertShownRef = useRef(false);
+
+    // Show alert in header when not authenticated and on full variant (only once per component mount)
+    useEffect(() => {
+        // Reset alert ref when variant changes
+        if (variant !== "full") {
+            alertShownRef.current = false;
+        }
+    }, [variant]);
+
+    useEffect(() => {
+        if (!isAuthenticated && variant === "full" && !alertShownRef.current) {
+            showAlert({
+                type: "info",
+                title: "Sign in to place your order",
+                message: "",
+                dismissible: true,
+                dedupeKey: "cart-login-info",
+                action:{
+                    text: "Sign In",
+                    onClick: () => {
+                        router.push("/login");
+                    }
+                }
+            });
+            alertShownRef.current = true;
+        }
+    }, [isAuthenticated, variant]);
+
     useEffect(() => {
         fetchAddresses();
     }, []);
@@ -44,7 +73,6 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                 const res = await axios.post(`${backendApi}/getAddress`, { token: parsedToken });
                 const fetchedAddresses = res.data?.addresses || [];
                 setAddresses(fetchedAddresses);
-                // Set first address as default
                 if (fetchedAddresses.length > 0) {
                     setSelectedAddress(0);
                 }
@@ -55,7 +83,6 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         }
     };
 
-    // Address selection panel content
     const getAddressPanel = () => (
         <div className="space-y-3 p-4">
             <div className="flex items-center justify-between mb-3">
@@ -76,11 +103,10 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                             setSelectedAddress(idx);
                             setTimeout(() => globalClosePanel(), 300);
                         }}
-                        className={`p-3 border rounded-md cursor-pointer transition-all relative ${
-                            selectedAddress === idx
-                                ? "border-green-500 bg-gradient-to-br from-green-100"
-                                : "border-gray-200 bg-white hover:border-gray-300"
-                        }`}
+                        className={`p-3 border rounded-md cursor-pointer transition-all relative ${selectedAddress === idx
+                            ? "border-green-500 bg-gradient-to-br from-green-100"
+                            : "border-gray-200 bg-white hover:border-gray-300"
+                            }`}
                         style={selectedAddress === idx ? {
                             backgroundImage: "radial-gradient(circle at top right, #dcfce7, #ffffff)"
                         } : {}}
@@ -184,13 +210,10 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
             const res = await axios.post(`${backendApi}/createOrder`, orderPayload);
 
             if (res.status === 200 || res.status === 201) {
-                // Clear cart
                 localStorage.removeItem("cart");
-                
-                // Show success message and redirect
+
                 alert("Order placed successfully!");
-                
-                // Redirect to order history after 1 second
+
                 setTimeout(() => {
                     router.push("/ordershistory");
                 }, 1000);
@@ -207,151 +230,275 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
         <div className={variant === "full" ? "flex flex-col h-full bg-white" : "space-y-3"}>
             {/* Scrollable Items Container */}
             <div className={variant === "full" ? "flex-1 overflow-y-auto pb-32" : ""}>
-                <div className={`space-y-3 ${variant === "full" ? "pt-4" : ""}`}>
-                    {cartItems.map((item, i) => {
-                        const qty = getItemQuantity(item);
-                        const price = getItemPrice(item);
-                        const lineTotal = price * qty;
+                {/* Cart Items Card */}
+                {variant === "full" && (
+                    <div className="border border-gray-200 rounded-md overflow-hidden mt-4">
+                        <div className="bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+                            <TruckIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                            <span className="text-sm text-gray-900 font-medium">Delivery by tomorrow</span>
+                        </div>
 
-                        return (
-                            <div
-                                key={i}
-                                className="relative bg-white rounded-md border border-gray-200 transition-all overflow-hidden"
-                            >
-                                {/* Card Content */}
-                                <div className="p-3 flex gap-3 items-start">
-                                    {/* Image */}
-                                    <div className="flex-shrink-0 relative">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-md border border-gray-200 flex items-center justify-center overflow-hidden">
-                                            <img
-                                                src={getItemImage(item)}
-                                                alt={getItemName(item)}
-                                                className="w-full h-full object-contain p-1"
-                                                onError={(e) => {
-                                                    e.currentTarget.src = "/placeholder-product.png";
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
+                        <div className="space-y-0 p-0">
+                            {cartItems.map((item, i) => {
+                                const qty = getItemQuantity(item);
+                                const price = getItemPrice(item);
+                                const lineTotal = price * qty;
 
-                                    {/* Product Info & Controls */}
-                                    <div className="flex-1 flex flex-col justify-between min-w-0">
-                                        <div>
-                                            <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
-                                                {getItemName(item)}
-                                            </h3>
-                                        </div>
-
-                                        {/* Quantity Selector */}
-                                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                            <div className="inline-flex items-center gap-1 bg-gray-100 rounded-md p-1">
-                                                <button
-                                                    onClick={() =>
-                                                        qty <= 1 ? removeFromCart(item) : decreaseQuantity(item)
-                                                    }
-                                                    className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-gray-700 transition-all active:scale-95 font-semibold text-sm"
-                                                >
-                                                    <Minus weight="bold" className="w-3 h-3" />
-                                                </button>
-
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={inputValues[i] !== undefined ? inputValues[i] : qty}
-                                                    onChange={(e) => {
-                                                        // Allow user to type freely - store raw input value
-                                                        setInputValues(prev => ({
-                                                            ...prev,
-                                                            [i]: e.target.value
-                                                        }));
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        const finalValue = e.target.value;
-                                                        
-                                                        // Clear the input state
-                                                        setInputValues(prev => {
-                                                            const newState = { ...prev };
-                                                            delete newState[i];
-                                                            return newState;
-                                                        });
-                                                        
-                                                        // Only process if user entered something
-                                                        if (finalValue === "") {
-                                                            removeFromCart(item);
-                                                        } else {
-                                                            const newQty = Number(finalValue);
-                                                            if (!Number.isNaN(newQty) && newQty > 0) {
-                                                                updateQuantity(item, newQty);
-                                                            } else if (newQty === 0 || Number.isNaN(newQty)) {
-                                                                removeFromCart(item);
-                                                            }
-                                                        }
-                                                    }}
-                                                    className="w-8 h-7 text-center border-0 text-xs font-bold text-gray-900 bg-white rounded-md focus:outline-none"
-                                                />
-
-                                                <button
-                                                    onClick={() => incrementQuantity(item)}
-                                                    disabled={item.stock && qty >= item.stock}
-                                                    className="w-7 h-7 flex items-center justify-center rounded-md bg-green-500 text-white transition-all active:scale-95 font-semibold text-sm disabled:opacity-50"
-                                                >
-                                                    <Plus weight="bold" className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                            <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
-                                                {qty} kg
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Remove Button - Always visible */}
-                                    <button
-                                        onClick={() => removeFromCart(item)}
-                                        className="p-2 rounded-md bg-red-50 text-red-500 transition-all flex-shrink-0"
-                                        title="Remove item"
+                                return (
+                                    <div
+                                        key={i}
+                                        className="relative bg-white transition-all overflow-hidden border-b border-gray-200 last:border-b-0"
                                     >
-                                        <X weight="bold" className="w-4 h-4" />
-                                    </button>
+                                        {/* Card Content */}
+                                        <div className="p-3 flex gap-3 items-start">
+                                            {/* Image */}
+                                            <div className="flex-shrink-0 relative">
+                                                <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-md border border-gray-200 flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={getItemImage(item)}
+                                                        alt={getItemName(item)}
+                                                        className="w-full h-full object-contain p-1"
+                                                        onError={(e) => {
+                                                            e.currentTarget.src = "/placeholder-product.png";
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Product Info & Controls */}
+                                            <div className="flex-1 flex flex-col justify-between min-w-0">
+                                                <div>
+                                                    <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
+                                                        {getItemName(item)}
+                                                    </h3>
+                                                </div>
+
+                                                {/* Quantity Selector */}
+                                                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                    <div className="inline-flex items-center gap-1 bg-gray-100 rounded-md p-1">
+                                                        <button
+                                                            onClick={() =>
+                                                                qty <= 1 ? removeFromCart(item) : decreaseQuantity(item)
+                                                            }
+                                                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-gray-700 transition-all active:scale-95 font-semibold text-sm"
+                                                        >
+                                                            <Minus weight="bold" className="w-3 h-3" />
+                                                        </button>
+
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={inputValues[i] !== undefined ? inputValues[i] : qty}
+                                                            onChange={(e) => {
+                                                                // Allow user to type freely - store raw input value
+                                                                setInputValues(prev => ({
+                                                                    ...prev,
+                                                                    [i]: e.target.value
+                                                                }));
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                const finalValue = e.target.value;
+
+                                                                // Clear the input state
+                                                                setInputValues(prev => {
+                                                                    const newState = { ...prev };
+                                                                    delete newState[i];
+                                                                    return newState;
+                                                                });
+
+                                                                // Only process if user entered something
+                                                                if (finalValue === "") {
+                                                                    removeFromCart(item);
+                                                                } else {
+                                                                    const newQty = Number(finalValue);
+                                                                    if (!Number.isNaN(newQty) && newQty > 0) {
+                                                                        updateQuantity(item, newQty);
+                                                                    } else if (newQty === 0 || Number.isNaN(newQty)) {
+                                                                        removeFromCart(item);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="w-8 h-7 text-center border-0 text-xs font-bold text-gray-900 bg-white rounded-md focus:outline-none"
+                                                        />
+
+                                                        <button
+                                                            onClick={() => incrementQuantity(item)}
+                                                            disabled={item.stock && qty >= item.stock}
+                                                            className="w-7 h-7 flex items-center justify-center rounded-md bg-green-500 text-white transition-all active:scale-95 font-semibold text-sm disabled:opacity-50"
+                                                        >
+                                                            <Plus weight="bold" className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                    <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+                                                        {qty} kg
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => removeFromCart(item)}
+                                                className="p-2 rounded-md bg-red-50 text-red-500 transition-all flex-shrink-0"
+                                                title="Remove item"
+                                            >
+                                                <X weight="bold" className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {variant !== "full" && (
+                    <div className="space-y-3">
+                        {cartItems.map((item, i) => {
+                            const qty = getItemQuantity(item);
+                            const price = getItemPrice(item);
+                            const lineTotal = price * qty;
+
+                            return (
+                                <div
+                                    key={i}
+                                    className="relative bg-white rounded-md border border-gray-200 transition-all overflow-hidden"
+                                >
+                                    {/* Card Content */}
+                                    <div className="p-3 flex gap-3 items-start">
+                                        {/* Image */}
+                                        <div className="flex-shrink-0 relative">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-md border border-gray-200 flex items-center justify-center overflow-hidden">
+                                                <img
+                                                    src={getItemImage(item)}
+                                                    alt={getItemName(item)}
+                                                    className="w-full h-full object-contain p-1"
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = "/placeholder-product.png";
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Product Info & Controls */}
+                                        <div className="flex-1 flex flex-col justify-between min-w-0">
+                                            <div>
+                                                <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
+                                                    {getItemName(item)}
+                                                </h3>
+                                            </div>
+
+                                            {/* Quantity Selector */}
+                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                <div className="inline-flex items-center gap-1 bg-gray-100 rounded-md p-1">
+                                                    <button
+                                                        onClick={() =>
+                                                            qty <= 1 ? removeFromCart(item) : decreaseQuantity(item)
+                                                        }
+                                                        className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-gray-700 transition-all active:scale-95 font-semibold text-sm"
+                                                    >
+                                                        <Minus weight="bold" className="w-3 h-3" />
+                                                    </button>
+
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={inputValues[i] !== undefined ? inputValues[i] : qty}
+                                                        onChange={(e) => {
+                                                            // Allow user to type freely - store raw input value
+                                                            setInputValues(prev => ({
+                                                                ...prev,
+                                                                [i]: e.target.value
+                                                            }));
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            const finalValue = e.target.value;
+
+                                                            // Clear the input state
+                                                            setInputValues(prev => {
+                                                                const newState = { ...prev };
+                                                                delete newState[i];
+                                                                return newState;
+                                                            });
+
+                                                            // Only process if user entered something
+                                                            if (finalValue === "") {
+                                                                removeFromCart(item);
+                                                            } else {
+                                                                const newQty = Number(finalValue);
+                                                                if (!Number.isNaN(newQty) && newQty > 0) {
+                                                                    updateQuantity(item, newQty);
+                                                                } else if (newQty === 0 || Number.isNaN(newQty)) {
+                                                                    removeFromCart(item);
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="w-8 h-7 text-center border-0 text-xs font-bold text-gray-900 bg-white rounded-md focus:outline-none"
+                                                    />
+
+                                                    <button
+                                                        onClick={() => incrementQuantity(item)}
+                                                        disabled={item.stock && qty >= item.stock}
+                                                        className="w-7 h-7 flex items-center justify-center rounded-md bg-green-500 text-white transition-all active:scale-95 font-semibold text-sm disabled:opacity-50"
+                                                    >
+                                                        <Plus weight="bold" className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                                <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+                                                    {qty} kg
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Remove Button - Always visible */}
+                                        <button
+                                            onClick={() => removeFromCart(item)}
+                                            className="p-2 rounded-md bg-red-50 text-red-500 transition-all flex-shrink-0"
+                                            title="Remove item"
+                                        >
+                                            <X weight="bold" className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* Fixed Checkout Bar - Above Bottom (No navbar on cart page) */}
             {variant === "full" && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
                     <div className="px-3 py-3">
-                        {/* Address Selection */}
-                        <div className="w-full pb-3 mb-3 border-b border-gray-200">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-start gap-2 flex-1 min-w-0">
-                                    <MapPinArea size={32} color="#16a34a" weight="duotone" className="flex-shrink-0 mt-0.5" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-gray-900 mb-0.5">
-                                            Delivering to {selectedAddress !== null && addresses[selectedAddress]
-                                                ? addresses[selectedAddress].name
-                                                : "Select Address"}
-                                        </p>
-                                        {selectedAddress !== null && addresses[selectedAddress] && (
-                                            <p className="text-xs text-gray-500 line-clamp-1">
-                                                {addresses[selectedAddress].city}, {addresses[selectedAddress].state} {addresses[selectedAddress].pincode}
+                        {/* Address Selection - Only show if authenticated */}
+                        {isAuthenticated && (
+                            <div className="w-full pb-3 mb-3 border-b border-gray-200">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                                        <MapPinArea size={32} color="#16a34a" weight="duotone" className="flex-shrink-0 mt-0.5" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-gray-900 mb-0.5">
+                                                Delivering to {selectedAddress !== null && addresses[selectedAddress]
+                                                    ? addresses[selectedAddress].name
+                                                    : "Select Address"}
                                             </p>
-                                        )}
+                                            {selectedAddress !== null && addresses[selectedAddress] && (
+                                                <p className="text-xs text-gray-500 line-clamp-1">
+                                                    {addresses[selectedAddress].city}, {addresses[selectedAddress].state} {addresses[selectedAddress].pincode}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
+                                    <button
+                                        onClick={() => globalOpenPanel(
+                                            "Select Delivery Address",
+                                            getAddressPanel()
+                                        )}
+                                        className="text-xs font-semibold text-green-600 hover:text-green-700 transition-colors whitespace-nowrap flex-shrink-0"
+                                    >
+                                        Change
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => globalOpenPanel(
-                                        "Select Delivery Address",
-                                        getAddressPanel()
-                                    )}
-                                    className="text-xs font-semibold text-green-600 hover:text-green-700 transition-colors whitespace-nowrap flex-shrink-0"
-                                >
-                                    Change
-                                </button>
                             </div>
-                        </div>
+                        )}
 
                         {/* Action Buttons Row */}
                         <div className="flex items-center gap-2">
@@ -365,10 +512,11 @@ export default function CartComponent({ variant = "preview" }: CartComponentProp
                             </button>
 
                             {/* Place Order Button */}
-                            <button 
+                            <button
                                 onClick={handlePlaceOrder}
-                                disabled={isPlacingOrder || selectedAddress === null}
+                                disabled={isPlacingOrder || selectedAddress === null || !isAuthenticated}
                                 className="flex-1 px-3 sm:px-6 py-2.5 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-1 cursor-pointer text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={!isAuthenticated ? "Please sign in to place an order" : ""}
                             >
                                 {isPlacingOrder ? (
                                     <>
