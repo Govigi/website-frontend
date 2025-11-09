@@ -54,7 +54,7 @@ export default function BottomNavbar() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden">
+    <nav className="w-full bg-white border-t border-gray-200 md:hidden flex-shrink-0">
       <ul className="flex justify-around items-center py-2">
         {navItems.map(({ href, icon: Icon, label, activeColor, inactiveColor }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");

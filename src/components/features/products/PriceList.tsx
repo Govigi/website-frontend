@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useCart } from "../core/Cart/CartContext";
+import { useCart } from "@/components/core/Cart/CartContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { config } from "@/libs/utils/config";
@@ -104,7 +104,7 @@ export default function PriceList() {
           </div>
 
           <p className="text-center text-gray-700 text-lg mb-6">
-            No fruits available at this time. We’ll restock soon!
+            No fruits available at this time. We&apos;ll restock soon!
           </p>
 
           {/* <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">

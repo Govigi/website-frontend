@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/libs/context/AuthContext";
 import { useLoginModal } from "@/libs/context/LoginModalContext";
 import {
@@ -15,8 +15,44 @@ import {
 } from "@phosphor-icons/react";
 import { ChevronRightIcon, UserIcon } from "@heroicons/react/24/outline";
 import { UserCircle2Icon } from "lucide-react";
+import axios from "axios";
+import { config } from "@/libs/utils/config";
 
 export default function ProfileOverview() {
+
+    const [totalOrders, setTotalOrders] = useState(0);
+    const backendApi = config.backend_url;
+    
+    const fetchOrderCount = async () => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            console.warn('Token not found in localStorage');
+            return;
+        }
+
+        try {
+            let cleanToken = token;
+            if (token.startsWith('"') && token.endsWith('"')) {
+                cleanToken = JSON.parse(token);
+            }
+
+            const res = await fetch(`${backendApi}/getCustomerOrderCount`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: cleanToken }),
+            });
+            const data = await res.json();
+            setTotalOrders(data.orderCount);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrderCount();
+    }, []);
+
     const [userData] = useState({
         name: "John Doe",
         email: "john.doe@example.com",
@@ -31,7 +67,7 @@ export default function ProfileOverview() {
     const profileStats = [
         {
             label: "Orders Placed",
-            value: "12",
+            value: totalOrders.toString(),
             icon: ShoppingCartSimple,
             color: "text-blue-600",
             bgColor: "bg-blue-50",

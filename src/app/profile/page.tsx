@@ -74,19 +74,15 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 sm:p-6">
-      {/* Mobile: show the compact ProfileOverview page */}
+    <div className="p-4 sm:p-6">
       <div className="max-w-screen-sm mx-auto block lg:hidden">
         <ProfileOverview />
       </div>
 
-      {/* Desktop: show rich profile dashboard */}
       <div className="max-w-6xl mx-auto hidden lg:block">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Profile & Stats */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Profile Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <div className="flex flex-col items-center text-center">
                 <div className="relative">
@@ -123,7 +119,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Quick Stats */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Shopping Stats
@@ -141,11 +136,10 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div
-                      className={`text-sm font-medium ${
-                        stat.trend === "up"
+                      className={`text-sm font-medium ${stat.trend === "up"
                           ? "text-green-600"
                           : "text-red-600"
-                      }`}
+                        }`}
                     >
                       {stat.change}
                     </div>
@@ -155,9 +149,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Right Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-5 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-4">
@@ -212,9 +204,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Addresses & Orders Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* Saved Addresses */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Saved Addresses</h3>
@@ -228,17 +218,15 @@ export default function ProfilePage() {
                   {savedAddresses.map((addr) => (
                     <div
                       key={addr.id}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        addr.primary
+                      className={`p-4 rounded-xl border-2 transition-all ${addr.primary
                           ? "border-green-200 bg-green-50"
                           : "border-gray-100 bg-gray-50 hover:border-gray-200"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start gap-3">
                         <MapPinIcon
-                          className={`h-5 w-5 mt-0.5 ${
-                            addr.primary ? "text-green-600" : "text-gray-400"
-                          }`}
+                          className={`h-5 w-5 mt-0.5 ${addr.primary ? "text-green-600" : "text-gray-400"
+                            }`}
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -257,7 +245,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Recent Orders */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
@@ -290,11 +277,10 @@ export default function ProfilePage() {
                         </div>
                         <div className="text-right">
                           <div
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              order.status === "Delivered"
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === "Delivered"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-yellow-100 text-yellow-800"
-                            }`}
+                              }`}
                           >
                             {order.status}
                           </div>
@@ -309,7 +295,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Personalized Offers */}
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>

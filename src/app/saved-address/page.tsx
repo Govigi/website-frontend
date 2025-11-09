@@ -141,8 +141,7 @@ export default function SavedAddress() {
   return (
     <section className="min-h-screen px-4 sm:px-6 py-6 sm:py-8 bg-white">
       <div className="max-w-5xl mx-auto">
-        {/* Add Button at Top */}
-        {!loading && (
+        {!loading && addresses.length > 0 && (
           <div className="mb-6 pb-6 border-b border-gray-200 text-left">
             <button
               onClick={() => {

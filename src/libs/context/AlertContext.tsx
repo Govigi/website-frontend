@@ -7,19 +7,18 @@ export interface Alert {
   type: "info" | "warning" | "error" | "success";
   title?: string;
   message: string;
-  /** Optional key to prevent duplicate alerts of same logical type */
   dedupeKey?: string;
   action?: {
     text: string;
     onClick: () => void;
   };
   dismissible?: boolean;
-  autoClose?: number; // milliseconds (0 or undefined = no auto close / permanent)
+  autoClose?: number;
 }
 
 interface AlertContextType {
   alerts: Alert[];
-  showAlert: (alert: Omit<Alert, "id">) => string; // Returns alert ID
+  showAlert: (alert: Omit<Alert, "id">) => string; 
   removeAlert: (id: string) => void;
   clearAllAlerts: () => void;
 }
@@ -39,30 +38,29 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const showAlert = useCallback(
     (alertData: Omit<Alert, "id">) => {
-      let createdId = "";
+      const id = `alert-${Date.now()}-${Math.random()}`;
+      
       setAlerts((prev) => {
-        // If dedupeKey provided and existing alert with same key -> skip
-        if (alertData.dedupeKey && prev.some(a => a.dedupeKey === alertData.dedupeKey)) {
-          return prev; // No new alert
+        let updated = prev;
+        if (alertData.dedupeKey) {
+          updated = prev.filter(a => a.dedupeKey !== alertData.dedupeKey);
         }
-        const id = `alert-${Date.now()}-${Math.random()}`;
-        createdId = id;
+
         const newAlert: Alert = {
           ...alertData,
           id,
           dismissible: alertData.dismissible !== false,
         };
-        return [...prev, newAlert];
+        return [...updated, newAlert];
       });
 
-      // Schedule auto close if needed (after state enqueue)
-      if (alertData.autoClose && alertData.autoClose > 0 && createdId) {
+      if (alertData.autoClose && alertData.autoClose > 0) {
         setTimeout(() => {
-          removeAlert(createdId);
+          removeAlert(id);
         }, alertData.autoClose);
       }
 
-      return createdId || "";
+      return id;
     },
     [removeAlert]
   );

@@ -1,5 +1,5 @@
 "use client";
-import PriceList from "../components/general-components/PriceList";
+import { PriceList } from "@/components/features/products";
 import Bulk from "../components/general-components/Bulk";
 import QualitySection from "../components/general-components/QualitySection";
 import BulkBenefitsSection from "../components/general-components/BulkBenefitsSection";

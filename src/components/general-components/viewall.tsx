@@ -4,7 +4,7 @@ import { config } from "@/libs/utils/config";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useCart } from "../core/Cart/CartContext";
-import ProductCard from "./ProductCard";
+import { ProductCard } from "../features/products";
 import { useSearchParams } from "next/navigation";
 
 export default function ViewAll({ webapp }) {

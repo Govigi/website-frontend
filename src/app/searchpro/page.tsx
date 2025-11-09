@@ -4,7 +4,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../components/core/Cart/CartContext";
-import ProductCard from "../../components/general-components/ProductCard";
+import { ProductCard } from "@/components/features/products";
 import { useAuth } from "../../libs/context/AuthContext";
 import { config } from "@/libs/utils/config";
 

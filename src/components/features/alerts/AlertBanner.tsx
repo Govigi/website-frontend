@@ -57,8 +57,8 @@ export const AlertBanner: React.FC = () => {
   };
 
   return (
-    <div 
-      className={`w-full ${typeStyles[alert.type]} transition-all duration-300 px-2 py-1`}
+    <div
+      className={`w-full ${typeStyles[alert.type]} transition-all duration-300 px-2 py-1 animate-slide-down-in`}
     >
       <div className={`flex items-center gap-3 ${!alert.dismissible ? "flex-row-reverse" : ""}`}>
 
