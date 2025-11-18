@@ -4,6 +4,21 @@ import { useEffect } from "react";
 
 export default function ServiceWorkerRegister() {
   useEffect(() => {
+    // Disable Service Worker in development mode to allow fresh content
+    const isDev = process.env.NODE_ENV === "development";
+    
+    if (isDev) {
+      console.log("⏳ Development mode detected - Service Worker registration disabled for fresh content");
+      // Unregister any existing service workers in dev mode
+      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(reg => reg.unregister());
+          console.log("✓ Unregistered all Service Workers in dev mode");
+        });
+      }
+      return;
+    }
+
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })

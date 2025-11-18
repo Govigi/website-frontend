@@ -39,7 +39,6 @@ export function AddressForm({
     }
   );
 
-  // Reset form when initialData changes
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
@@ -71,7 +70,6 @@ export function AddressForm({
 
   return (
     <div className="p-4 space-y-4">
-      {/* Input Fields */}
       {fields.map(({ field, label, required }) => (
         <div key={field}>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
@@ -88,7 +86,6 @@ export function AddressForm({
         </div>
       ))}
 
-      {/* Landmark Textarea */}
       <div>
         <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
           Landmark/Additional Details <span className="text-red-500">*</span>
@@ -103,7 +100,6 @@ export function AddressForm({
         />
       </div>
 
-      {/* Action Buttons */}
       <div className="flex gap-3 pt-4 border-t border-gray-200">
         <button
           className="flex-1 px-5 py-3 border border-gray-300 text-gray-700 font-medium text-sm rounded-md hover:bg-gray-50 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"

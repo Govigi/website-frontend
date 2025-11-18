@@ -12,15 +12,16 @@ import {
   XCircleIcon,
   MapPinIcon,
   DocumentTextIcon,
-  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import Link from "next/link";
+import axios from "axios";
 
+// Helper functions
 const getItemPrice = (item) => item?.price ?? 0;
 const getItemName = (item) => item?.name || "Product";
 const getItemImage = (item) => item?.image || "/placeholder-product.png";
 const getItemQuantity = (item) => item?.quantityKg ?? 1;
 
+// Status Pill UI
 const StatusBadge = ({ status }) => {
   const statusStyles = {
     delivered: {
@@ -68,25 +69,23 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const backendApi = config.backend_url;
 
+  // Fetch order details
   useEffect(() => {
     if (!orderId) {
       setLoading(false);
       return;
     }
 
-    const fetchOrderDetails = async () => {
+    const fetchOrder = async () => {
       try {
-        const res = await fetch(`${backendApi}/getOrder/${orderId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        const res = await fetch(`${backendApi}/getOrder/${orderId}`);
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch order");
-        }
+        if (!res.ok) throw new Error("Failed to fetch order");
 
         const data = await res.json();
         setOrder(data);
@@ -98,8 +97,33 @@ export default function OrderDetailPage() {
       }
     };
 
-    fetchOrderDetails();
-  }, [orderId, backendApi]);
+    fetchOrder();
+  }, [orderId]);
+
+  // Handle Invoice
+  const handleGetInvoice = () => {
+    setInvoiceLoading(true);
+
+    axios
+      .get(`${backendApi}/downloadInvoice/${orderId}`, { responseType: "blob" })
+      .then((res) => {
+        const blob = new Blob([res.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `invoice_${orderId}.pdf`;
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(() => {
+        alert("Cannot generate invoice. Please try again.");
+      })
+      .finally(() => {
+        setInvoiceLoading(false);
+      });
+  };
 
   if (loading) {
     return (
@@ -129,133 +153,212 @@ export default function OrderDetailPage() {
     );
   }
 
-  const handleReorder = () => {
-    console.log("Reordering items...");
-    // TODO: Add items back to cart
-  };
-
-  const handleGetInvoice = () => {
-    console.log("Getting invoice...");
-    // TODO: Generate invoice
-  };
-
-  const productListMaxHeight = "max-h-[50vh] sm:max-h-none";
-  const totalItems = order?.items?.length || 0;
-  const totalQuantity = order?.items?.reduce((sum, item) => sum + (getItemQuantity(item) || 0), 0) || 0;
+  const totalItems = order.items?.length || 0;
+  const totalQuantity = order.items?.reduce(
+    (sum, item) => sum + getItemQuantity(item),
+    0
+  );
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20 md:pb-0">
-      <main className="p-4 sm:p-6 sm:max-w-7xl sm:mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      {/* MAIN PAGE */}
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
+            {/* LEFT COLUMN */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="bg-white border border-gray-200 rounded-md p-5">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200">
+                  <div className="flex flex-row items-center gap-2">
+                    <div className="w-1.5 h-10 bg-green-600 rounded-full"></div>
+                    <div className="flex flex-col">
+                      <h1 className="text-lg font-bold text-gray-900">
+                        Order #{order._id.slice(-8)}
+                      </h1>
+                      <p className="text-sm text-gray-500">
+                        Placed on{" "}
+                        {new Date(order.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
 
-          {/* Left Column: Order Items */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white border border-gray-200 rounded-md p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200">
-                <div className="flex flex-row items-center gap-2">
-                  <div className="w-1.5 h-10 bg-green-600 rounded-full"></div>
-                  <div className="flex flex-col gap-0.5">
-                    <h1 className="text-lg font-bold text-gray-900">Order #{order?._id?.slice(-8)}</h1>
-                    <p className="text-sm text-gray-500">
-                      Placed on {order?.createdAt ? new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
+                  <StatusBadge status={order.status} />
+                </div>
+
+                {/* Items */}
+                <div className="divide-y divide-gray-200">
+                  {order.items.map((item, i) => (
+                    <div key={i} className="flex gap-4 py-4">
+                      <img
+                        src={getItemImage(item)}
+                        alt={getItemName(item)}
+                        className="w-16 h-16 rounded-md object-contain bg-gray-50"
+                      />
+
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">
+                          {getItemName(item)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Qty: {getItemQuantity(item)} kg
+                        </p>
+                      </div>
+
+                      <p className="font-semibold text-gray-900">
+                        ₹
+                        {(getItemPrice(item) * getItemQuantity(item)).toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="lg:col-span-1 space-y-4 mt-4 lg:mt-0">
+              {/* Summary */}
+              <div className="bg-white border border-gray-200 rounded-md p-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
+                  <div className="w-1.5 h-5 bg-green-600 rounded-full"></div>
+                  <h2 className="text-base font-bold text-gray-900">
+                    Order Summary
+                  </h2>
+                </div>
+
+                <div className="space-y-2 mt-3 text-sm">
+                  <div className="flex justify-between">
+                    <p className="text-gray-600">Subtotal</p>
+                    <p className="font-medium text-gray-900">
+                      ₹{order.totalAmount.toFixed(2)}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-200">
+                    <p>Total</p>
+                    <p className="text-green-600">
+                      ₹{order.totalAmount.toFixed(2)}
                     </p>
                   </div>
                 </div>
-                <div className="mt-2 sm:mt-0">
-                  <StatusBadge status={order?.status} />
+              </div>
+
+              {/* Address */}
+              <div className="bg-white border border-gray-200 rounded-md p-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
+                  <MapPinIcon className="w-5 h-5 text-gray-500" />
+                  <h2 className="text-base font-bold text-gray-900">
+                    Delivery Address
+                  </h2>
+                </div>
+
+                <div className="mt-3 text-sm space-y-1 text-gray-600">
+                  <p className="font-semibold text-gray-800">
+                    {order.name || "N/A"}
+                  </p>
+                  <p>{order.contact}</p>
+
+                  {order.address?.[0] && (
+                    <>
+                      <p>{order.address[0].landmark}</p>
+                      <p>
+                        {order.address[0].city}, {order.address[0].state} -{" "}
+                        {order.address[0].pincode}
+                      </p>
+                      <p>{order.address[0].email}</p>
+                    </>
+                  )}
                 </div>
               </div>
-              <div className={`divide-y divide-gray-200 overflow-y-auto no-scrollbar ${productListMaxHeight}`}>
-                {order?.items?.map((item, index) => (
-                  <div key={index} className="flex gap-4 py-4">
-                    <img 
-                      src={getItemImage(item)} 
-                      alt={getItemName(item)} 
-                      className="w-16 h-16 rounded-md object-contain bg-gray-50"
-                      onError={(e) => {
-                        e.currentTarget.src = "/api/placeholder/64/64";
-                      }}
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{getItemName(item)}</p>
-                      <p className="text-sm text-gray-500">Qty: {getItemQuantity(item)}</p>
-                    </div>
-                    <p className="font-semibold text-gray-900">₹{(getItemPrice(item) * getItemQuantity(item)).toFixed(2)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Right Column: Summary & Details */}
-          <div className="lg:col-span-1 space-y-4 mt-4 lg:mt-0">
-            <div className="bg-white border border-gray-200 rounded-md p-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-gray-200 flex-row justify-start">
-                <div className="w-1.5 h-5 bg-green-600 rounded-full"></div>
-                <h2 className="text-base font-bold text-gray-900">Order Summary</h2>
-              </div>
-              <div className="space-y-2 mt-3 text-sm">
-                <div className="flex justify-between">
-                  <p className="text-gray-600">Subtotal</p>
-                  <p className="font-medium text-gray-900">₹{order?.totalAmount?.toFixed(2) || "0.00"}</p>
-                </div>
-                <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-200 mt-2">
-                  <p className="text-gray-900">Total</p>
-                  <p className="text-green-600">₹{order?.totalAmount?.toFixed(2) || "0.00"}</p>
-                </div>
-              </div>
-            </div>
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button className="flex-1 flex items-center justify-center gap-2 bg-green-50 border border-green-300 text-green-700 hover:bg-green-100 px-4 py-2.5 rounded-md transition-colors text-sm font-semibold active:scale-95">
+                  <ShoppingBagIcon className="w-4 h-4" />
+                  Reorder
+                </button>
 
-            <div className="bg-white border border-gray-200 rounded-md p-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
-                <MapPinIcon className="w-5 h-5 text-gray-500" />
-                <h2 className="text-base font-bold text-gray-900">Delivery Address</h2>
+                <button
+                  onClick={handleGetInvoice}
+                  disabled={invoiceLoading}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md transition-colors text-sm font-semibold active:scale-95 ${
+                    invoiceLoading
+                      ? "bg-gray-100 border border-gray-200 text-gray-400"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {invoiceLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-4 w-4 text-gray-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                      Generating Invoice…
+                    </>
+                  ) : (
+                    <>
+                      <DocumentTextIcon className="w-4 h-4" />
+                      Get Invoice
+                    </>
+                  )}
+                </button>
               </div>
-              <div className="mt-3 text-sm space-y-1 text-gray-600">
-                <p className="font-semibold text-gray-800">{order?.name || "N/A"}</p>
-                <p>{order?.contact || "N/A"}</p>
-                {order?.address && order?.address[0] && (
-                  <>
-                    <p>{order.address[0].landmark || ""}</p>
-                    <p>{`${order.address[0].city || ""}, ${order.address[0].state || ""} - ${order.address[0].pincode || ""}`}</p>
-                    <p>{order.address[0].email || ""}</p>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-md p-4">
-              <div className="mb-3 text-sm">
-                <p className="text-gray-600">Items: <span className="font-semibold text-gray-900">{totalItems}</span></p>
-                <p className="text-gray-600">Total Quantity: <span className="font-semibold text-gray-900">{totalQuantity} kg</span></p>
-                {order?.paymentMethod && (
-                  <p className="text-gray-600 mt-2">Payment: <span className="font-semibold text-gray-900">{order.paymentMethod}</span></p>
-                )}
-                {order?.scheduledDate && (
-                  <p className="text-gray-600 mt-1">Scheduled: <span className="font-semibold text-gray-900">{new Date(order.scheduledDate).toLocaleDateString()}</span></p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleReorder}
-                className="flex-1 flex items-center justify-center gap-2 bg-green-50 border border-green-300 text-green-700 hover:bg-green-100 px-4 py-2.5 rounded-md transition-colors text-sm font-semibold active:scale-95"
-              >
-                <ShoppingBagIcon className="w-4 h-4" />
-                Reorder
-              </button>
-              <button
-                onClick={handleGetInvoice}
-                className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-md transition-colors text-sm font-semibold active:scale-95"
-              >
-                <DocumentTextIcon className="w-4 h-4" />
-                Get Invoice
-              </button>
             </div>
           </div>
         </div>
       </main>
+
+      {/* FULL SCREEN LOADER */}
+      {invoiceLoading && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[999] flex items-center justify-center">
+          <div className="bg-white px-6 py-5 rounded-xl shadow-lg flex flex-col items-center gap-3 border border-gray-200">
+            <svg
+              className="animate-spin h-8 w-8 text-green-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+
+            <p className="text-gray-800 font-semibold text-sm">
+              Generating Invoice…
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -72,7 +72,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Govigi" />
       </head>
-      <body className={`${poppins.className} antialiased md:overflow-auto overflow-hidden`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <body className={`${poppins.className} antialiased overflow-hidden md:overflow-auto`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
         <ServiceWorkerRegister />
         <ProgressBar/>
         <ToastProvider>
@@ -82,7 +82,7 @@ export default function RootLayout({ children }) {
                 <BottomPanelProvider>
                   <Suspense fallback={null}>
                     {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
-                    <main className="flex-1 overflow-y-auto md:pb-0 md:flex-none md:overflow-visible">
+                    <main className="flex-1 overflow-y-auto pb-16 md:pb-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)" }}>
                       {children}
                     </main>
                     {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}

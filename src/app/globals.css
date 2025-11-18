@@ -22,7 +22,6 @@
 body {
   background: white;
   color: black;
-  font-family: var(--font-inter), sans-serif;
 }
 
 /* Remove spinner for Chrome, Safari, Edge, Opera */
