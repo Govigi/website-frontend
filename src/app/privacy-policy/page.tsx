@@ -10,7 +10,7 @@ export default function PrivacyPolicyPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 text-transparent bg-clip-text drop-shadow-sm">
-            GIVIGI — Privacy Policy
+            GOVIGI — Privacy Policy
           </h1>
           <p className="text-sm text-gray-600 mt-2">
             Last updated: <span className="font-semibold">{LAST_UPDATED}</span>
@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
                 1. Introduction
               </h2>
               <p>
-                Welcome to <strong>Givigi</strong>, owned and operated by
+                Welcome to <strong>Govigi</strong>, owned and operated by
                 <a
                   href="https://govigi.com"
                   className="text-green-600 font-medium hover:underline ml-1"
@@ -37,7 +37,7 @@ export default function PrivacyPolicyPage() {
                 application and website.
               </p>
               <p>
-                By accessing or using the Givigi app, you agree to the practices
+                By accessing or using the Govigi app, you agree to the practices
                 described in this policy.
               </p>
             </section>
@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
               </h2>
               <p>We use your data to:</p>
               <ul className="list-disc pl-6">
-                <li>Manage your Givigi business account</li>
+                <li>Manage your Govigi business account</li>
                 <li>Process and deliver orders</li>
                 <li>Verify business and delivery details</li>
                 <li>Enhance app experience and performance</li>
@@ -150,7 +150,7 @@ export default function PrivacyPolicyPage() {
                 8. Children’s Privacy
               </h2>
               <p>
-                Givigi is intended for adults (18+). We do not knowingly collect
+                Govigi is intended for adults (18+). We do not knowingly collect
                 information from minors.
               </p>
             </section>
@@ -217,7 +217,7 @@ export default function PrivacyPolicyPage() {
           </article>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            © {new Date().getFullYear()} Givigi — All rights reserved.
+            © {new Date().getFullYear()} Govigi — All rights reserved.
           </footer>
         </div>
       </div>
