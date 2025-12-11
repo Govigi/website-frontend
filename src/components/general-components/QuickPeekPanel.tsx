@@ -30,7 +30,7 @@ export default function QuickPeekPanel({ type, data, onClose }) {
     notifications: "Notifications",
     profile: "My Account",
     wishlist: "Wishlist",
-    orders: "My Orders",
+    orders: "Orders",
     wallet: "Wallet",
     addresses: "Saved Addresses",
   };
@@ -91,7 +91,7 @@ export default function QuickPeekPanel({ type, data, onClose }) {
   return (
     <div className="space-y-3">
       {/* Content preview */}
-      {type === "cart" && <CartComponent variant="preview" />}
+      {type === "cart" && <CartComponent />}
 
       {type === "notifications" && (
         <EmptyOrList

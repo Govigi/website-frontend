@@ -85,19 +85,16 @@ export default function SavedAddress() {
     }
   };
 
-  const handleAddNewAddress = async () => {
-    if (
-      !newAddress.name ||
-      !newAddress.contact ||
-      !newAddress.landmark ||
-      !newAddress.pincode
-    ) {
-      showToast("Please fill in all required fields.", "warning");
+  const handleAddNewAddress = async (data: AddressData) => {
+
+    if (!data.name || !data.contact || !data.landmark || !data.pincode) {
+      showToast("Please fill in all required fields.", "warn");
       return;
     }
 
     try {
-      const saved = await updateAddress(newAddress);
+      const saved = await updateAddress(data);
+
       if (!saved._id) {
         await fetchAddresses();
       } else {
@@ -106,20 +103,10 @@ export default function SavedAddress() {
       }
 
       closePanel();
-
-      setNewAddress({
-        name: "",
-        contact: "",
-        email: "",
-        city: "",
-        landmark: "",
-        state: "",
-        pincode: "",
-      });
     } catch (err) {
-      console.error("Failed to save address", err);
     }
   };
+
 
   const handleEditAddress = async (index, updatedAddress) => {
     const data = await EditAddress_context(index, updatedAddress);
@@ -141,7 +128,6 @@ export default function SavedAddress() {
   return (
     <section className="min-h-screen px-4 sm:px-6 py-6 sm:py-8 bg-white">
       <div className="max-w-5xl mx-auto">
-        {/* Add Button at Top */}
         {!loading && (
           <div className="mb-6 pb-6 border-b border-gray-200 text-left">
             <button
@@ -173,7 +159,6 @@ export default function SavedAddress() {
             </button>
           </div>
         )}
-        {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
@@ -183,7 +168,6 @@ export default function SavedAddress() {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && addresses.length === 0 && (
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-md p-12 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -222,7 +206,6 @@ export default function SavedAddress() {
           </div>
         )}
 
-        {/* Addresses Grid */}
         {!loading && addresses.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {addresses
@@ -236,21 +219,17 @@ export default function SavedAddress() {
                 return (
                   <div
                     key={addr._id}
-                    className={`border rounded-md overflow-hidden transition-all ${
-                      isSelected
-                        ? "border-green-400 bg-green-50 shadow-lg"
-                        : "border-gray-200 bg-white shadow-sm hover:shadow-md"
-                    }`}
+                    className={`border rounded-md overflow-hidden transition-all ${isSelected
+                      ? "border-green-400 bg-green-50 shadow-lg"
+                      : "border-gray-200 bg-white shadow-sm hover:shadow-md"
+                      }`}
                   >
-                    {/* Header with Name and Selection Indicator */}
-                    <div className={`px-5 py-4 border-b ${
-                      isSelected ? "bg-green-100 border-green-300" : "bg-gray-50 border-gray-200"
-                    }`}>
+                    <div className={`px-5 py-4 border-b ${isSelected ? "bg-green-100 border-green-300" : "bg-gray-50 border-gray-200"
+                      }`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1">
-                          <MapPinIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                            isSelected ? "text-green-600" : "text-gray-500"
-                          }`} />
+                          <MapPinIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${isSelected ? "text-green-600" : "text-gray-500"
+                            }`} />
                           <div>
                             <h3 className="font-semibold text-gray-900 text-sm">{addr.name}</h3>
                             <p className="text-xs text-gray-600 mt-0.5">{addr.city}, {addr.state}</p>
@@ -265,7 +244,6 @@ export default function SavedAddress() {
                       </div>
                     </div>
 
-                    {/* Content */}
                     <div className="px-5 py-4">
                       <div
                         onClick={() =>
@@ -303,40 +281,39 @@ export default function SavedAddress() {
                       </div>
                     </div>
 
-                    {/* Footer with Action Buttons */}
                     <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                        <button
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-medium transition-colors active:scale-95"
-                          onClick={() => {
-                            setEditAddressIndex(originalIndex);
-                            setEditAddress({ ...addr });
-                            globalOpenPanel(
-                              "Edit Address",
-                              <AddressForm
-                                mode="edit"
-                                initialData={addr}
-                                onSubmit={(data) => handleEditAddress(originalIndex, data)}
-                                onCancel={closePanel}
-                              />,
-                              { maxHeight: "90vh" }
-                            );
-                          }}
-                        >
-                          <PencilIcon className="w-4 h-4" />
-                          Edit
-                        </button>
-                        <button
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-md text-xs font-medium transition-colors active:scale-95"
-                          onClick={() => handleDeleteAddress(originalIndex)}
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                          Delete
-                        </button>
-                      </div>
+                      <button
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-medium transition-colors active:scale-95"
+                        onClick={() => {
+                          setEditAddressIndex(originalIndex);
+                          setEditAddress({ ...addr });
+                          globalOpenPanel(
+                            "Edit Address",
+                            <AddressForm
+                              mode="edit"
+                              initialData={addr}
+                              onSubmit={(data) => handleEditAddress(originalIndex, data)}
+                              onCancel={closePanel}
+                            />,
+                            { maxHeight: "90vh" }
+                          );
+                        }}
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-md text-xs font-medium transition-colors active:scale-95"
+                        onClick={() => handleDeleteAddress(originalIndex)}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 );
               })}
-            </div>
+          </div>
         )}
       </div>
     </section>

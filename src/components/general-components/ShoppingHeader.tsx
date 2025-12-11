@@ -66,6 +66,17 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
         setSearch(searchQuery);
     }, [searchQuery]);
 
+    // 🔹 Listen for openOrdersPanel event from CartComponent
+    useEffect(() => {
+        const handleOpenOrdersPanel = () => {
+            setPanelType("orders");
+            setPanelOpen(true);
+        };
+
+        window.addEventListener("openOrdersPanel", handleOpenOrdersPanel);
+        return () => window.removeEventListener("openOrdersPanel", handleOpenOrdersPanel);
+    }, []);
+
     // 🔹 Live update on typing
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -208,19 +219,19 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                 onClose={closePanel}
                 title={
                     panelType === "cart"
-                        ? "My Cart"
+                        ? "Cart"
                         : panelType === "notifications"
                             ? "Notifications"
                             : panelType === "wishlist"
                                 ? "Wishlist"
                                 : panelType === "orders"
-                                    ? "My Orders"
+                                    ? "Orders"
                                     : panelType === "wallet"
                                         ? "Wallet"
                                         : panelType === "addresses"
                                             ? "Saved Addresses"
                                             : panelType === "profile"
-                                                ? "My Account"
+                                                ? "Account"
                                                 : ""
                 }
             >

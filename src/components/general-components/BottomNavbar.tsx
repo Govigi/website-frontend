@@ -1,16 +1,10 @@
 "use client";
 import {
-  HomeIcon,
-  WalletIcon,
-  ShoppingBagIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
-import {
-  HomeIcon as HomeIconSolid,
-  WalletIcon as WalletIconSolid,
-  ShoppingBagIcon as ShoppingBagIconSolid,
-  UserIcon as UserIconSolid,
-} from "@heroicons/react/24/solid";
+  ShoppingBag,
+  Wallet,
+  User,
+  Receipt,
+} from "@phosphor-icons/react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,72 +12,76 @@ import { usePathname } from "next/navigation";
 export default function BottomNavbar() {
   const pathname = usePathname();
 
-  // Hide navbar on cart page for better checkout UX
   if (pathname === "/cart") {
     return null;
   }
 
-  type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
-
   const navItems: Array<{
     href: string;
     label: string;
-    outline: IconComponent;
-    solid: IconComponent;
+    icon: typeof ShoppingBag;
+    activeColor: string;
+    inactiveColor: string;
   }> = [
     {
       href: "/webapp",
       label: "Shop",
-      outline: ShoppingBagIcon,
-      solid: ShoppingBagIconSolid
+      icon: ShoppingBag,
+      activeColor: "#22c55e",
+      inactiveColor: "#6b7280"
     },
     {
       href: "/ordershistory",
       label: "Orders",
-      outline: ShoppingBagIcon,
-      solid: ShoppingBagIconSolid,
+      icon: Receipt,
+      activeColor: "#22c55e",
+      inactiveColor: "#6b7280"
     },
     {
       href: "/wallet",
       label: "Wallet",
-      outline: WalletIcon,
-      solid: WalletIconSolid,
+      icon: Wallet,
+      activeColor: "#22c55e",
+      inactiveColor: "#6b7280"
     },
     { 
       href: "/profile", 
       label: "Profile", 
-      outline: UserIcon, 
-      solid: UserIconSolid 
+      icon: User,
+      activeColor: "#22c55e",
+      inactiveColor: "#6b7280"
     },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 md:hidden">
+    <nav
+      className="w-full bg-white border-t border-gray-200 md:hidden flex-shrink-0 fixed bottom-0 left-0 right-0 z-30"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <ul className="flex justify-around items-center py-2">
-        {navItems.map(({ href, outline: OutlineIcon, solid: SolidIcon, label }) => {
-          // Check if pathname starts with the href (handles nested routes)
+        {navItems.map(({ href, icon: Icon, label, activeColor, inactiveColor }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");
 
           return (
             <li key={href} className="flex-1">
               <Link
                 href={href}
-                className="flex flex-col items-center p-1 transition-colors duration-200"
+                className="flex flex-col items-center justify-center py-2.5 transition-all duration-200"
                 aria-current={isActive ? "page" : undefined}
               >
-                <div
-                  className={"p-2 rounded-full mb-1 transition-all duration-300 w-12 h-8 flex items-center justify-center"}
-                >
-                  {isActive ? (
-                    <SolidIcon className="w-6 h-6 text-green-600" />
-                  ) : (
-                    <OutlineIcon className="w-6 h-6 text-gray-600" />
-                  )}
-                </div>
+                <Icon 
+                  size={22} 
+                  weight={isActive ? "duotone" : "regular"}
+                  color={isActive ? activeColor : inactiveColor}
+                  className="transition-colors duration-200 mb-1"
+                />
+                
                 <span
-                  className={
-                    "text-xs font-bold transition-colors duration-200 text-gray-700"
-                  }
+                  className="text-xs font-medium transition-colors duration-200"
+                  style={{
+                    color: isActive ? activeColor : inactiveColor,
+                    fontSize: "9px"
+                  }}
                 >
                   {label}
                 </span>
