@@ -151,7 +151,6 @@ export default function PriceList() {
                         incrementQuantity={incrementQuantity}
                         decreaseQuantity={decreaseQuantity}
                         webapp={undefined}
-                        setShowLogin={undefined}
                         onQuickView={undefined}
                         updateQuantity={undefined}
                         removeFromCart={undefined}

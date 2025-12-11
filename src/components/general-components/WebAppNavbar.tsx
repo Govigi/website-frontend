@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../libs/context/AuthContext";
 import { useCart } from "../core/Cart/CartContext";
 import Address from "./Address";
-import LoginCard from "./LoginCard";
+import { useLoginModal } from "@/libs/context/LoginModalContext";
 import QuickPeekPanel from "./QuickPeekPanel";
 import SidePanel from "./SidePanel";
 
@@ -28,7 +28,7 @@ export default function Header() {
   const { cartItems } = useCart();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
-  const [showLogin, setShowLogin] = useState(false);
+  const { open: openLogin } = useLoginModal();
   const [location, setLocation] = useState("");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -234,7 +234,7 @@ export default function Header() {
                     <UserCircle size={16} />
                     <span>My Account</span>
                   </div>
-                  <button
+                    <button
                     type="button"
                     onClick={() => {
                       openPanel("profile");
@@ -288,7 +288,7 @@ export default function Header() {
                   ) : (
                     <button
                       onClick={() => {
-                        setShowLogin(true);
+                        openLogin();
                         setShowProfileDropdown(false);
                       }}
                       className="w-full flex items-center gap-2 px-4 py-2 text-sm text-green-700 hover:bg-gray-100 cursor-pointer"
@@ -458,7 +458,7 @@ export default function Header() {
                     href="/login"
                     onClick={(e) => {
                       e.preventDefault();
-                      setShowLogin(true);
+                      openLogin();
                     }}
                     className="flex items-center gap-3 text-green-600"
                   >
@@ -486,12 +486,6 @@ export default function Header() {
           />
         )}
 
-        {/* login */}
-        <LoginCard
-          isOpen={showLogin}
-          onClose={() => setShowLogin(false)}
-          onLoginSuccess={undefined}
-        />
 
         {/* logout */}
         {showLogoutConfirm && (

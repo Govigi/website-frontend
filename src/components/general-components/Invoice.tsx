@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
@@ -123,9 +124,9 @@ export default function Invoice({
           )}
         </button>
 
-        <a href="/ordershistory" className="text-blue-600 font-medium">
+        <Link href="/ordershistory" className="text-blue-600 font-medium">
           Back
-        </a>
+        </Link>
       </div>
 
       {/* Invoice Content */}
