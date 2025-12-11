@@ -1,14 +1,20 @@
+// Corrected ProductCard with custom weight edit visibility fix
 "use client";
 import { config } from "@/libs/utils/config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../libs/context/AuthContext";
+import { useLoginModal } from "@/libs/context/LoginModalContext";
 import { useToast } from "../../libs/context/ToastContext";
+import { useGlobalBottomPanel } from "@/components/core/BottomPanel/BottomPanelContext";
+import { Loader2 } from "lucide-react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@phosphor-icons/react";
+import WeightPickerContent from "./WeightPickerContent";
 
 export default function ProductCard({
   item,
   onAddToCart,
   webapp,
-  setShowLogin,
   onQuickView,
   cartItems,
   incrementQuantity,
@@ -20,197 +26,189 @@ export default function ProductCard({
   const [isLoading, setIsLoading] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [showWeightModal, setShowWeightModal] = useState(false);
+
+  const popularWeights = [0.25, 0.5, 1, 2, 5, 10];
 
   const { showToast } = useToast();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { open: openLogin } = useLoginModal();
+  const { openPanel, closePanel } = useGlobalBottomPanel();
   const backendURL = config.backend_url;
 
-  // Cart info
+  // FIX: ensure custom weight is visible when editing existing item
   const cartItem = cartItems?.find((c) => c._id === item._id);
   const isInCart = !!cartItem;
   const cartQuantity = cartItem?.quantity || 0;
 
-  // Stock checks
+  useEffect(() => {
+    // no-op: initial values will be passed to reusable content
+  }, [isInCart, cartQuantity]);
+
   const isOutOfStock = item.stock === 0;
   const isLowStock = item.stock > 0 && item.stock <= 5;
 
-  // Helpers
-  const formatPrice = (price) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-
   const getDiscountPercentage = () =>
     item.originalPrice && item.originalPrice > item.price
-      ? Math.round(
-          ((item.originalPrice - item.price) / item.originalPrice) * 100
-        )
+      ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
       : 0;
 
-  // Close login popup if authenticated
-  useEffect(() => {
-    if (isAuthenticated && typeof setShowLogin === "function") {
-      setShowLogin(false);
-    }
-  }, [isAuthenticated, setShowLogin]);
-
-  const toggleWishlist = async () => {
-    if (!isAuthenticated) return setShowLogin?.(true);
+  const toggleWeightModal = (open) => {
+    setShowWeightModal(open);
+    document.body.style.overflow = open ? "hidden" : "auto";
   };
 
-  const handleAddToCart = async () => {
-    if (!isAuthenticated) return setShowLogin?.(true);
-
-    setIsLoading(true);
-    try {
-      await onAddToCart({ ...item, quantity });
-      setQuantity(1);
-      showToast(`${item.name} added to cart (${quantity} kg)`, "success");
-    } catch {
-      showToast("Failed to add item to cart", "error");
-    } finally {
-      setIsLoading(false);
+  const openWeightPicker = () => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobile) {
+      // Initialize from current cart state
+      const initialSel = !isInCart || popularWeights.includes(cartQuantity) ? (isInCart ? cartQuantity : 1) : null;
+      const initialCus = isInCart && !popularWeights.includes(cartQuantity) ? String(cartQuantity) : "";
+      openPanel(
+        "Select Weight",
+        <WeightPickerContent
+          item={item}
+          isInCart={isInCart}
+          initialSelected={initialSel}
+          initialCustom={initialCus}
+          onCancel={() => closePanel()}
+          onRemove={() => { removeFromCart(item); closePanel(); }}
+          onConfirm={async (w) => { await onAddToCart({ ...item, quantity: w }); closePanel(); }}
+          confirmLabel={isInCart ? "Update Cart" : "Add to Cart"}
+        />,
+        { maxHeight: "85vh" }
+      );
+    } else {
+      toggleWeightModal(true);
     }
   };
-
-  const [inputQty, setInputQty] = useState(cartQuantity);
-
-  // keep input in sync when cartQuantity changes externally
-  useEffect(() => {
-    setInputQty(cartQuantity);
-  }, [cartQuantity]);
 
   return (
-    <div
-      className="group relative bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-200 hover:border-green-300 
-  p-3 sm:p-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full"
-    >
-      {/* Top Row: Discount & Wishlist */}
-      <div className="absolute inset-x-0 top-0 p-2 sm:p-3 flex justify-between items-start z-10">
-        {getDiscountPercentage() > 0 && (
-          <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
-            -{getDiscountPercentage()}%
-          </span>
-        )}
-      </div>
+    <div className="group relative bg-white border-b border-gray-200 px-3 sm:px-4 py-3 sm:py-4 text-center flex flex-col justify-between h-full transition-all duration-200 w-full">
 
-      {/* Product Image */}
-      <div className="relative flex justify-center items-center w-full h-24 sm:h-28 mb-2 sm:mb-3 mt-6">
-        {!imageLoaded && !imageError && (
-          <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-gray-300 border-t-green-500 rounded-full animate-spin"></div>
-        )}
+      {/* Discount Badge */}
+      {getDiscountPercentage() > 0 && (
+        <div className="absolute top-2 left-0 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-r-lg shadow-md overflow-hidden">
+          <div className="px-3 py-1.5 flex items-center justify-center whitespace-nowrap">
+            <span className="text-[11px] sm:text-xs font-bold tracking-wide">
+              {getDiscountPercentage()}% OFF
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Image */}
+      <div className="relative flex justify-center items-center w-full h-28 sm:h-28 mb-3 mt-4">
+        {!imageLoaded && !imageError && <Loader2 className="w-5 h-5 text-green-500 animate-spin" />}
 
         {imageError ? (
           <div className="text-gray-400 text-center">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg mx-auto mb-1 flex items-center justify-center">
-              📦
-            </div>
-            <span className="text-[10px] sm:text-xs">No image</span>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg mx-auto mb-1 flex items-center justify-center">📦</div>
+            <span className="text-xs">No image</span>
           </div>
         ) : (
           <img
             src={item.image?.url || "/placeholder-product.png"}
             alt={item.name}
-            className={`w-full h-full object-contain transition-opacity duration-300 ${
-              imageLoaded ? "opacity-100" : "opacity-0"
-            } ${isOutOfStock ? "grayscale opacity-50" : ""}`}
+            className={`w-[100px] h-[100px] object-contain transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"} ${isOutOfStock ? "grayscale opacity-50" : ""}`}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
           />
         )}
       </div>
 
-      {/* Product Info */}
-      <div className="flex-1 space-y-1 sm:space-y-2 flex flex-col items-start">
-        <h3 className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2 leading-tight text-left">
-          {item.name}
-        </h3>
-        <span className="text-gray-500 text-xs font-light">1Kg</span>
-        <div className="flex flex-row sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
-          {/* {cartQuantity > 0 && (
-            <div className="text-[10px] sm:text-xs text-right">
-              <div className="text-gray-600">In cart: {cartQuantity}kg</div>
-              <div className="font-semibold text-green-600">
-                {formatPrice(item.price * cartQuantity)}
-              </div>
-            </div>
-          )} */}
+      {/* Details */}
+      <div className="flex-1 text-left space-y-1.5">
+        <h3 className="font-medium text-sm sm:text-base text-gray-900 line-clamp-2">{item.name}</h3>
+        <p className="text-gray-500 text-xs">1 Kg</p>
+
+        {/* Price */}
+        <div className="flex items-baseline gap-1 pt-1">
+          <span className="text-sm font-semibold text-gray-900">₹{item.price || 0}</span>
+          {item.originalPrice && item.originalPrice > item.price && (
+            <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
+          )}
         </div>
 
-        {/* Stock Status */}
-        {isOutOfStock && (
-          <div className="text-[10px] sm:text-xs text-red-500 font-medium">
-            Out of Stock
-          </div>
-        )}
-        {isLowStock && !isOutOfStock && (
-          <div className="text-[10px] sm:text-xs text-orange-500 font-medium">
-            Only {item.stock} left
-          </div>
-        )}
+        {isOutOfStock ? (
+          <p className="text-xs text-red-500 font-medium">Out of Stock</p>
+        ) : isLowStock ? (
+          <p className="text-xs text-yellow-600 font-medium">Only {item.stock} left</p>
+        ) : null}
       </div>
 
-      {/* Actions */}
+      {/* Footer */}
       {webapp && (
-        <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 flex flex-row w-full justify-between items-center">
-          <div>
-            <span className="text-sm">{formatPrice(item.price)}</span>
-            {/* <span className="text-[10px] sm:text-xs text-gray-500 ml-0.5 sm:ml-1">
-              /kg
-            </span> */}
-            {item.originalPrice && item.originalPrice > item.price && (
-              <div className="text-[10px] sm:text-xs text-gray-400 line-through">
-                {formatPrice(item.originalPrice)}
-              </div>
-            )}
-          </div>
+        <div className="mt-3 pt-2 border-t border-dashed border-gray-100 flex justify-end items-center">
           {!isInCart ? (
-            // ADD button
             <button
-              onClick={handleAddToCart}
+              onClick={openWeightPicker}
               disabled={isOutOfStock || isLoading}
-              className={`w-[66px] py-1.5 sm:py-2 rounded text-[12px] sm:text-sm font-medium transition-colors border cursor-pointer
-              ${
-                isOutOfStock
-                  ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed"
-                  : isLoading
-                  ? "bg-green-400 text-white border-green-400"
-                  : "bg-white text-green-600 border-green-600 hover:bg-green-50"
-              }`}
+              className={`h-[32px] w-[32px] flex items-center justify-center rounded-md border font-semibold transition-all
+                ${isOutOfStock ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed" : isLoading ? "bg-green-500 text-white border-green-500" : "bg-green-50 text-green-600 border-green-600 hover:bg-green-50"}`}
             >
-              {isLoading ? "Adding..." : isOutOfStock ? "Out of Stock" : "ADD"}
+              {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <PlusIcon size={14} weight="bold" />}
             </button>
           ) : (
-            // Quantity state
-            <div className="flex items-center w-[66px] h-[32px] sm:h-[36px] bg-green-600 text-white rounded overflow-hidden">
-              {/* Left (Decrease) */}
-              <button
-                onClick={() => decreaseQuantity(item)}
-                className="flex-1 h-full text-sm font-bold hover:bg-green-700"
-              >
-                -
-              </button>
-
-              {/* Middle (Qty) */}
-              <span className="px-1 text-sm font-semibold">{cartQuantity}</span>
-
-              {/* Right (Increase) */}
-              <button
-                onClick={() => incrementQuantity(item)}
-                disabled={item.stock && cartQuantity >= item.stock}
-                className="flex-1 h-full text-sm font-bold hover:bg-green-700 disabled:opacity-50"
-              >
-                +
-              </button>
+            <div className="w-full flex justify-center">
+              <div className="flex items-center justify-center w-[50%] h-[34px] bg-green-100 text-green-700 rounded-md mr-2 border border-green-200 overflow-hidden">
+                <div className="p-1 text-xs font-medium">{cartQuantity} KG</div>
+              </div>
+              <div className="flex items-center justify-center w-[50%] h-[34px] bg-green-600 text-white rounded-md overflow-hidden">
+                <button onClick={openWeightPicker} className="w-full h-[34px] bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-all">Edit</button>
+              </div>
             </div>
           )}
         </div>
       )}
+
+      {showWeightModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4"
+          onClick={() => toggleWeightModal(false)}
+        >
+          <div
+            className="bg-white rounded-md w-full max-w-sm shadow-lg border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">Select Weight</h2>
+              <button
+                onClick={() => toggleWeightModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors active:scale-95"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <WeightPickerContent
+              item={item}
+              isInCart={isInCart}
+              initialSelected={
+                !isInCart || popularWeights.includes(cartQuantity)
+                  ? (isInCart ? cartQuantity : 1)
+                  : null
+              }
+              initialCustom={
+                isInCart && !popularWeights.includes(cartQuantity)
+                  ? String(cartQuantity)
+                  : ""
+              }
+              onCancel={() => toggleWeightModal(false)}
+              onRemove={() => {
+                removeFromCart(item);
+                toggleWeightModal(false);
+              }}
+              onConfirm={async (w) => {
+                await onAddToCart({ ...item, quantity: w });
+                toggleWeightModal(false);
+              }}
+              confirmLabel={isInCart ? "Update Cart" : "Add to Cart"}
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

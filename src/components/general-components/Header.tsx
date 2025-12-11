@@ -4,20 +4,49 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import LoginCard from "./LoginCard";
+import { useLoginModal } from "@/libs/context/LoginModalContext";
 import { UserIcon } from "@phosphor-icons/react";
+import { Label } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function Header() {
+
   const router = useRouter();
-  const [showLogin, setShowLogin] = useState(false);
+  const { open: openLogin } = useLoginModal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const menuItems = [
+    { label: "Browse catalogue", href: "/webapp" },
+    { label: "About us", href: "/#about" },
+    { label: "Services", href: "/#services" },
+    { label: "Contact us", href: "/#contact" },
+  ];
 
   return (
     <>
       <nav className="h-20 bg-white/20 backdrop-blur-md shadow-sm sticky top-0 z-50 w-full border-b border-gray-200 transition duration-300">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-          {/* Left Side - Logo + Desktop Menu */}
-          <div className="flex items-center gap-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+          <div className="flex items-center gap-4 sm:gap-8">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden"
+              aria-label="Toggle menu"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-7 w-7 text-gray-800"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
             <Link href="/" className="flex items-center space-x-2">
               <Image
                 src="/LOGO-png 3.svg"
@@ -28,114 +57,61 @@ export default function Header() {
               />
             </Link>
 
-            <div className="hidden md:flex space-x-6 text-sm font-semibold text-black">
-              <Link href="/" className="hover:text-green-600">
-                Home
-              </Link>
-              <Link href="/#about" className="hover:text-green-600">
-                About us
-              </Link>
-              <Link href="/#services" className="hover:text-green-600">
-                Services
-              </Link>
-              <Link href="/#contact" className="hover:text-green-600">
-                Contact us
-              </Link>
-              <button
-                onClick={() => router.push("/webapp")}
-                className="cursor-pointer hover:text-green-600"
-              >
-                Browse catalogue
-              </button>
-            </div>
+            {menuItems.map((item) => (
+              <div key={item.label} className="hidden md:flex space-x-6 text-md font-semibold text-gray-800">
+                <Link href={item.href} className="cursor-pointer">
+                  {item.label}
+                </Link>
+              </div>
+            ))}
           </div>
 
           {/* Login Button */}
           <button
-            onClick={() => setShowLogin(true)}
-            className="md:flex py-2 items-center space-x-2 bg-green-600 text-white font-semibold px-4 rounded-lg cursor-pointer flex flex-row"
+            onClick={() => openLogin()}
+            className="md:flex md:py-2 items-center space-x-2 bg-green-600 text-white font-semibold md:px-16 px-4 py-2 rounded-lg cursor-pointer flex flex-row"
           >
-            <UserIcon size={20} color="#ffffff" />
-            <span className="font-medium">Login</span>
+            <span className="font-bold">Login/Signup</span>
           </button>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden"
-            aria-label="Toggle menu"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-7 w-7 text-gray-800"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              {mobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 px-4 py-3 space-y-4">
-          <div className="flex flex-col space-y-3 text-sm font-semibold text-black">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-              Home
-            </Link>
-            <Link href="/#about" onClick={() => setMobileMenuOpen(false)}>
-              About us
-            </Link>
-            <Link href="/#services" onClick={() => setMobileMenuOpen(false)}>
-              Services
-            </Link>
-            <Link href="/#contact" onClick={() => setMobileMenuOpen(false)}>
-              Contact us
-            </Link>
-            <button
-              onClick={() => {
-                router.push("/webapp");
-                setMobileMenuOpen(false);
-              }}
-              className="text-left"
-            >
-              Browse catalogue
-            </button>
-            <button
-              onClick={() => {
-                setShowLogin(true);
-                setMobileMenuOpen(false);
-              }}
-              className="text-green-600 text-left"
-            >
-              Login
-            </button>
-          </div>
-        </div>
-      )}
 
-      {/* Login Modal */}
-      <LoginCard
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-        onLoginSuccess={undefined}
-      />
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          ></div>
+          <div
+            className={`fixed top-0 left-0 h-full w-3/4 sm:w-1/2 bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+          >
+            <div className="flex flex-col p-4 space-y-3 text-sm font-semibold text-black">
+              <div className="flex justify-end mb-0">
+                <button
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="ml-auto -mr-2 p-2 rounded-full hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+                >
+                  <XMarkIcon className="h-6 w-6 text-gray-800" aria-hidden="true" />
+                </button>
+              </div>
+              {menuItems.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

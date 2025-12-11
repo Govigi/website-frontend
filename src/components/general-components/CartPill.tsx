@@ -51,7 +51,7 @@ export default function CartPill() {
 
   return (
     <div
-      className={`fixed z-50 flex justify-center transition-[right,left,bottom] duration-500 ease-in-out h-15 ${
+      className={`fixed z-50 flex justify-center transition-[right,left,bottom] duration-500 ease-in-out h-15 md:hidden ${
         isCartPage
           ? "bottom-20 left-0 right-0"
           : collapsed

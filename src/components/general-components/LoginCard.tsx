@@ -139,10 +139,10 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 transition-opacity duration-300">
+    <div className="fixed  inset-0 bg-black/40 flex items-center justify-center z-150 transition-opacity duration-300">
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative mx-4 animate-fade-in"
+        className="bg-white rounded-2xl sm:max-w-sm max-w-xs mx-auto  md:max-w-md p-6 shadow-xl relative  animate-fade-in"
       >
         <button
           onClick={() => {
@@ -188,7 +188,7 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
             <button
               onClick={handleSendOtp}
               disabled={loading}
-              className="w-full bg-blue-600 text-white cursor-pointer font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
+              className="w-full bg-green-600 text-white cursor-pointer font-semibold py-2 rounded-lg hover:bg-green-700 transition"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -264,7 +264,7 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(idx, e.target.value)}
-                  className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition"
                 />
               ))}
             </div>
