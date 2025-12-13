@@ -15,6 +15,7 @@ import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
 import ServiceWorkerRegister from "@/components/core/ServiceWorkerRegister";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
@@ -87,6 +88,7 @@ export default function RootLayout({ children }) {
                     </main>
                     {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
                   </Suspense>
+                  <Analytics />
                 </BottomPanelProvider>
               </LoginModalProvider>
             </CartProvider>
