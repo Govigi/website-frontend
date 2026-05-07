@@ -42,6 +42,13 @@ export default function RootLayout({ children }) {
     pathname.startsWith("/profile");
 
   const isProfilePage = pathname.startsWith("/profile");
+  const isStandaloneRoute = 
+    pathname.startsWith("/vendor-onboarding") ||
+    pathname.startsWith("/privacy-policy") ||
+    pathname.startsWith("/terms-and-conditions") ||
+    pathname.startsWith("/refund-and-cancellation") ||
+    pathname.startsWith("/return-policy") ||
+    pathname.startsWith("/shipping-policy");
 
   // Determine page title and if it's webapp
   const isWebApp = pathname.startsWith("/webapp");
@@ -72,7 +79,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Govigi" />
       </head>
-      <body className={`${poppins.className} antialiased overflow-hidden md:overflow-auto`} style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <body className={`${poppins.className} antialiased ${isStandaloneRoute ? '' : 'overflow-hidden md:overflow-auto'}`} style={isStandaloneRoute ? {} : { height: "100vh", display: "flex", flexDirection: "column" }}>
         <ServiceWorkerRegister />
         <ProgressBar/>
         <ToastProvider>
@@ -81,11 +88,14 @@ export default function RootLayout({ children }) {
               <LoginModalProvider>
                 <BottomPanelProvider>
                   <Suspense fallback={null}>
-                    {showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />}
-                    <main className="flex-1 overflow-y-auto pb-16 md:pb-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)" }}>
+                    {!isStandaloneRoute && (showWebAppNavbar ? <ShoppingHeader isWebApp={isWebApp} pageTitle={getPageTitle()} /> : <Header />)}
+                    <main
+                      className={isStandaloneRoute ? '' : 'flex-1 overflow-y-auto pb-16 md:pb-0'}
+                      style={isStandaloneRoute ? {} : { paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)" }}
+                    >
                       {children}
                     </main>
-                    {(showWebAppNavbar || isProfilePage) && <BottomNavbar />}
+                    {!isStandaloneRoute && (showWebAppNavbar || isProfilePage) && <BottomNavbar />}
                   </Suspense>
                 </BottomPanelProvider>
               </LoginModalProvider>
