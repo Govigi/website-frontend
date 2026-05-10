@@ -8,6 +8,7 @@ import { useToast } from "../../libs/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../components/core/Cart/CartContext";
 import { config } from "@/libs/utils/config";
+import { getAuthHeaders, normalizeAddresses } from "@/libs/utils/address";
 
 import CartPage from "../cart/page";
 
@@ -43,9 +44,10 @@ export default function CheckoutPage() {
   const fetchAddresses = async () => {
     try {
       if (isAuthenticated) {
-        const token = JSON.parse(localStorage.getItem("token"));
-        const res = await axios.post(`${backendApi}/getAddress`, { token });
-        const fetchedAddresses = res.data?.addresses || [];
+        const res = await axios.get(`${backendApi}/getAddress`, {
+          headers: getAuthHeaders(),
+        });
+        const fetchedAddresses = normalizeAddresses(res.data?.addresses || res.data?.data || []);
         setAddresses(fetchedAddresses);
         // Automatically select the first address if available and none is selected
         if (fetchedAddresses.length > 0 && !selectedAddressId) {
@@ -71,7 +73,7 @@ export default function CheckoutPage() {
     ) {
       showToast(
         "Please fill in all required fields (Name, Phone, City, State, Pincode).",
-        "warning"
+        "warning",
       );
       return;
     }
@@ -113,9 +115,16 @@ export default function CheckoutPage() {
       const data = await EditAddress_context(originalAddr._id, updatedAddress); // Pass ID and updated data
       if (data && data.addresses) {
         setAddresses(data.addresses);
+      } else if (data && data.data) {
+        setAddresses((prev) =>
+          prev.map((addr) => (addr._id === originalAddr._id ? data.data : addr)),
+        );
+      }
+
+      if (data && (data.addresses || data.data)) {
         // If the edited address was selected, keep it selected (update its details)
         if (selectedAddressId && selectedAddressId._id === originalAddr._id) {
-          setSelectedAddressId(updatedAddress); // Update selected address state
+          setSelectedAddressId(data.data || updatedAddress); // Update selected address state
         }
         showToast("Address updated successfully!", "success");
       } else {
@@ -131,7 +140,7 @@ export default function CheckoutPage() {
 
   const handleProceedToPayment = async () => {
     const selectedAddress = addresses.find(
-      (a) => a._id === selectedAddressId?._id
+      (a) => a._id === selectedAddressId?._id,
     );
 
     if (!selectedAddress) {
@@ -147,6 +156,7 @@ export default function CheckoutPage() {
 
     const orderPayload = {
       phone: selectedAddress?.contact ?? "",
+      addressId: selectedAddress?._id,
       name: selectedAddress?.name ?? "",
       email: selectedAddress?.email ?? "",
       businessType: selectedAddress?.businessType ?? "",
@@ -168,15 +178,17 @@ export default function CheckoutPage() {
       totalAmount: cartItems.reduce(
         (total, item) =>
           total + item.quantity * (parseFloat(item.pricePerKg) || 0),
-        0
+        0,
       ),
-      scheduledDate: new Date().toISOString().split("T")[0], // YYYY-MM-DD
     };
 
     try {
-      const res = await fetch(`${config.backend_url}/createOrder`, {
+      const res = await fetch(`${config.backend_url}/placeCustomerOrder`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(orderPayload),
       });
 
