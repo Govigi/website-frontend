@@ -58,13 +58,13 @@ function StepSidebar({ step }: { step: number }) {
                             const active = step === s.id;
                             return (
                                 <li key={s.id} className="flex items-start gap-4">
-                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-300 ${done ? "bg-green-600 text-white shadow-md shadow-green-200" :
-                                        active ? "bg-white border-2 border-green-600 text-green-700 shadow-sm" :
+                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-300 ${done ? "bg-emerald-600 text-white shadow-md shadow-emerald-200" :
+                                        active ? "bg-white border-2 border-emerald-600 text-emerald-700 shadow-sm" :
                                             "bg-white border-2 border-gray-200 text-gray-400"
                                         }`}>
                                         {done ? <CheckIcon className="w-4 h-4" strokeWidth={3} /> : s.id}
                                     </span>
-                                    <span className={`text-[14px] font-semibold mt-1.5 transition-colors duration-300 ${active ? "text-green-700" : done ? "text-gray-700" : "text-gray-400"}`}>
+                                    <span className={`text-[14px] font-semibold mt-1.5 transition-colors duration-300 ${active ? "text-emerald-700" : done ? "text-gray-700" : "text-gray-400"}`}>
                                         {s.label}
                                     </span>
                                 </li>
@@ -85,7 +85,7 @@ function Input({ label, required, ...props }: React.InputHTMLAttributes<HTMLInpu
             </label>
             <input
                 {...props}
-                className={`w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 focus:bg-white transition-all shadow-sm ${props.disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-100" : ""}`}
+                className={`w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:bg-white transition-all shadow-sm ${props.disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-100" : ""}`}
             />
         </div>
     );
@@ -104,7 +104,7 @@ function FormActions({ onBack, onNext, nextLabel = "Next", nextDisabled = false,
             <button
                 onClick={onNext}
                 disabled={nextDisabled || loading}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-[15px] font-bold px-8 py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98]"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-[15px] font-bold px-8 py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98]"
             >
                 {loading ? "Please wait..." : nextLabel}
                 {!loading && <ChevronRightIcon className="w-4 h-4" strokeWidth={2.5} />}
@@ -170,7 +170,7 @@ function OTPInput({ value, onChange }: { value: string; onChange: (val: string) 
                     onChange={e => handleChange(e, i)}
                     onKeyDown={e => handleKeyDown(e, i)}
                     onPaste={handlePaste}
-                    className="w-14 h-16 sm:w-16 sm:h-16 border-2 border-gray-200 rounded-xl text-center text-2xl font-bold text-gray-900 bg-white focus:outline-none focus:border-green-600 focus:bg-gray-50 transition-all caret-green-600"
+                    className="w-14 h-16 sm:w-16 sm:h-16 border-2 border-gray-200 rounded-xl text-center text-2xl font-bold text-gray-900 bg-white focus:outline-none focus:border-emerald-600 focus:bg-gray-50 transition-all caret-emerald-600"
                 />
             ))}
         </div>
@@ -252,7 +252,7 @@ export default function VendorOnboardingStepper() {
             <div className="lg:hidden border-b border-gray-100 bg-white px-6 py-4 sticky top-16 z-30 shadow-sm">
                 <div className="flex items-center gap-2 mb-3">
                     {STEPS.map((s) => (
-                        <div key={s.id} className={`h-1.5 flex-1 rounded-full transition-colors ${step >= s.id ? "bg-green-600" : "bg-gray-100"}`} />
+                        <div key={s.id} className={`h-1.5 flex-1 rounded-full transition-colors ${step >= s.id ? "bg-emerald-600" : "bg-gray-100"}`} />
                     ))}
                 </div>
                 <p className="text-[13px] text-gray-500 font-medium tracking-tight">Step {step} of {STEPS.length} — <span className="text-gray-900 font-bold">{STEPS[step - 1]?.label}</span></p>
@@ -264,7 +264,7 @@ export default function VendorOnboardingStepper() {
                     <StepSidebar step={step} />
 
                     {/* Main Form Card */}
-                    <div className="flex-1 w-full bg-white border border-gray-100 lg:rounded-[32px] sm:rounded-3xl rounded-2xl p-6 sm:p-10 shadow-sm">
+                    <div className="flex-1 w-full bg-white border border-gray-100 lg:rounded-[40px] sm:rounded-3xl rounded-2xl p-6 sm:p-10 shadow-xl shadow-gray-200/50">
 
                         {/* Step 1 — Phone Verification */}
                         {step === 1 && (
@@ -275,7 +275,7 @@ export default function VendorOnboardingStepper() {
                                 <div className="max-w-md space-y-5">
                                     <div>
                                         <label className="block text-[13px] font-semibold text-gray-700 mb-2">Mobile Number <span className="text-red-500">*</span></label>
-                                        <div className="flex border border-gray-200 rounded-xl overflow-hidden focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition-all shadow-sm bg-gray-50/50 focus-within:bg-white">
+                                        <div className="flex border border-gray-200 rounded-xl overflow-hidden focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition-all shadow-sm bg-gray-50/50 focus-within:bg-white">
                                             <span className="bg-gray-50/80 border-r border-gray-200 px-4 py-3.5 text-[15px] font-semibold text-gray-600 flex items-center">🇮🇳 +91</span>
                                             <input
                                                 type="tel"
@@ -298,7 +298,7 @@ export default function VendorOnboardingStepper() {
                                         <button
                                             onClick={sendOtp}
                                             disabled={loading || contact.length < 10}
-                                            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl shadow-md transition-all active:scale-[0.98]"
+                                            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-[0.98]"
                                         >
                                             {loading ? "Sending OTP..." : "Send OTP"}
                                         </button>
@@ -313,7 +313,7 @@ export default function VendorOnboardingStepper() {
                                             <button
                                                 onClick={verifyOtp}
                                                 disabled={loading || otp.length < 4}
-                                                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                                             >
                                                 {loading ? "Verifying..." : "Verify & Continue"}
                                                 {!loading && <ChevronRightIcon className="w-4 h-4" strokeWidth={2.5} />}
@@ -346,15 +346,15 @@ export default function VendorOnboardingStepper() {
                                         <div
                                             onClick={() => setShowMap(true)}
                                             className={`flex items-center gap-4 border rounded-xl px-5 py-4 cursor-pointer transition-all shadow-sm ${form.address.formattedAddress
-                                                ? "border-green-600 bg-green-50/30 hover:bg-green-50/50"
-                                                : "border-gray-200 bg-gray-50 hover:border-green-600 hover:bg-white"
+                                                ? "border-emerald-600 bg-emerald-50/30 hover:bg-emerald-50/50"
+                                                : "border-gray-200 bg-gray-50 hover:border-emerald-600 hover:bg-white"
                                                 }`}
                                         >
-                                            <MapPinIcon className={`w-6 h-6 shrink-0 ${form.address.formattedAddress ? "text-green-600" : "text-gray-400"}`} />
+                                            <MapPinIcon className={`w-6 h-6 shrink-0 ${form.address.formattedAddress ? "text-emerald-600" : "text-gray-400"}`} />
                                             <span className={`text-[15px] flex-1 ${form.address.formattedAddress ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
                                                 {form.address.formattedAddress || "Tap to mark your shop location on map"}
                                             </span>
-                                            <span className="text-[13px] font-bold text-green-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm shrink-0">
+                                            <span className="text-[13px] font-bold text-emerald-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm shrink-0">
                                                 {form.address.formattedAddress ? "Change" : "Select"}
                                             </span>
                                         </div>
@@ -414,7 +414,7 @@ export default function VendorOnboardingStepper() {
                                         <label className="block text-[13px] font-semibold text-gray-700 mb-2">Mobile Number</label>
                                         <div className="flex items-center gap-3 border border-gray-200 bg-gray-50 rounded-xl px-4 py-3.5 shadow-sm">
                                             <span className="text-[15px] text-gray-500 font-semibold flex items-center gap-2">🇮🇳 +91 {contact}</span>
-                                            <span className="ml-auto text-[13px] font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full flex items-center gap-1.5">
+                                            <span className="ml-auto text-[13px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5">
                                                 <CheckIcon className="w-4 h-4" strokeWidth={3} /> Verified
                                             </span>
                                         </div>
@@ -424,7 +424,7 @@ export default function VendorOnboardingStepper() {
                                             type="checkbox"
                                             checked={form.whatsappUpdates}
                                             onChange={e => setForm(p => ({ ...p, whatsappUpdates: e.target.checked }))}
-                                            className="mt-0.5 w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-600 transition-all cursor-pointer"
+                                            className="mt-0.5 w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600 transition-all cursor-pointer"
                                         />
                                         <span className="text-[14px] text-gray-700 font-medium leading-snug">I want to receive important business updates and order alerts on WhatsApp.</span>
                                     </label>
@@ -502,7 +502,7 @@ export default function VendorOnboardingStepper() {
                                     window.close();
                                     setTimeout(() => setCloseFailed(true), 400);
                                 }}
-                                className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-[15px] shadow-md transition-all active:scale-[0.98]"
+                                className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[15px] shadow-lg shadow-emerald-100 transition-all active:scale-[0.98]"
                             >
                                 Close Tab
                             </button>

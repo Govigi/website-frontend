@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, XMarkIcon, MapPinIcon } from "@heroicons/react/24/outline";
 
 const DEFAULT_CENTER = {
     lat: 17.3850,
@@ -110,6 +110,27 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
                     map?.setZoom(17);
                 }
             });
+        }
+    };
+
+    const handleLocateMe = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    updateLocationFromCoordinates(latitude, longitude);
+                    const newPos = { lat: latitude, lng: longitude };
+                    setCenter(newPos);
+                    map?.panTo(newPos);
+                    map?.setZoom(17);
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    alert("Unable to retrieve your location. Please check your browser permissions.");
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by your browser.");
         }
     };
 
@@ -228,6 +249,15 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
                                 {loadError ? "Error loading maps" : "Loading Map..."}
                             </div>
                         )}
+
+                        {/* Locate Me Button */}
+                        <button
+                            onClick={handleLocateMe}
+                            title="Use my current location"
+                            className="absolute bottom-10 right-4 z-10 p-3 bg-white hover:bg-gray-50 text-green-600 rounded-full shadow-xl border border-gray-100 transition-all active:scale-95 group"
+                        >
+                            <MapPinIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                        </button>
                     </div>
                 </div>
 
