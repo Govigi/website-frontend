@@ -101,16 +101,16 @@ export default function ViewAll({ webapp }) {
                 }`}
             >
               <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-md overflow-hidden mb-1.5 md:mb-2 border-2 transition-all flex items-center justify-center bg-gray-50 ${!category
-                  ? 'border-green-500 shadow-sm'
-                  : 'border-gray-200'
+                ? 'border-green-500 shadow-sm'
+                : 'border-gray-200'
                 }`}>
                 <svg className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
               </div>
               <span className={`text-xs leading-tight text-center px-1 ${!category
-                  ? 'text-green-600 font-semibold'
-                  : 'text-gray-600'
+                ? 'text-green-600 font-semibold'
+                : 'text-gray-600'
                 }`}>
                 All
               </span>
@@ -124,8 +124,8 @@ export default function ViewAll({ webapp }) {
                   }`}
               >
                 <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-md overflow-hidden mb-1.5 md:mb-2 border-2 transition-all ${category === cat.categoryName
-                    ? 'border-green-500 shadow-md'
-                    : 'border-gray-200'
+                  ? 'border-green-500 shadow-md'
+                  : 'border-gray-200'
                   }`}>
                   <img
                     src={cat.categoryImage.url}
@@ -134,8 +134,8 @@ export default function ViewAll({ webapp }) {
                   />
                 </div>
                 <span className={`text-xs leading-tight text-center px-1 ${category === cat.categoryName
-                    ? 'text-green-600 font-semibold'
-                    : 'text-gray-600'
+                  ? 'text-green-600 font-semibold'
+                  : 'text-gray-600'
                   }`}>
                   {cat.categoryName}
                 </span>
