@@ -44,6 +44,7 @@ export default function RootLayout({ children }) {
   const isProfilePage = pathname.startsWith("/profile");
   const isStandaloneRoute = 
     pathname.startsWith("/vendor-onboarding") ||
+    pathname.startsWith("/vendor-product-request") ||
     pathname.startsWith("/privacy-policy") ||
     pathname.startsWith("/terms-and-conditions") ||
     pathname.startsWith("/refund-and-cancellation") ||
