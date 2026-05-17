@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import VendorOnboardingStepper from "../../components/vendor-onboarding/VendorOnboardingStepper";
 import { Toaster } from "react-hot-toast";
 
@@ -11,7 +11,9 @@ export default function VendorOnboardingPage() {
     return (
         <>
             <Toaster position="top-center" toastOptions={{ style: { fontSize: "14px", fontWeight: 600 } }} />
-            <VendorOnboardingStepper />
+            <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center font-semibold text-gray-500">Loading...</div>}>
+                <VendorOnboardingStepper />
+            </Suspense>
         </>
     );
 }
