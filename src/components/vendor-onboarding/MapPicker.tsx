@@ -80,6 +80,18 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
         const newPos = { lat, lng };
         setMarkerPosition(newPos);
 
+        const fallbackPlace = {
+            place_id: "manual-pin",
+            formatted_address: `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`,
+            name: "Pinned Location",
+            address_components: [
+                { types: ["locality"], long_name: "Local Area" },
+                { types: ["administrative_area_level_1"], long_name: "Manual Location" }
+            ]
+        };
+        setSelectedPlace(fallbackPlace);
+        setSearchQuery(fallbackPlace.formatted_address);
+
         if (geocoder.current) {
             geocoder.current.geocode({ location: newPos }, (results, status) => {
                 if (status === "OK" && results && results[0]) {
@@ -126,7 +138,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
-                    alert("Unable to retrieve your location. Please check your browser permissions.");
+                    alert("Unable to retrieve your location. If you previously blocked location access, please click the lock/info settings icon next to the URL bar in your browser and toggle 'Location' back to allowed.");
                 }
             );
         } else {
