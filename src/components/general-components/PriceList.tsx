@@ -31,9 +31,14 @@ export default function PriceList() {
   }, []);
 
   const filteredProducts = products
-    .filter(
-      (p) => p.category?.toLowerCase() === category.toLowerCase().slice(0, -1)
-    )
+    .filter((p) => {
+      const categoryName =
+        typeof p.category === "object" && p.category !== null
+          ? (p.category.categoryName || "")
+          : (typeof p.category === "string" ? p.category : "");
+      const clean = (str: string) => str.toLowerCase().trim().replace(/s$/, "");
+      return clean(categoryName) === clean(category);
+    })
     .slice(0, 8);
 
   const chunkedProducts = [

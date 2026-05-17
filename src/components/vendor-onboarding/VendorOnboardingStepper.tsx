@@ -1,11 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { CheckIcon, ChevronRightIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
 import MapPicker from "./MapPicker";
+import { useSearchParams } from "next/navigation";
 
 import { config } from "../../libs/utils/config";
 const BACKEND_URL = config.backend_url;
@@ -178,6 +179,7 @@ function OTPInput({ value, onChange }: { value: string; onChange: (val: string) 
 }
 
 export default function VendorOnboardingStepper() {
+    const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
@@ -189,6 +191,30 @@ export default function VendorOnboardingStepper() {
     const [token, setToken] = useState("");
     const [form, setForm] = useState<Form>(initialForm);
     const [closeFailed, setCloseFailed] = useState(false);
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    useEffect(() => {
+        const urlToken = searchParams.get("token");
+        if (urlToken) {
+            setToken(urlToken);
+            setOtpVerified(true);
+            setStep(2);
+            
+            try {
+                const parts = urlToken.split(".");
+                if (parts.length === 3) {
+                    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+                    if (payload && payload.contact) {
+                        setContact(payload.contact);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+            }
+        }
+    }, [searchParams]);
 
     const updateAddress = (key: keyof AddressComponents, val: string) =>
         setForm(p => ({ ...p, address: { ...p.address, components: { ...p.address.components, [key]: val } } }));
@@ -227,10 +253,28 @@ export default function VendorOnboardingStepper() {
     const submitForm = async () => {
         setLoading(true);
         try {
-            await axios.post(`${BACKEND_URL}/onboardVendor`, { token, ...form });
+            const formData = new FormData();
+            formData.append("token", token);
+            formData.append("businessName", form.businessName);
+            formData.append("contactPerson", form.contactPerson);
+            formData.append("email", form.email);
+            formData.append("whatsappUpdates", String(form.whatsappUpdates));
+            formData.append("address", JSON.stringify(form.address));
+            formData.append("bankDetails", JSON.stringify(form.bankDetails));
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+            await axios.post(`${BACKEND_URL}/onboardVendor`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
             setSubmitted(true);
-        } catch (e: any) { toast.error(e.response?.data?.message || "Submission failed."); }
-        finally { setLoading(false); }
+        } catch (e: any) { 
+            toast.error(e.response?.data?.message || "Submission failed."); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const handleMapConfirm = (data: any) => {
@@ -419,6 +463,57 @@ export default function VendorOnboardingStepper() {
                                             </span>
                                         </div>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">
+                                            Store Owner Photo <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50/50 shadow-sm">
+                                            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-emerald-600 bg-white flex items-center justify-center shrink-0 shadow-inner">
+                                                {imagePreview ? (
+                                                    <img src={imagePreview} alt="Owner Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center text-center">
+                                                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 flex flex-col gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-all active:scale-[0.98]">
+                                                        Upload Photo
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    setImageFile(file);
+                                                                    const reader = new FileReader();
+                                                                    reader.onloadend = () => setImagePreview(reader.result as string);
+                                                                    reader.readAsDataURL(file);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+                                                    {imagePreview && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setImageFile(null); setImagePreview(null); }}
+                                                            className="border border-red-200 text-red-500 hover:bg-red-50 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 font-medium">JPEG, PNG or WEBP. Max size 5MB.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <label className="flex items-start gap-4 cursor-pointer mt-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                                         <input
                                             type="checkbox"
@@ -433,7 +528,7 @@ export default function VendorOnboardingStepper() {
                                 <FormActions
                                     onBack={() => setStep(2)}
                                     onNext={() => setStep(4)}
-                                    nextDisabled={!form.contactPerson || !form.email}
+                                    nextDisabled={!form.contactPerson || !form.email || !imageFile}
                                 />
                             </div>
                         )}
