@@ -46,9 +46,14 @@ export default function ViewAll({ webapp }) {
       }
 
       if (category) {
-        fetched = fetched.filter((item) =>
-          (item.category || "").toLowerCase().includes(category.toLowerCase())
-        );
+        fetched = fetched.filter((item) => {
+          const categoryName =
+            typeof item.category === "object" && item.category !== null
+              ? (item.category.categoryName || "")
+              : (typeof item.category === "string" ? item.category : "");
+          const clean = (str: string) => str.toLowerCase().trim().replace(/s$/, "");
+          return clean(categoryName).includes(clean(category)) || clean(category).includes(clean(categoryName));
+        });
       }
 
       setProducts(fetched);
