@@ -15,9 +15,11 @@ type MapPickerProps = {
     onClose: () => void;
     onConfirm: (locationData: any) => void;
     apiKey: string;
+    initialLocation?: { lat: number; lng: number };
+    initialAddress?: string;
 };
 
-export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPickerProps) {
+export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialLocation, initialAddress }: MapPickerProps) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: apiKey,
@@ -47,6 +49,48 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
             }
         }
     }, [isLoaded, loadError]);
+
+    useEffect(() => {
+        if (isOpen && isLoaded) {
+            if (initialLocation && initialLocation.lat !== 0 && initialLocation.lng !== 0) {
+                setCenter(initialLocation);
+                setMarkerPosition(initialLocation);
+                const prevPlace = {
+                    place_id: "initial-pin",
+                    formatted_address: initialAddress || `Latitude: ${initialLocation.lat.toFixed(6)}, Longitude: ${initialLocation.lng.toFixed(6)}`,
+                    name: "Selected Location",
+                    address_components: []
+                };
+                setSelectedPlace(prevPlace);
+                setSearchQuery(initialAddress || prevPlace.formatted_address);
+
+                if (geocoder.current) {
+                    geocoder.current.geocode({ location: initialLocation }, (results, status) => {
+                        if (status === "OK" && results && results[0]) {
+                            setSelectedPlace(results[0]);
+                        }
+                    });
+                }
+            } else {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const { latitude, longitude } = position.coords;
+                            const newPos = { lat: latitude, lng: longitude };
+                            setCenter(newPos);
+                            updateLocationFromCoordinates(latitude, longitude);
+                        },
+                        (error) => {
+                            console.error("Auto geolocation error:", error);
+                            updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+                        }
+                    );
+                } else {
+                    updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+                }
+            }
+        }
+    }, [isOpen, isLoaded, initialLocation, initialAddress]);
 
     const onLoad = useCallback((map: google.maps.Map) => {
         setMap(map);
@@ -79,6 +123,18 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
     const updateLocationFromCoordinates = (lat: number, lng: number) => {
         const newPos = { lat, lng };
         setMarkerPosition(newPos);
+
+        const fallbackPlace = {
+            place_id: "manual-pin",
+            formatted_address: `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`,
+            name: "Pinned Location",
+            address_components: [
+                { types: ["locality"], long_name: "Local Area" },
+                { types: ["administrative_area_level_1"], long_name: "Manual Location" }
+            ]
+        };
+        setSelectedPlace(fallbackPlace);
+        setSearchQuery(fallbackPlace.formatted_address);
 
         if (geocoder.current) {
             geocoder.current.geocode({ location: newPos }, (results, status) => {
@@ -126,7 +182,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
-                    alert("Unable to retrieve your location. Please check your browser permissions.");
+                    alert("Unable to retrieve your location. If you previously blocked location access, please click the lock/info settings icon next to the URL bar in your browser and toggle 'Location' back to allowed.");
                 }
             );
         } else {
