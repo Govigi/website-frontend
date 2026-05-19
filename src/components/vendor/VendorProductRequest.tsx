@@ -36,8 +36,13 @@ export default function VendorProductRequest() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchCategories();
-        if (editId && token) fetchRequestData();
+        const init = async () => {
+            await fetchCategories();
+            if (editId && token) {
+                await fetchRequestData();
+            }
+        };
+        init();
     }, [editId, token]);
 
     const fetchRequestData = async () => {
@@ -74,9 +79,12 @@ export default function VendorProductRequest() {
             if (Array.isArray(res.data)) {
                 const activeCats = res.data.filter((cat: any) => cat.categoryStatus === "active");
                 setCategories(activeCats);
+                return activeCats;
             }
+            return [];
         } catch (error) {
             console.error("Error fetching categories:", error);
+            return [];
         }
     };
 
@@ -108,7 +116,9 @@ export default function VendorProductRequest() {
         setLoading(true);
         try {
             const formData = new FormData();
-            Object.entries(form).forEach(([key, value]) => formData.append(key, value));
+            Object.entries(form).forEach(([key, value]) => {
+                formData.append(key, value);
+            });
             if (image) formData.append("image", image);
 
             if (editId) {
@@ -190,7 +200,7 @@ export default function VendorProductRequest() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
+                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Category *</label>
                                 <select 
                                     value={form.category}
