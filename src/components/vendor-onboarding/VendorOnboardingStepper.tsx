@@ -31,6 +31,8 @@ type Form = {
     whatsappUpdates: boolean;
     address: { formattedAddress: string; components: AddressComponents; location: { type: string; coordinates: number[] } };
     bankDetails: { accountName: string; accountNumber: string; bankName: string; ifscCode: string };
+    supportedCategories: string[];
+    customCategory?: string;
 };
 
 const initialForm: Form = {
@@ -44,6 +46,8 @@ const initialForm: Form = {
         location: { type: "Point", coordinates: [0, 0] },
     },
     bankDetails: { accountName: "", accountNumber: "", bankName: "", ifscCode: "" },
+    supportedCategories: [],
+    customCategory: "",
 };
 
 function StepSidebar({ step }: { step: number }) {
@@ -194,6 +198,24 @@ export default function VendorOnboardingStepper() {
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [categories, setCategories] = useState<string[]>([]);
+
+    useEffect(() => {
+        const fetchCategoriesList = async () => {
+            try {
+                const res = await axios.get(`${BACKEND_URL}/getAllCategories`);
+                if (Array.isArray(res.data)) {
+                    const activeNames = res.data
+                        .filter((c: any) => c.categoryStatus === "active")
+                        .map((c: any) => c.categoryName);
+                    setCategories(activeNames);
+                }
+            } catch (err) {
+                console.error("Failed to load categories:", err);
+            }
+        };
+        fetchCategoriesList();
+    }, []);
 
     useEffect(() => {
         const urlToken = searchParams.get("token");
@@ -261,6 +283,16 @@ export default function VendorOnboardingStepper() {
             formData.append("whatsappUpdates", String(form.whatsappUpdates));
             formData.append("address", JSON.stringify(form.address));
             formData.append("bankDetails", JSON.stringify(form.bankDetails));
+            
+            let finalCategories = [...form.supportedCategories];
+            if (form.supportedCategories.includes("other") && form.customCategory?.trim()) {
+                finalCategories = finalCategories.filter(c => c !== "other");
+                finalCategories.push(form.customCategory.trim());
+            } else {
+                finalCategories = finalCategories.filter(c => c !== "other");
+            }
+            formData.append("supportedCategories", JSON.stringify(finalCategories));
+
             if (imageFile) {
                 formData.append("image", imageFile);
             }
@@ -422,12 +454,78 @@ export default function VendorOnboardingStepper() {
                                             />
                                         ))}
                                     </div>
+
+                                    <div className="mt-8 pt-6 border-t border-gray-100">
+                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">
+                                            Categories of Products You Sell <span className="text-red-500">*</span>
+                                        </label>
+                                        <p className="text-[12px] text-gray-400 mb-3 font-medium">Select one or more categories that you provide.</p>
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {categories.map((cat) => {
+                                                const isSelected = form.supportedCategories.includes(cat);
+                                                return (
+                                                    <button
+                                                        key={cat}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const current = form.supportedCategories;
+                                                            const updated = current.includes(cat)
+                                                                ? current.filter(c => c !== cat)
+                                                                : [...current, cat];
+                                                            setForm(p => ({ ...p, supportedCategories: updated }));
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-200 active:scale-[0.98] ${
+                                                            isSelected
+                                                                ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
+                                                                : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                                                        }`}
+                                                    >
+                                                        {cat}
+                                                    </button>
+                                                );
+                                            })}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const current = form.supportedCategories;
+                                                    const updated = current.includes("other")
+                                                        ? current.filter(c => c !== "other")
+                                                        : [...current, "other"];
+                                                    setForm(p => ({ ...p, supportedCategories: updated }));
+                                                }}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-200 active:scale-[0.98] ${
+                                                    form.supportedCategories.includes("other")
+                                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
+                                                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                                                }`}
+                                            >
+                                                Other (Specify...)
+                                            </button>
+                                        </div>
+
+                                        {form.supportedCategories.includes("other") && (
+                                            <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Specify custom product category..."
+                                                    value={form.customCategory || ""}
+                                                    onChange={e => setForm(p => ({ ...p, customCategory: e.target.value }))}
+                                                    className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-sm"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <FormActions
                                     onBack={() => setStep(1)}
                                     onNext={() => setStep(3)}
-                                    nextDisabled={!form.businessName || !form.address.formattedAddress}
+                                    nextDisabled={
+                                        !form.businessName || 
+                                        !form.address.formattedAddress || 
+                                        form.supportedCategories.length === 0 || 
+                                        (form.supportedCategories.includes("other") && !form.customCategory?.trim())
+                                    }
                                 />
                             </div>
                         )}
@@ -570,7 +668,18 @@ export default function VendorOnboardingStepper() {
                 </div>
             </div>
 
-            <MapPicker isOpen={showMap} onClose={() => setShowMap(false)} onConfirm={handleMapConfirm} apiKey={GOOGLE_MAPS_API_KEY} />
+            <MapPicker
+                isOpen={showMap}
+                onClose={() => setShowMap(false)}
+                onConfirm={handleMapConfirm}
+                apiKey={GOOGLE_MAPS_API_KEY}
+                initialLocation={
+                    form.address.location?.coordinates[1] && form.address.location?.coordinates[0]
+                        ? { lat: form.address.location.coordinates[1], lng: form.address.location.coordinates[0] }
+                        : undefined
+                }
+                initialAddress={form.address.formattedAddress || undefined}
+            />
 
             {/* Success Modal */}
             {submitted && (
