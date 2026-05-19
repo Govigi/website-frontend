@@ -15,9 +15,11 @@ type MapPickerProps = {
     onClose: () => void;
     onConfirm: (locationData: any) => void;
     apiKey: string;
+    initialLocation?: { lat: number; lng: number };
+    initialAddress?: string;
 };
 
-export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPickerProps) {
+export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialLocation, initialAddress }: MapPickerProps) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: apiKey,
@@ -47,6 +49,48 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey }: MapPic
             }
         }
     }, [isLoaded, loadError]);
+
+    useEffect(() => {
+        if (isOpen && isLoaded) {
+            if (initialLocation && initialLocation.lat !== 0 && initialLocation.lng !== 0) {
+                setCenter(initialLocation);
+                setMarkerPosition(initialLocation);
+                const prevPlace = {
+                    place_id: "initial-pin",
+                    formatted_address: initialAddress || `Latitude: ${initialLocation.lat.toFixed(6)}, Longitude: ${initialLocation.lng.toFixed(6)}`,
+                    name: "Selected Location",
+                    address_components: []
+                };
+                setSelectedPlace(prevPlace);
+                setSearchQuery(initialAddress || prevPlace.formatted_address);
+
+                if (geocoder.current) {
+                    geocoder.current.geocode({ location: initialLocation }, (results, status) => {
+                        if (status === "OK" && results && results[0]) {
+                            setSelectedPlace(results[0]);
+                        }
+                    });
+                }
+            } else {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const { latitude, longitude } = position.coords;
+                            const newPos = { lat: latitude, lng: longitude };
+                            setCenter(newPos);
+                            updateLocationFromCoordinates(latitude, longitude);
+                        },
+                        (error) => {
+                            console.error("Auto geolocation error:", error);
+                            updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+                        }
+                    );
+                } else {
+                    updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+                }
+            }
+        }
+    }, [isOpen, isLoaded, initialLocation, initialAddress]);
 
     const onLoad = useCallback((map: google.maps.Map) => {
         setMap(map);
