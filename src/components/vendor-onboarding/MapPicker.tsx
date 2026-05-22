@@ -57,7 +57,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                 setMarkerPosition(initialLocation);
                 const prevPlace = {
                     place_id: "initial-pin",
-                    formatted_address: initialAddress || `Latitude: ${initialLocation.lat.toFixed(6)}, Longitude: ${initialLocation.lng.toFixed(6)}`,
+                    formatted_address: initialAddress || "Pinned Location (Coordinates Set)",
                     name: "Selected Location",
                     address_components: []
                 };
@@ -126,7 +126,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
 
         const fallbackPlace = {
             place_id: "manual-pin",
-            formatted_address: `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`,
+            formatted_address: "Pinned Location (Custom Map Pin)",
             name: "Pinned Location",
             address_components: [
                 { types: ["locality"], long_name: "Local Area" },

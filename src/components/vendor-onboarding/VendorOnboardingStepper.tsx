@@ -54,22 +54,22 @@ function StepSidebar({ step }: { step: number }) {
     return (
         <div className="w-64 shrink-0 hidden lg:block sticky top-24">
             <div className="pr-6">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">Setup Progress</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6 font-inter">Setup Progress</p>
                 <div className="relative">
-                    <div className="absolute left-[15px] top-4 bottom-4 w-[2px] bg-gray-100 z-0" />
+                    <div className="absolute left-[11px] top-4 bottom-4 w-[1px] bg-gray-200 z-0" />
                     <ul className="space-y-6 relative z-10">
                         {STEPS.map((s) => {
                             const done = step > s.id;
                             const active = step === s.id;
                             return (
                                 <li key={s.id} className="flex items-start gap-4">
-                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-300 ${done ? "bg-emerald-600 text-white shadow-md shadow-emerald-200" :
-                                        active ? "bg-white border-2 border-emerald-600 text-emerald-700 shadow-sm" :
-                                            "bg-white border-2 border-gray-200 text-gray-400"
+                                    <span className={`w-6 h-6 rounded-none flex items-center justify-center text-[10px] font-bold shrink-0 transition-all duration-300 ${done ? "bg-[#10b981] text-white" :
+                                        active ? "bg-black text-white" :
+                                            "bg-white border border-gray-200 text-gray-400"
                                         }`}>
-                                        {done ? <CheckIcon className="w-4 h-4" strokeWidth={3} /> : s.id}
+                                        {done ? <CheckIcon className="w-3 h-3" strokeWidth={3} /> : s.id}
                                     </span>
-                                    <span className={`text-[14px] font-semibold mt-1.5 transition-colors duration-300 ${active ? "text-emerald-700" : done ? "text-gray-700" : "text-gray-400"}`}>
+                                    <span className={`text-[11px] uppercase tracking-wider font-bold mt-1 transition-colors duration-300 font-inter ${active ? "text-black" : done ? "text-gray-700" : "text-gray-400"}`}>
                                         {s.label}
                                     </span>
                                 </li>
@@ -84,13 +84,13 @@ function StepSidebar({ step }: { step: number }) {
 
 function Input({ label, required, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; required?: boolean }) {
     return (
-        <div>
-            <label className="block text-[13px] font-semibold text-gray-700 mb-2">
+        <div className="mb-4">
+            <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1 font-bold font-inter">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
             <input
                 {...props}
-                className={`w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:bg-white transition-all shadow-sm ${props.disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-100" : ""}`}
+                className={`block w-full border-b border-gray-300 bg-transparent py-2.5 px-0 text-sm focus:border-black focus:ring-0 focus:outline-none transition-colors placeholder-gray-300 font-inter ${props.disabled ? "text-gray-400 cursor-not-allowed" : "text-black font-semibold"}`}
             />
         </div>
     );
@@ -102,17 +102,21 @@ function FormActions({ onBack, onNext, nextLabel = "Next", nextDisabled = false,
     return (
         <div className="flex flex-col-reverse sm:flex-row items-center justify-between pt-8 mt-8 border-t border-gray-100 gap-4">
             {onBack ? (
-                <button onClick={onBack} className="w-full sm:w-auto text-[14px] font-semibold text-gray-500 hover:text-gray-900 transition-colors px-5 py-3 rounded-xl hover:bg-gray-50">
-                    ← Back
+                <button 
+                    onClick={onBack} 
+                    type="button"
+                    className="w-full sm:w-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black border border-gray-200 hover:border-black bg-white px-6 py-3 transition-all rounded-none"
+                >
+                    Back
                 </button>
             ) : <div className="hidden sm:block" />}
             <button
                 onClick={onNext}
+                type="button"
                 disabled={nextDisabled || loading}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-[15px] font-bold px-8 py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98]"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-black hover:bg-[#10b981] disabled:opacity-50 text-white text-[10px] font-bold uppercase tracking-widest px-8 py-3.5 transition-all rounded-none"
             >
                 {loading ? "Please wait..." : nextLabel}
-                {!loading && <ChevronRightIcon className="w-4 h-4" strokeWidth={2.5} />}
             </button>
         </div>
     );
@@ -175,7 +179,7 @@ function OTPInput({ value, onChange }: { value: string; onChange: (val: string) 
                     onChange={e => handleChange(e, i)}
                     onKeyDown={e => handleKeyDown(e, i)}
                     onPaste={handlePaste}
-                    className="w-14 h-16 sm:w-16 sm:h-16 border-2 border-gray-200 rounded-xl text-center text-2xl font-bold text-gray-900 bg-white focus:outline-none focus:border-emerald-600 focus:bg-gray-50 transition-all caret-emerald-600"
+                    className="w-12 h-14 border border-gray-300 rounded-none text-center text-xl font-bold text-black bg-white focus:outline-none focus:border-black transition-all"
                 />
             ))}
         </div>
@@ -199,6 +203,8 @@ export default function VendorOnboardingStepper() {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [categories, setCategories] = useState<string[]>([]);
+    const [isOpenDropdown, setIsOpenDropdown] = useState(false);
+    const dropdownRef = React.useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const fetchCategoriesList = async () => {
@@ -215,6 +221,16 @@ export default function VendorOnboardingStepper() {
             }
         };
         fetchCategoriesList();
+    }, []);
+
+    React.useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpenDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     useEffect(() => {
@@ -328,7 +344,7 @@ export default function VendorOnboardingStepper() {
             <div className="lg:hidden border-b border-gray-100 bg-white px-6 py-4 sticky top-16 z-30 shadow-sm">
                 <div className="flex items-center gap-2 mb-3">
                     {STEPS.map((s) => (
-                        <div key={s.id} className={`h-1.5 flex-1 rounded-full transition-colors ${step >= s.id ? "bg-emerald-600" : "bg-gray-100"}`} />
+                        <div key={s.id} className={`h-1 flex-1 transition-colors ${step >= s.id ? "bg-black" : "bg-gray-100"}`} />
                     ))}
                 </div>
                 <p className="text-[13px] text-gray-500 font-medium tracking-tight">Step {step} of {STEPS.length} — <span className="text-gray-900 font-bold">{STEPS[step - 1]?.label}</span></p>
@@ -340,19 +356,19 @@ export default function VendorOnboardingStepper() {
                     <StepSidebar step={step} />
 
                     {/* Main Form Card */}
-                    <div className="flex-1 w-full bg-white border border-gray-100 lg:rounded-[40px] sm:rounded-3xl rounded-2xl p-6 sm:p-10 shadow-xl shadow-gray-200/50">
+                    <div className="flex-1 w-full bg-white border border-gray-200 rounded-none p-6 sm:p-10 shadow-sm">
 
                         {/* Step 1 — Phone Verification */}
                         {step === 1 && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <h2 className="text-[28px] font-extrabold text-gray-900 mb-2 tracking-tight">Verify your phone</h2>
-                                <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">We'll send a one-time password to confirm your identity.</p>
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-black mb-1 border-l-2 border-black pl-3 font-inter">Verify your phone</h2>
+                                <p className="text-[10px] text-gray-400 mb-8 font-inter uppercase font-semibold">We'll send a one-time password to confirm your identity.</p>
 
-                                <div className="max-w-md space-y-5">
+                                <div className="max-w-md space-y-6">
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">Mobile Number <span className="text-red-500">*</span></label>
-                                        <div className="flex border border-gray-200 rounded-xl overflow-hidden focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition-all shadow-sm bg-gray-50/50 focus-within:bg-white">
-                                            <span className="bg-gray-50/80 border-r border-gray-200 px-4 py-3.5 text-[15px] font-semibold text-gray-600 flex items-center">🇮🇳 +91</span>
+                                        <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1 font-bold font-inter">Mobile Number <span className="text-red-500">*</span></label>
+                                        <div className="flex border-b border-gray-300 py-2.5 focus-within:border-black transition-colors bg-transparent">
+                                            <span className="text-sm font-bold text-gray-500 pr-2 self-center">🇮🇳 +91</span>
                                             <input
                                                 type="tel"
                                                 maxLength={10}
@@ -360,11 +376,15 @@ export default function VendorOnboardingStepper() {
                                                 value={contact}
                                                 disabled={otpSent}
                                                 onChange={e => setContact(e.target.value.replace(/\D/g, ""))}
-                                                className="flex-1 px-4 py-3.5 text-[15px] font-semibold text-gray-900 bg-transparent focus:outline-none placeholder-gray-400 disabled:text-gray-400"
+                                                className="flex-1 text-sm font-semibold text-black bg-transparent focus:outline-none placeholder-gray-300 disabled:text-gray-400"
                                             />
                                         </div>
                                         {otpSent && (
-                                            <button onClick={() => { setOtpSent(false); setOtp(""); }} className="text-[13px] text-green-700 font-bold mt-2 hover:underline">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => { setOtpSent(false); setOtp(""); }} 
+                                                className="text-[9px] uppercase tracking-wider text-[#10b981] font-bold mt-2 hover:underline"
+                                            >
                                                 Change number
                                             </button>
                                         )}
@@ -372,9 +392,10 @@ export default function VendorOnboardingStepper() {
 
                                     {!otpSent && (
                                         <button
+                                            type="button"
                                             onClick={sendOtp}
                                             disabled={loading || contact.length < 10}
-                                            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-[0.98]"
+                                            className="w-full bg-black hover:bg-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-widest py-4 transition-all rounded-none"
                                         >
                                             {loading ? "Sending OTP..." : "Send OTP"}
                                         </button>
@@ -383,16 +404,16 @@ export default function VendorOnboardingStepper() {
                                     {otpSent && (
                                         <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
                                             <div>
-                                                <label className="block text-[13px] font-semibold text-gray-700 mb-2">Enter OTP <span className="text-red-500">*</span></label>
+                                                <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1 font-bold font-inter">Enter OTP <span className="text-red-500">*</span></label>
                                                 <OTPInput value={otp} onChange={setOtp} />
                                             </div>
                                             <button
+                                                type="button"
                                                 onClick={verifyOtp}
                                                 disabled={loading || otp.length < 4}
-                                                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                                className="w-full bg-black hover:bg-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-widest py-4 transition-all rounded-none flex items-center justify-center gap-2"
                                             >
                                                 {loading ? "Verifying..." : "Verify & Continue"}
-                                                {!loading && <ChevronRightIcon className="w-4 h-4" strokeWidth={2.5} />}
                                             </button>
                                         </div>
                                     )}
@@ -403,8 +424,8 @@ export default function VendorOnboardingStepper() {
                         {/* Step 2 — Business Info */}
                         {step === 2 && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <h2 className="text-[28px] font-extrabold text-gray-900 mb-2 tracking-tight">Business information</h2>
-                                <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">Let's set up your shop's identity and location.</p>
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-black mb-1 border-l-2 border-black pl-3 font-inter">Business information</h2>
+                                <p className="text-[10px] text-gray-400 mb-8 font-inter uppercase font-semibold">Let's set up your shop's identity and location.</p>
 
                                 <div className="space-y-6 max-w-2xl">
                                     <Input
@@ -416,21 +437,20 @@ export default function VendorOnboardingStepper() {
                                     />
 
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">
+                                        <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1 font-bold font-inter">
                                             Shop Location <span className="text-red-500">*</span>
                                         </label>
                                         <div
                                             onClick={() => setShowMap(true)}
-                                            className={`flex items-center gap-4 border rounded-xl px-5 py-4 cursor-pointer transition-all shadow-sm ${form.address.formattedAddress
-                                                ? "border-emerald-600 bg-emerald-50/30 hover:bg-emerald-50/50"
-                                                : "border-gray-200 bg-gray-50 hover:border-emerald-600 hover:bg-white"
-                                                }`}
+                                            className="flex items-center justify-between border-b border-gray-300 py-3 cursor-pointer hover:border-black transition-colors"
                                         >
-                                            <MapPinIcon className={`w-6 h-6 shrink-0 ${form.address.formattedAddress ? "text-emerald-600" : "text-gray-400"}`} />
-                                            <span className={`text-[15px] flex-1 ${form.address.formattedAddress ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
-                                                {form.address.formattedAddress || "Tap to mark your shop location on map"}
-                                            </span>
-                                            <span className="text-[13px] font-bold text-emerald-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm shrink-0">
+                                            <div className="flex items-center gap-3">
+                                                <MapPinIcon className={`w-5 h-5 shrink-0 ${form.address.formattedAddress ? "text-black" : "text-gray-400"}`} />
+                                                <span className={`text-xs ${form.address.formattedAddress ? "text-black font-bold uppercase font-inter" : "text-gray-300"}`}>
+                                                    {form.address.formattedAddress || "Tap to mark your shop location on map"}
+                                                </span>
+                                            </div>
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-black border border-black bg-white px-3 py-1.5 rounded-none shadow-sm shrink-0">
                                                 {form.address.formattedAddress ? "Change" : "Select"}
                                             </span>
                                         </div>
@@ -455,65 +475,88 @@ export default function VendorOnboardingStepper() {
                                         ))}
                                     </div>
 
-                                    <div className="mt-8 pt-6 border-t border-gray-100">
-                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">
-                                            Categories of Products You Sell <span className="text-red-500">*</span>
-                                        </label>
-                                        <p className="text-[12px] text-gray-400 mb-3 font-medium">Select one or more categories that you provide.</p>
-                                        <div className="flex flex-wrap gap-2 mb-3">
-                                            {categories.map((cat) => {
-                                                const isSelected = form.supportedCategories.includes(cat);
-                                                return (
-                                                    <button
-                                                        key={cat}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const current = form.supportedCategories;
-                                                            const updated = current.includes(cat)
-                                                                ? current.filter(c => c !== cat)
-                                                                : [...current, cat];
-                                                            setForm(p => ({ ...p, supportedCategories: updated }));
-                                                        }}
-                                                        className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-200 active:scale-[0.98] ${
-                                                            isSelected
-                                                                ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
-                                                                : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
-                                                        }`}
-                                                    >
-                                                        {cat}
-                                                    </button>
-                                                );
-                                            })}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const current = form.supportedCategories;
-                                                    const updated = current.includes("other")
-                                                        ? current.filter(c => c !== "other")
-                                                        : [...current, "other"];
-                                                    setForm(p => ({ ...p, supportedCategories: updated }));
-                                                }}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-200 active:scale-[0.98] ${
-                                                    form.supportedCategories.includes("other")
-                                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
-                                                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
-                                                }`}
-                                            >
-                                                Other (Specify...)
-                                            </button>
-                                        </div>
+                                    <div className="mt-8 pt-6 border-t border-gray-100 relative">
+                                        <h2 className="text-sm font-bold uppercase tracking-widest mb-6 border-l-2 border-black pl-3 text-gray-800">
+                                            02. Capability
+                                        </h2>
+                                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                                            <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-bold font-inter">Supported Categories <span className="text-red-500">*</span></label>
+                                            
+                                            {/* Premium Custom Dropdown Select */}
+                                            <div className="relative" ref={dropdownRef}>
+                                                <div 
+                                                    onClick={() => setIsOpenDropdown(!isOpenDropdown)}
+                                                    className="flex items-center justify-between border-b border-gray-300 py-3 cursor-pointer hover:border-black transition-colors"
+                                                >
+                                                    <span className="text-xs font-bold uppercase font-inter text-black">
+                                                        {form.supportedCategories.length > 0 
+                                                            ? form.supportedCategories.map(c => c === "other" ? (form.customCategory || "Other") : c).join(", ")
+                                                            : "Select Categories..."}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">▼</span>
+                                                </div>
 
-                                        {form.supportedCategories.includes("other") && (
-                                            <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Specify custom product category..."
-                                                    value={form.customCategory || ""}
-                                                    onChange={e => setForm(p => ({ ...p, customCategory: e.target.value }))}
-                                                    className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-sm"
-                                                />
+                                                {isOpenDropdown && (
+                                                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl max-h-60 overflow-y-auto z-20">
+                                                        {categories.map((cat) => {
+                                                            const isSelected = form.supportedCategories.includes(cat);
+                                                            return (
+                                                                <div 
+                                                                    key={cat}
+                                                                    onClick={() => {
+                                                                        const current = form.supportedCategories;
+                                                                        const updated = current.includes(cat)
+                                                                            ? current.filter(c => c !== cat)
+                                                                            : [...current, cat];
+                                                                        setForm(p => ({ ...p, supportedCategories: updated }));
+                                                                    }}
+                                                                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors"
+                                                                >
+                                                                    <input 
+                                                                        type="checkbox"
+                                                                        checked={isSelected}
+                                                                        readOnly
+                                                                        className="w-4 h-4 accent-black rounded-none border-gray-300 focus:ring-black"
+                                                                    />
+                                                                    <span className="text-xs uppercase font-bold text-black font-inter">{cat}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        <div 
+                                                            onClick={() => {
+                                                                const current = form.supportedCategories;
+                                                                const updated = current.includes("other")
+                                                                    ? current.filter(c => c !== "other")
+                                                                    : [...current, "other"];
+                                                                setForm(p => ({ ...p, supportedCategories: updated }));
+                                                            }}
+                                                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                                                        >
+                                                            <input 
+                                                                type="checkbox"
+                                                                checked={form.supportedCategories.includes("other")}
+                                                                readOnly
+                                                                className="w-4 h-4 accent-black rounded-none border-gray-300 focus:ring-black"
+                                                            />
+                                                            <span className="text-xs uppercase font-bold text-black font-inter">Other (Specify...)</span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
+
+                                            {form.supportedCategories.includes("other") && (
+                                                <div className="mt-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    <label className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1 font-bold">Custom Category Name</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Specify custom product category..."
+                                                        value={form.customCategory || ""}
+                                                        onChange={e => setForm(p => ({ ...p, customCategory: e.target.value }))}
+                                                        className="block w-full border-b border-gray-300 bg-transparent py-2 text-xs focus:border-black focus:ring-0 focus:outline-none transition-colors font-inter text-black uppercase font-bold"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -533,8 +576,8 @@ export default function VendorOnboardingStepper() {
                         {/* Step 3 — Owner Details */}
                         {step === 3 && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <h2 className="text-[28px] font-extrabold text-gray-900 mb-2 tracking-tight">Owner details</h2>
-                                <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">Contact details for business communications.</p>
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-black mb-1 border-l-2 border-black pl-3 font-inter">Owner details</h2>
+                                <p className="text-[10px] text-gray-400 mb-8 font-inter uppercase font-semibold">Contact details for business communications.</p>
 
                                 <div className="space-y-6 max-w-lg">
                                     <Input
@@ -553,21 +596,21 @@ export default function VendorOnboardingStepper() {
                                         onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                                     />
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">Mobile Number</label>
-                                        <div className="flex items-center gap-3 border border-gray-200 bg-gray-50 rounded-xl px-4 py-3.5 shadow-sm">
-                                            <span className="text-[15px] text-gray-500 font-semibold flex items-center gap-2">🇮🇳 +91 {contact}</span>
-                                            <span className="ml-auto text-[13px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5">
-                                                <CheckIcon className="w-4 h-4" strokeWidth={3} /> Verified
+                                        <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1 font-bold font-inter">Mobile Number</label>
+                                        <div className="flex items-center justify-between border-b border-gray-300 py-2.5">
+                                            <span className="text-xs text-gray-500 font-semibold">🇮🇳 +91 {contact}</span>
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#10b981] border border-[#10b981] bg-white px-2.5 py-1">
+                                                Verified
                                             </span>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-gray-700 mb-2">
+                                        <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1 font-bold font-inter">
                                             Store Owner Photo <span className="text-red-500">*</span>
                                         </label>
-                                        <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50/50 shadow-sm">
-                                            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-emerald-600 bg-white flex items-center justify-center shrink-0 shadow-inner">
+                                        <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-none bg-gray-50/50 shadow-sm">
+                                            <div className="relative w-20 h-20 rounded-none overflow-hidden border border-gray-200 bg-white flex items-center justify-center shrink-0">
                                                 {imagePreview ? (
                                                     <img src={imagePreview} alt="Owner Preview" className="w-full h-full object-cover" />
                                                 ) : (
@@ -580,7 +623,7 @@ export default function VendorOnboardingStepper() {
                                             </div>
                                             <div className="flex-1 flex flex-col gap-2">
                                                 <div className="flex items-center gap-2">
-                                                    <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-all active:scale-[0.98]">
+                                                    <label className="cursor-pointer bg-black hover:bg-[#10b981] text-white text-[9px] font-bold uppercase tracking-widest px-4 py-2 transition-all rounded-none">
                                                         Upload Photo
                                                         <input
                                                             type="file"
@@ -601,25 +644,25 @@ export default function VendorOnboardingStepper() {
                                                         <button
                                                             type="button"
                                                             onClick={() => { setImageFile(null); setImagePreview(null); }}
-                                                            className="border border-red-200 text-red-500 hover:bg-red-50 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+                                                            className="border border-red-200 text-red-500 hover:bg-red-50 text-[9px] font-bold uppercase tracking-widest px-3 py-2 rounded-none transition-all"
                                                         >
                                                             Remove
                                                         </button>
                                                     )}
                                                 </div>
-                                                <p className="text-[11px] text-gray-400 font-medium">JPEG, PNG or WEBP. Max size 5MB.</p>
+                                                <p className="text-[10px] text-gray-400 font-medium">JPEG, PNG or WEBP. Max size 5MB.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <label className="flex items-start gap-4 cursor-pointer mt-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <label className="flex items-start gap-4 cursor-pointer mt-4 p-4 border border-gray-200 rounded-none hover:bg-gray-50 transition-colors">
                                         <input
                                             type="checkbox"
                                             checked={form.whatsappUpdates}
                                             onChange={e => setForm(p => ({ ...p, whatsappUpdates: e.target.checked }))}
-                                            className="mt-0.5 w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600 transition-all cursor-pointer"
+                                            className="mt-0.5 w-4 h-4 rounded-none border-gray-300 text-black focus:ring-black cursor-pointer"
                                         />
-                                        <span className="text-[14px] text-gray-700 font-medium leading-snug">I want to receive important business updates and order alerts on WhatsApp.</span>
+                                        <span className="text-[12px] text-gray-600 font-medium leading-snug">I want to receive important business updates and order alerts on WhatsApp.</span>
                                     </label>
                                 </div>
 
@@ -634,8 +677,8 @@ export default function VendorOnboardingStepper() {
                         {/* Step 4 — Bank Details */}
                         {step === 4 && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <h2 className="text-[28px] font-extrabold text-gray-900 mb-2 tracking-tight">Bank information</h2>
-                                <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">Required for receiving payouts securely from Govigi.</p>
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-black mb-1 border-l-2 border-black pl-3 font-inter">Bank information</h2>
+                                <p className="text-[10px] text-gray-400 mb-8 font-inter uppercase font-semibold">Required for receiving payouts securely from Govigi.</p>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
                                     {([
@@ -683,30 +726,31 @@ export default function VendorOnboardingStepper() {
 
             {/* Success Modal */}
             {submitted && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[32px] shadow-2xl p-8 sm:p-12 text-center max-w-md w-full animate-in zoom-in-95 duration-300">
-                        <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-200">
-                            <CheckIcon className="w-10 h-10 text-white" strokeWidth={3} />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-300">
+                    <div className="bg-white border border-gray-200 shadow-2xl p-8 sm:p-12 text-center max-w-md w-full rounded-none animate-in zoom-in-95 duration-300">
+                        <div className="w-16 h-16 bg-[#10b981] flex items-center justify-center mx-auto mb-6 shadow-sm rounded-none">
+                            <CheckIcon className="w-8 h-8 text-white" strokeWidth={3} />
                         </div>
-                        <h2 className="text-[26px] font-extrabold text-gray-900 mb-3 tracking-tight">Registration Complete!</h2>
-                        <p className="text-[15px] text-gray-500 mb-2 leading-relaxed">
-                            <strong className="text-gray-900">{form.businessName}</strong> has been submitted successfully.
+                        <h2 className="text-sm font-bold uppercase tracking-widest text-black mb-3 font-inter">Registration Complete!</h2>
+                        <p className="text-xs text-gray-500 mb-2 leading-relaxed font-inter">
+                            <strong className="text-black font-extrabold">{form.businessName}</strong> has been submitted successfully.
                         </p>
-                        <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">
-                            We will contact you on <strong className="text-gray-900">+91 {contact}</strong> to verify your account shortly.
+                        <p className="text-xs text-gray-500 mb-8 leading-relaxed font-inter">
+                            We will contact you on <strong className="text-black font-extrabold">+91 {contact}</strong> to verify your account shortly.
                         </p>
 
                         {closeFailed ? (
-                            <p className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-                                You can now <strong className="text-gray-800">close this tab</strong> manually.
+                            <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-none px-4 py-3 font-inter uppercase font-semibold">
+                                You can now <strong className="text-black font-extrabold">close this tab</strong> manually.
                             </p>
                         ) : (
                             <button
+                                type="button"
                                 onClick={() => {
                                     window.close();
                                     setTimeout(() => setCloseFailed(true), 400);
                                 }}
-                                className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[15px] shadow-lg shadow-emerald-100 transition-all active:scale-[0.98]"
+                                className="w-full py-3.5 bg-black hover:bg-[#10b981] text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-none"
                             >
                                 Close Tab
                             </button>
