@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/libs/utils/config";
+import { getAuthHeaders, getStoredToken } from "@/libs/utils/address";
 import {
   CheckBadgeIcon,
   ClockIcon,
@@ -26,7 +27,7 @@ const HistorySection = () => {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const fetchUserOrders = async () => {
-    const token = JSON.parse(localStorage.getItem("token"));
+    const token = getStoredToken();
     if (!token) {
       console.warn("Token not found in localStorage");
       setLoading(false);
@@ -34,10 +35,12 @@ const HistorySection = () => {
     }
 
     try {
-      const res = await fetch(`${backendApi}/userOrders`, {
+      const res = await fetch(`${backendApi}/customerOrders`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
       });
 
       const data = await res.json();
