@@ -1,7 +1,7 @@
 // Service Worker for Govigi PWA
 
-const CACHE_NAME = 'govigi-v2';
-const STATIC_CACHE = 'govigi-static-v2';
+const CACHE_NAME = 'govigi-v3';
+const STATIC_CACHE = 'govigi-static-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -65,8 +65,14 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // API calls - network first
-  if (url.pathname.includes('/api/') || url.pathname.includes('/get')) {
+  // Only use Cache-First for static hashed assets and media.
+  // HTML pages, API calls, and sw.js itself must use Network-First to prevent stale UI caching.
+  const isStaticHashedAsset = (url.pathname.includes('_next/static/') || 
+                               /\.(png|jpe?g|gif|svg|ico|webp|woff2?|ttf|otf|css|js)$/i.test(url.pathname)) && 
+                              !url.pathname.includes('sw.js');
+
+  if (!isStaticHashedAsset || url.pathname.includes('/api/') || url.pathname.includes('/get')) {
+    // Pages, Documents, Manifests & APIs - Network First, falling back to cache
     event.respondWith(
       fetch(event.request)
         .then(response => {
@@ -81,7 +87,7 @@ self.addEventListener('fetch', event => {
         })
         .catch(() => {
           return caches.match(event.request).catch(() => {
-            return new Response('Offline - no cache available', {
+            return caches.match('/') || new Response('Offline', {
               status: 503,
               statusText: 'Service Unavailable',
               headers: new Headers({
@@ -92,7 +98,7 @@ self.addEventListener('fetch', event => {
         })
     );
   } else {
-    // Static assets - cache first, then network
+    // Static assets - Cache First, falling back to network
     event.respondWith(
       caches.match(event.request).then(response => {
         if (response) {
@@ -110,7 +116,6 @@ self.addEventListener('fetch', event => {
           });
           return response;
         }).catch(() => {
-          // Return offline page if available
           return caches.match('/') || new Response('Offline', {
             status: 503,
             statusText: 'Service Unavailable'
