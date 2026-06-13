@@ -17,16 +17,23 @@ export default function ViewAll({ webapp }) {
     removeFromCart,
   } = useCart();
 
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search")?.trim() || "";
+  const initialCategory = searchParams.get("category")?.trim() || "";
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [category, setCategory] = useState(""); // Default to empty (All Products)
+  const [category, setCategory] = useState(initialCategory || ""); // Default to empty (All Products) or query param
   const [loading, setLoading] = useState(false);
   const backendURL = config.backend_url;
 
-  const searchParams = useSearchParams();
-  const searchQuery = searchParams.get("search")?.trim() || "";
+  useEffect(() => {
+    if (initialCategory) {
+      setCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   const fetchProducts = async () => {
     setLoading(true);

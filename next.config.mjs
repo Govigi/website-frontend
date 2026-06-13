@@ -9,6 +9,28 @@ const nextConfig = {
         ],
     },
     // reactStrictMode: false,
+    async redirects() {
+        return [
+            {
+                source: "/vendor-onboarding",
+                destination: "/partner-with-us",
+                permanent: true,
+            },
+        ];
+    },
+    async rewrites() {
+        if (process.env.NODE_ENV === "production") {
+            return [];
+        }
+        return {
+            fallback: [
+                {
+                    source: "/:path*",
+                    destination: "http://127.0.0.1:8000/:path*",
+                },
+            ],
+        };
+    },
     async headers() {
         return [
             {
