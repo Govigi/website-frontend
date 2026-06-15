@@ -19,11 +19,17 @@ import {
     ShieldCheckIcon,
     QuestionMarkCircleIcon,
     PhotoIcon,
-    CreditCardIcon
+    CameraIcon,
+    CreditCardIcon,
+    BriefcaseIcon,
+    UsersIcon,
+    ArrowLeftIcon,
+    ArrowRightIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
 import MapPicker from "./MapPicker";
+import LivenessCaptureModal from "./LivenessCaptureModal";
 import { useSearchParams } from "next/navigation";
 
 import { config } from "../../libs/utils/config";
@@ -102,6 +108,8 @@ type Form = {
     gstin?: string;
     panNumber?: string;
     fssaiNumber?: string;
+    role?: string;
+    alternatePhone?: string;
 };
 
 const initialForm: Form = {
@@ -124,6 +132,8 @@ const initialForm: Form = {
     gstin: "",
     panNumber: "",
     fssaiNumber: "",
+    role: "",
+    alternatePhone: "",
 };
 
 function OTPInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
@@ -209,8 +219,42 @@ export default function VendorOnboardingStepper() {
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isLivenessModalOpen, setIsLivenessModalOpen] = useState(false);
     const [docFile, setDocFile] = useState<File | null>(null);
     const [docPreview, setDocPreview] = useState<string | null>(null);
+    const [storePreviews, setStorePreviews] = useState<{ url: string; file?: File }[]>([]);
+    const [expandedSection, setExpandedSection] = useState<number | null>(null);
+    const [agree1, setAgree1] = useState(false);
+    const [agree2, setAgree2] = useState(false);
+    const [isBankVerified, setIsBankVerified] = useState(false);
+    const [isBankVerifying, setIsBankVerifying] = useState(false);
+    const [bankVerificationError, setBankVerificationError] = useState("");
+    const [verifiedBankName, setVerifiedBankName] = useState("");
+
+    const handleStoreImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+
+        const fileList = Array.from(files);
+        if (storePreviews.length + fileList.length > 5) {
+            toast.error("You can upload a maximum of 5 store images.");
+            return;
+        }
+
+        fileList.forEach((file) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                setStorePreviews((prev) => [...prev, { url: dataUrl, file }]);
+            };
+            reader.readAsDataURL(file);
+        });
+        e.target.value = "";
+    };
+
+    const handleRemoveStoreImage = (index: number) => {
+        setStorePreviews((prev) => prev.filter((_, i) => i !== index));
+    };
     
     const [categories, setCategories] = useState<string[]>([]);
     const [backendCategories, setBackendCategories] = useState<any[]>([]);
@@ -331,7 +375,27 @@ export default function VendorOnboardingStepper() {
                                 gstin: vendor.gstin || "",
                                 panNumber: vendor.panNumber || "",
                                 fssaiNumber: vendor.fssaiNumber || "",
+                                role: vendor.role || "",
+                                alternatePhone: vendor.alternatePhone || "",
                             }));
+                            if (vendor.image) {
+                                setImagePreview(typeof vendor.image === "object" && vendor.image.url ? vendor.image.url : vendor.image);
+                            }
+                            if (vendor.document) {
+                                setDocPreview(typeof vendor.document === "object" && vendor.document.url ? vendor.document.url : vendor.document);
+                            }
+                            if (vendor.storeImages && Array.isArray(vendor.storeImages)) {
+                                setStorePreviews(vendor.storeImages.map((img: any) => ({ url: img.url })));
+                            }
+                            const hasBank = vendor.bankDetails &&
+                                            (vendor.bankDetails.bankName || "").trim().length > 0 &&
+                                            (vendor.bankDetails.accountNumber || "").trim().length > 0 &&
+                                            (vendor.bankDetails.accountName || "").trim().length > 0 &&
+                                            (vendor.bankDetails.ifscCode || "").trim().length > 0;
+                            if (hasBank) {
+                                setIsBankVerified(true);
+                                setVerifiedBankName(vendor.bankDetails.accountName);
+                            }
                         }
                         
                         setSubmitted(true);
@@ -373,8 +437,47 @@ export default function VendorOnboardingStepper() {
     const updateAddress = (key: keyof AddressComponents, val: string) =>
         setForm(p => ({ ...p, address: { ...p.address, components: { ...p.address.components, [key]: val } } }));
 
-    const updateBank = (key: keyof Form["bankDetails"], val: string) =>
+    const updateBank = (key: keyof Form["bankDetails"], val: string) => {
         setForm(p => ({ ...p, bankDetails: { ...p.bankDetails, [key]: val } }));
+        setIsBankVerified(false);
+        setBankVerificationError("");
+        setVerifiedBankName("");
+    };
+
+    const handleVerifyBankDetails = async () => {
+        const { bankName, accountNumber, accountName, ifscCode } = form.bankDetails;
+        if (!bankName || !accountNumber || !accountName || !ifscCode) {
+            toast.error("Please fill in all bank details before verifying.");
+            return;
+        }
+
+        setIsBankVerifying(true);
+        setBankVerificationError("");
+        setVerifiedBankName("");
+
+        try {
+            const res = await axios.post(`${BACKEND_URL}/verifyBankDetails`, {
+                accountNumber,
+                ifscCode,
+                accountName
+            });
+
+            if (res.data && res.data.success) {
+                setIsBankVerified(true);
+                setVerifiedBankName(res.data.verifiedName);
+                toast.success("Bank account verified successfully!");
+            } else {
+                setBankVerificationError(res.data.message || "Verification failed");
+                toast.error(res.data.message || "Bank account verification failed.");
+            }
+        } catch (err: any) {
+            const msg = err.response?.data?.message || "Failed to verify bank details.";
+            setBankVerificationError(msg);
+            toast.error(msg);
+        } finally {
+            setIsBankVerifying(false);
+        }
+    };
 
     const sendOtp = async () => {
         if (contact.length < 10) { toast.error("Enter a valid 10-digit mobile number."); return; }
@@ -430,7 +533,27 @@ export default function VendorOnboardingStepper() {
                         gstin: v.gstin || "",
                         panNumber: v.panNumber || "",
                         fssaiNumber: v.fssaiNumber || "",
+                        role: v.role || "",
+                        alternatePhone: v.alternatePhone || "",
                     }));
+                    if (v.image) {
+                        setImagePreview(typeof v.image === "object" && v.image.url ? v.image.url : v.image);
+                    }
+                    if (v.document) {
+                        setDocPreview(typeof v.document === "object" && v.document.url ? v.document.url : v.document);
+                    }
+                    if (v.storeImages && Array.isArray(v.storeImages)) {
+                        setStorePreviews(v.storeImages.map((img: any) => ({ url: img.url })));
+                    }
+                    const hasBank = v.bankDetails &&
+                                    (v.bankDetails.bankName || "").trim().length > 0 &&
+                                    (v.bankDetails.accountNumber || "").trim().length > 0 &&
+                                    (v.bankDetails.accountName || "").trim().length > 0 &&
+                                    (v.bankDetails.ifscCode || "").trim().length > 0;
+                    if (hasBank) {
+                        setIsBankVerified(true);
+                        setVerifiedBankName(v.bankDetails.accountName);
+                    }
                 }
             }
         } catch (e: any) { 
@@ -455,6 +578,8 @@ export default function VendorOnboardingStepper() {
             // Add custom fields so they go to backend (ignored or saved)
             if (form.gstin) formData.append("gstin", form.gstin);
             if (form.panNumber) formData.append("panNumber", form.panNumber);
+            if (form.role) formData.append("role", form.role);
+            if (form.alternatePhone) formData.append("alternatePhone", form.alternatePhone);
             formData.append("businessType", form.businessType);
             formData.append("legalEntityType", form.legalEntityType);
             formData.append("legalBusinessName", form.legalBusinessName);
@@ -477,6 +602,17 @@ export default function VendorOnboardingStepper() {
             if (docFile) {
                 formData.append("document", docFile);
             }
+
+            // Append store images
+            storePreviews.forEach((item) => {
+                if (item.file) {
+                    formData.append("storeImages", item.file);
+                }
+            });
+            const existingStoreUrls = storePreviews
+                .filter((item) => !item.file && item.url.startsWith("http"))
+                .map((item) => item.url);
+            formData.append("existingStoreImages", JSON.stringify(existingStoreUrls));
 
             const res = await axios.post(`${BACKEND_URL}/onboardVendor`, formData, {
                 headers: {
@@ -534,8 +670,10 @@ export default function VendorOnboardingStepper() {
     const isStep3Valid = () => {
         return (
             (form.contactPerson || "").trim().length > 0 &&
+            (form.role || "").trim().length > 0 &&
             (form.email || "").trim().includes("@") &&
-            imageFile !== null
+            (form.panNumber || "").trim().length === 10 &&
+            (imageFile !== null || (imagePreview !== null && imagePreview !== "/profile_placeholder.png"))
         );
     };
 
@@ -545,14 +683,15 @@ export default function VendorOnboardingStepper() {
 
     const isStep5Valid = () => {
         if (form.gstin && (form.gstin || "").trim().length !== 15) return false;
-        if (form.panNumber && (form.panNumber || "").trim().length !== 10) return false;
         return true;
     };
 
     const isStep6Valid = () => {
         return (
             form.supportedCategories.length > 0 &&
-            (!form.supportedCategories.includes("other") || (form.customCategory && (form.customCategory || "").trim().length > 0))
+            (!form.supportedCategories.includes("other") || (form.customCategory && (form.customCategory || "").trim().length > 0)) &&
+            storePreviews.length >= 1 &&
+            storePreviews.length <= 5
         );
     };
 
@@ -561,12 +700,13 @@ export default function VendorOnboardingStepper() {
             (form.bankDetails.bankName || "").trim().length > 0 &&
             (form.bankDetails.accountNumber || "").trim().length > 0 &&
             (form.bankDetails.accountName || "").trim().length > 0 &&
-            (form.bankDetails.ifscCode || "").trim().length > 0
+            (form.bankDetails.ifscCode || "").trim().length > 0 &&
+            isBankVerified
         );
     };
 
     const isStep8Valid = () => {
-        return true;
+        return agree1 && agree2;
     };
 
     if (verifyingSession) {
@@ -593,7 +733,7 @@ export default function VendorOnboardingStepper() {
             <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-4 md:py-4 flex flex-col lg:flex-row gap-8 items-start">
                 
                 {/* Left Side: Zomato-Style Stepper Sidebar */}
-                <div className="w-full lg:w-96 shrink-0 flex flex-col gap-5 sticky top-24">
+                <div className="w-full lg:w-96 shrink-0 flex flex-col gap-5 lg:sticky lg:top-24">
                     
                     {/* Stepper Card */}
                     <div className="bg-white border border-gray-100 rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
@@ -699,10 +839,6 @@ export default function VendorOnboardingStepper() {
 
                 {/* Right Side: Main Content Card & Forms */}
                 <div className="flex-1 w-full flex flex-col gap-6">
-                    
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight pl-1">
-                        {STEPS[step - 1]?.label}
-                    </h1>
 
                     <div className="bg-white border border-gray-100 rounded-[32px] p-6 md:p-10 shadow-[0_12px_40px_rgba(0,0,0,0.015)]">
 
@@ -833,7 +969,6 @@ export default function VendorOnboardingStepper() {
                                                 <option value="Distributor">Distributor</option>
                                                 <option value="Manufacturer">Manufacturer</option>
                                                 <option value="Service Provider">Service Provider</option>
-                                                <option value="Restaurant / Food Service">Restaurant / Food Service</option>
                                             </select>
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
                                         </div>
@@ -867,7 +1002,10 @@ export default function VendorOnboardingStepper() {
                                             type="text"
                                             placeholder="Enter legal business name"
                                             value={form.legalBusinessName}
-                                            onChange={e => setForm(p => ({ ...p, legalBusinessName: e.target.value }))}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
+                                                setForm(p => ({ ...p, legalBusinessName: value }))
+                                            }}
                                             className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 px-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
                                         />
                                         <p className="text-[10px] text-gray-400 font-semibold pl-1">Enter the name as per PAN / official documents</p>
@@ -879,7 +1017,10 @@ export default function VendorOnboardingStepper() {
                                             type="text"
                                             placeholder="Enter brand or store name"
                                             value={form.businessName}
-                                            onChange={e => setForm(p => ({ ...p, businessName: e.target.value }))}
+                                            onChange={(e) => {
+                                                    const value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
+                                                    setForm(p => ({ ...p, businessName: value }))
+                                            }}
                                             className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 px-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
                                         />
                                         <p className="text-[10px] text-gray-400 font-semibold pl-1">This is the name customers will see</p>
@@ -932,96 +1073,162 @@ export default function VendorOnboardingStepper() {
 
                         {/* ================= STEP 3: OWNER DETAILS ================= */}
                         {step === 3 && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="border border-gray-100 rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.01)] space-y-5">
-                                    <div>
-                                        <h3 className="text-base font-extrabold text-gray-800 mb-1">Owner details</h3>
-                                        <p className="text-xs text-gray-400 font-medium">We will use these details for all business communications and updates</p>
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+                                        <UsersIcon className="w-6 h-6" />
                                     </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900 leading-tight">Owner Details</h3>
+                                        <p className="text-xs text-gray-400 font-semibold mt-0.5">Provide details of the person who will be responsible for the Govigi partner account.</p>
+                                    </div>
+                                </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1">Full name*</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                    {/* Full Name */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-700">Full Name <span className="text-red-500">*</span></label>
+                                        <div className="relative flex items-center">
+                                            <UserIcon className="w-5 h-5 text-gray-400 absolute left-4" />
                                             <input
                                                 type="text"
-                                                placeholder="Full name*"
+                                                placeholder="Enter full name"
                                                 value={form.contactPerson}
                                                 onChange={e => setForm(p => ({ ...p, contactPerson: e.target.value }))}
-                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 px-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 pl-12 pr-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
                                             />
                                         </div>
-
-                                        <div className="space-y-1">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1">Email address*</label>
-                                            <input
-                                                type="email"
-                                                placeholder="Email address*"
-                                                value={form.email}
-                                                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 px-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
-                                            />
-                                        </div>
+                                        <p className="text-[11px] text-gray-400 pl-1">Enter name as per PAN or official documents</p>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1">Store Owner Photo*</label>
-                                        
-                                        <div className="flex flex-col sm:flex-row items-center gap-5 p-5 border border-dashed border-gray-200 rounded-2xl bg-gray-50/20">
-                                            <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-gray-100 bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                                {imagePreview ? (
-                                                    <img src={imagePreview} alt="Owner Preview" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="flex flex-col items-center justify-center text-center text-gray-400">
-                                                        <UserIcon className="w-7 h-7" />
-                                                    </div>
-                                                )}
+                                    {/* Role / Designation */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-700">Role / Designation <span className="text-red-500">*</span></label>
+                                        <div className="relative flex items-center">
+                                            <BriefcaseIcon className="w-5 h-5 text-gray-400 absolute left-4" />
+                                            <select
+                                                value={form.role || ""}
+                                                onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
+                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 pl-12 pr-10 text-sm font-semibold transition-all text-gray-900 focus:outline-none appearance-none cursor-pointer"
+                                            >
+                                                <option value="" disabled>Select role / designation</option>
+                                                <option value="Owner">Owner</option>
+                                                <option value="Partner">Partner</option>
+                                                <option value="Manager">Manager</option>
+                                                <option value="Authorized Representative">Authorized Representative</option>
+                                            </select>
+                                            <div className="pointer-events-none absolute right-4 flex items-center">
+                                                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
                                             </div>
-                                            <div className="flex-1 text-center sm:text-left space-y-2">
-                                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                                                    <label className="cursor-pointer bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all active:scale-98 inline-flex items-center gap-1.5 shadow-md shadow-green-100">
-                                                        <ArrowUpTrayIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                                        Upload Photo
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (file) {
-                                                                    setImageFile(file);
-                                                                    const reader = new FileReader();
-                                                                    reader.onloadend = () => setImagePreview(reader.result as string);
-                                                                    reader.readAsDataURL(file);
-                                                                }
-                                                            }}
-                                                        />
-                                                    </label>
-                                                    {imagePreview && (
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 pl-1">Select your role in the business</p>
+                                    </div>
+
+                                    {/* Email Address */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-700">Email Address <span className="text-red-500">*</span></label>
+                                        <div className="relative flex items-center">
+                                            <EnvelopeIcon className="w-5 h-5 text-gray-400 absolute left-4" />
+                                            <input
+                                                type="email"
+                                                placeholder="Enter email address"
+                                                value={form.email}
+                                                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 pl-12 pr-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 pl-1">We will use this email for important updates</p>
+                                    </div>
+
+                                    {/* Alternate Phone Number */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-gray-500">Alternate Phone Number (Optional)</label>
+                                        <div className="relative flex items-center">
+                                            <DevicePhoneMobileIcon className="w-5 h-5 text-gray-400 absolute left-4" />
+                                            <span className="text-sm font-semibold text-gray-700 absolute left-11">+91</span>
+                                            <div className="w-px h-6 bg-gray-200 absolute left-20" />
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={10}
+                                                placeholder="Enter 10-digit mobile number"
+                                                value={form.alternatePhone || ""}
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/\D/g, "");
+                                                    setForm(p => ({ ...p, alternatePhone: val }));
+                                                }}
+                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 pl-24 pr-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 pl-1">Used if we cannot reach your primary number</p>
+                                    </div>
+
+                                    {/* PAN Number */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-700">PAN Number <span className="text-red-500">*</span></label>
+                                        <div className="relative flex items-center">
+                                            <CreditCardIcon className="w-5 h-5 text-gray-400 absolute left-4" />
+                                            <input
+                                                type="text"
+                                                maxLength={10}
+                                                placeholder="Enter PAN number (e.g. ABCDE1234F)"
+                                                value={form.panNumber || ""}
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                                                    setForm(p => ({ ...p, panNumber: val }));
+                                                }}
+                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 pl-12 pr-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 pl-1">Required for verification and payouts</p>
+                                    </div>
+
+                                    {/* Profile Photo */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-700">Profile Photo <span className="text-red-500">*</span></label>
+                                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-4">
+                                            {/* Webcam Capture Option */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsLivenessModalOpen(true)}
+                                                className="relative flex-1 min-w-[200px] max-w-[280px] h-[88px] border border-dashed border-gray-300 hover:border-green-500 rounded-xl bg-[#F8FAFC]/50 flex flex-col items-center justify-center cursor-pointer hover:bg-[#F8FAFC] transition-all"
+                                            >
+                                                <CameraIcon className="w-5 h-5 text-gray-400 mb-1" />
+                                                <span className="text-[11px] font-bold text-gray-700">Verify & Capture</span>
+                                                <span className="text-[9px] text-gray-400">Live Face Verification</span>
+                                            </button>
+
+                                            {/* Preview */}
+                                            <div className="w-[88px] h-[88px] rounded-2xl overflow-hidden bg-[#F1F5F9] border border-gray-100 flex items-center justify-center shrink-0 relative group">
+                                                {imagePreview ? (
+                                                    <>
+                                                        <img src={imagePreview} alt="Owner Profile" className="w-full h-full object-cover" />
                                                         <button
                                                             type="button"
                                                             onClick={() => { setImageFile(null); setImagePreview(null); }}
-                                                            className="border border-red-200 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all inline-flex items-center gap-1.5"
+                                                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded-2xl"
                                                         >
-                                                            <TrashIcon className="w-3.5 h-3.5" />
-                                                            Remove
+                                                            <TrashIcon className="w-5 h-5" />
                                                         </button>
-                                                    )}
-                                                </div>
-                                                <p className="text-[10px] text-gray-400 font-semibold">JPEG, PNG or WEBP. Max size 5MB.</p>
+                                                    </>
+                                                ) : (
+                                                    <img src="/profile_placeholder.png" alt="Profile Placeholder" className="w-full h-full object-cover" />
+                                                )}
                                             </div>
                                         </div>
+                                        <p className="text-[11px] text-gray-400 pl-1">Clear photo helps build trust with customers</p>
                                     </div>
+                                </div>
 
-                                    {/* Whatsapp updates toggle */}
-                                    <label className="flex items-start gap-3.5 cursor-pointer mt-2 p-3.5 border border-gray-100 rounded-xl hover:bg-gray-50/50 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.whatsappUpdates}
-                                            onChange={e => setForm(p => ({ ...p, whatsappUpdates: e.target.checked }))}
-                                            className="mt-0.5 w-4.5 h-4.5 rounded-md border-gray-200 text-green-600 focus:ring-green-600 cursor-pointer transition-all"
-                                        />
-                                        <span className="text-xs text-gray-600 font-semibold leading-normal">I want to receive important business updates and order alerts on WhatsApp.</span>
-                                    </label>
+                                {/* Info Banner */}
+                                <div className="flex items-start gap-3.5 p-4 bg-[#E8F5E9]/30 border border-green-50 rounded-2xl mt-4">
+                                    <ShieldCheckIcon className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-xs font-bold text-gray-800">Your information is safe with us.</h4>
+                                        <p className="text-[11px] text-gray-500 font-semibold mt-0.5">We never share your personal information with anyone.</p>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1085,7 +1292,7 @@ export default function VendorOnboardingStepper() {
                                         <p className="text-xs text-gray-400 font-medium">Provide registration and tax info for verification</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4">
                                         <div className="space-y-1">
                                             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1">GSTIN (Optional)</label>
                                             <input
@@ -1098,21 +1305,6 @@ export default function VendorOnboardingStepper() {
                                             />
                                             {form.gstin && form.gstin.length !== 15 && (
                                                 <p className="text-[10px] text-amber-600 font-semibold pl-1">GSTIN must be exactly 15 characters</p>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1">PAN Number (Optional)</label>
-                                            <input
-                                                type="text"
-                                                maxLength={10}
-                                                placeholder="e.g. ABCDE1234F"
-                                                value={form.panNumber}
-                                                onChange={e => setForm(p => ({ ...p, panNumber: e.target.value.toUpperCase() }))}
-                                                className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 px-4 text-sm font-semibold transition-all text-gray-900 uppercase placeholder-gray-400 focus:outline-none"
-                                            />
-                                            {form.panNumber && form.panNumber.length !== 10 && (
-                                                <p className="text-[10px] text-amber-600 font-semibold pl-1">PAN must be exactly 10 characters</p>
                                             )}
                                         </div>
                                     </div>
@@ -1291,6 +1483,51 @@ export default function VendorOnboardingStepper() {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="border border-gray-100 rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.01)] space-y-4 mt-6">
+                                    <div>
+                                        <h3 className="text-base font-extrabold text-gray-800 mb-1">Store Images <span className="text-red-500">*</span></h3>
+                                        <p className="text-xs text-gray-400 font-medium">Upload up to 5 images of your store (at least 1 is required)</p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-4">
+                                        {storePreviews.length < 5 && (
+                                            <label className="border-2 border-dashed border-gray-200 hover:border-green-600 bg-gray-50/50 hover:bg-white rounded-2xl py-6 px-4 flex flex-col items-center justify-center cursor-pointer transition-all">
+                                                <PhotoIcon className="w-8 h-8 text-gray-400 mb-2" />
+                                                <span className="text-xs font-bold text-gray-700">Click to upload store images</span>
+                                                <span className="text-[10px] text-gray-400 mt-0.5">Upload JPEG, PNG, or WEBP (Max 5 images)</span>
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    accept="image/*"
+                                                    onChange={handleStoreImagesChange}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        )}
+
+                                        {storePreviews.length > 0 && (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                                                {storePreviews.map((item, idx) => (
+                                                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 group shadow-sm">
+                                                        <img
+                                                            src={item.url}
+                                                            alt={`Store Preview ${idx + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveStoreImage(idx)}
+                                                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                                                        >
+                                                            <TrashIcon className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -1302,25 +1539,76 @@ export default function VendorOnboardingStepper() {
                                         <h3 className="text-base font-extrabold text-gray-800 mb-1">Bank information</h3>
                                         <p className="text-xs text-gray-400 font-medium">Enter bank details to safely receive weekly payouts</p>
                                     </div>
-
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {([
-                                            ["bankName", "Bank Name", "e.g. HDFC Bank"],
-                                            ["accountNumber", "Account Number", "Your account number"],
-                                            ["accountName", "Account Holder Name", "As per bank records"],
-                                            ["ifscCode", "IFSC Code", "e.g. HDFC0001234"],
-                                        ] as const).map(([key, label, placeholder]) => (
+                                            ["bankName", "Bank Name", "e.g. HDFC Bank", "text", "[^a-zA-Z ]", "none"],
+                                            ["accountNumber", "Account Number", "Your account number", "text", "[^0-9]", "numeric"],
+                                            ["accountName", "Account Holder Name", "As per bank records", "text", "[^a-zA-Z ]", "none"],
+                                            ["ifscCode", "IFSC Code", "e.g. HDFC0001234", "text", "[^a-zA-Z0-9]", "none"],
+                                        ] as const).map(([key, label, placeholder, type, pattern, inputMode]) => (
                                             <div key={key} className="space-y-1">
                                                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1">{label}*</label>
                                                 <input
-                                                    type="text"
+                                                    type={type}
+                                                    inputMode={inputMode === "none" ? undefined : inputMode}
                                                     placeholder={placeholder}
                                                     value={form.bankDetails[key as keyof Form["bankDetails"]]}
-                                                    onChange={e => updateBank(key as keyof Form["bankDetails"], e.target.value)}
+                                                    onChange={e => {
+                                                        debugger;
+                                                        const regex = new RegExp(pattern, "g");
+                                                        const cleanValue = e.target.value.replace(regex, "");
+                                                        updateBank(key as keyof Form["bankDetails"], cleanValue);
+                                                    }}
                                                     className="w-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/10 bg-white rounded-xl py-3 px-4 text-sm font-semibold transition-all text-gray-900 placeholder-gray-400 focus:outline-none"
                                                 />
                                             </div>
                                         ))}
+                                    </div>
+
+                                    {/* Bank Verification Section */}
+                                    <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+                                        {isBankVerified ? (
+                                            <div className="p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                                                    <CheckIcon className="w-5 h-5" strokeWidth={3} />
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-xs font-bold text-green-800">Bank Account Verified Successfully</h4>
+                                                    <p className="text-[10px] text-green-600 font-semibold mt-0.5">
+                                                        Verified Holder Name: <span className="font-extrabold text-green-700">{verifiedBankName}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-3">
+                                                <button
+                                                    type="button"
+                                                    disabled={
+                                                        isBankVerifying ||
+                                                        !form.bankDetails.bankName ||
+                                                        !form.bankDetails.accountNumber ||
+                                                        !form.bankDetails.accountName ||
+                                                        !form.bankDetails.ifscCode
+                                                    }
+                                                    onClick={handleVerifyBankDetails}
+                                                    className="w-full sm:w-auto self-start px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md shadow-green-100"
+                                                >
+                                                    {isBankVerifying ? (
+                                                        <>
+                                                            <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                                                            Verifying details...
+                                                        </>
+                                                    ) : (
+                                                        "Verify Bank Account"
+                                                    )}
+                                                </button>
+                                                {bankVerificationError && (
+                                                    <p className="text-[11px] text-red-500 font-semibold pl-1 animate-in fade-in duration-200">
+                                                        ⚠ {bankVerificationError}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1329,39 +1617,321 @@ export default function VendorOnboardingStepper() {
                         {/* ================= STEP 8: REVIEW & AGREEMENT ================= */}
                         {step === 8 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="border border-gray-150 rounded-2xl p-6 bg-gray-50/30 space-y-4">
-                                    <div className="flex items-center gap-2 text-gray-800">
-                                        <ShieldCheckIcon className="w-5 h-5 text-green-600" />
-                                        <h4 className="text-sm font-bold">Review Registration Details</h4>
+                                {/* Circular green checkmark with document text icon */}
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                        </svg>
                                     </div>
+                                    <div>
+                                        <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Review & Agreement</h2>
+                                        <p className="text-xs text-gray-400 font-medium">Please review all details carefully before submitting.</p>
+                                    </div>
+                                </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
-                                        <div className="flex justify-between border-b border-gray-100 py-1.5">
-                                            <span className="text-gray-400 font-semibold">Business Name:</span>
-                                            <span className="text-gray-800 font-bold">{form.businessName}</span>
-                                        </div>
-                                        <div className="flex justify-between border-b border-gray-100 py-1.5">
-                                            <span className="text-gray-400 font-semibold">Owner Contact:</span>
-                                            <span className="text-gray-800 font-bold">{form.contactPerson}</span>
-                                        </div>
-                                        <div className="flex justify-between border-b border-gray-100 py-1.5">
-                                            <span className="text-gray-400 font-semibold">Email:</span>
-                                            <span className="text-gray-800 font-bold">{form.email}</span>
-                                        </div>
-                                        <div className="flex justify-between border-b border-gray-100 py-1.5">
-                                            <span className="text-gray-400 font-semibold">Phone:</span>
-                                            <span className="text-gray-800 font-bold">+91 {contact}</span>
-                                        </div>
-                                        <div className="flex justify-between border-b border-gray-100 py-1.5">
-                                            <span className="text-gray-400 font-semibold">Categories:</span>
-                                            <span className="text-gray-800 font-bold uppercase truncate max-w-[160px]">
-                                                {form.supportedCategories.join(", ")}
+                                {/* Callout box */}
+                                <div className="border border-amber-200/60 bg-amber-50/30 rounded-2xl p-4 flex items-start gap-3">
+                                    <QuestionMarkCircleIcon className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                    <p className="text-xs text-amber-800 font-semibold leading-relaxed">
+                                        Almost there! Please review your information and agree to the terms to complete your setup.
+                                    </p>
+                                </div>
+
+                                {/* Accordion Title */}
+                                <div className="space-y-4 pt-2">
+                                    <h3 className="text-sm font-bold text-gray-800">Review Your Details</h3>
+
+                                    <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white ">
+                                        {[
+                                            {
+                                                id: 2,
+                                                label: "Business Information",
+                                                icon: BuildingStorefrontIcon,
+                                                render: () => (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-5 bg-gray-50/50 border-t border-gray-50 text-xs text-gray-800">
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Business Name</span>
+                                                            <span className="text-gray-800 font-bold text-sm">{form.businessName || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Business Category</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.businessCategory || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Business Type</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.businessType || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Legal Entity Type</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.legalEntityType || "—"}</span>
+                                                        </div>
+                                                        <div className="sm:col-span-2">
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Legal Business Name</span>
+                                                            <span className="text-gray-800 font-bold text-sm">{form.legalBusinessName || "—"}</span>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                id: 3,
+                                                label: "Owner Details",
+                                                icon: UserIcon,
+                                                render: () => (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-5 bg-gray-50/50 border-t border-gray-50 text-xs text-gray-800">
+                                                        <div className="sm:col-span-2 flex items-center gap-4 mb-2">
+                                                            {imagePreview ? (
+                                                                <img src={imagePreview} className="w-16 h-16 rounded-full object-cover border border-gray-200 shadow-sm" alt="Profile" />
+                                                            ) : (
+                                                                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold border">No Image</div>
+                                                            )}
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block">Profile Photo</span>
+                                                                <span className="text-xs text-gray-500 font-medium">Liveness verified</span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Owner Name</span>
+                                                            <span className="text-gray-800 font-bold text-sm">{form.contactPerson || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Contact Role</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.role || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Email Address</span>
+                                                            <span className="text-gray-800 font-bold text-sm">{form.email || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Primary Phone</span>
+                                                            <span className="text-gray-800 font-bold text-sm">+91 {contact}</span>
+                                                        </div>
+                                                        {form.alternatePhone && (
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block mb-0.5">Alternate Phone</span>
+                                                                <span className="text-gray-800 font-bold text-sm">+91 {form.alternatePhone}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                id: 4,
+                                                label: "Business Location",
+                                                icon: MapPinIcon,
+                                                render: () => (
+                                                    <div className="grid grid-cols-1 gap-4 p-5 bg-gray-50/50 border-t border-gray-100 text-xs text-gray-800">
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Shop Address</span>
+                                                            <span className="text-gray-800 font-bold text-sm">{form.address.formattedAddress || "—"}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block mb-0.5">Area</span>
+                                                                <span className="text-gray-800 font-bold text-sm">{form.address.components.area || "—"}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block mb-0.5">Landmark</span>
+                                                                <span className="text-gray-800 font-bold text-sm">{form.address.components.street || "—"}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                id: 5,
+                                                label: "Business Verification",
+                                                icon: ShieldCheckIcon,
+                                                render: () => (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-5 bg-gray-50/50 border-t border-gray-100 text-xs text-gray-800">
+                                                        {form.gstin && (
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block mb-0.5">GSTIN</span>
+                                                                <span className="text-gray-800 font-bold text-sm uppercase">{form.gstin}</span>
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">PAN Card Number</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.panNumber || "—"}</span>
+                                                        </div>
+                                                        <div className="sm:col-span-2">
+                                                            <span className="text-gray-400 font-semibold block mb-1">Verification Document</span>
+                                                            {docPreview ? (
+                                                                <div className="flex items-center gap-2 border border-gray-200 rounded-xl p-3 bg-white max-w-sm">
+                                                                    <DocumentCheckIcon className="w-5 h-5 text-green-600 shrink-0" />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-xs font-bold text-gray-700 truncate font-outfit">PAN_Document</p>
+                                                                        <p className="text-[10px] text-gray-400 font-medium">Uploaded successfully</p>
+                                                                    </div>
+                                                                    <a href={docPreview} target="_blank" rel="noreferrer" className="text-xs font-bold text-green-600 hover:text-green-700">View</a>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-gray-500 italic">No document uploaded</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                id: 6,
+                                                label: "Store Setup",
+                                                icon: QueueListIcon,
+                                                render: () => (
+                                                    <div className="grid grid-cols-1 gap-4 p-5 bg-gray-50/50 border-t border-gray-100 text-xs text-gray-800">
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-1">Supported Categories</span>
+                                                            <div className="flex flex-wrap gap-1.5 mt-0.5">
+                                                                {form.supportedCategories.map((c, idx) => (
+                                                                    <span key={idx} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-755 font-bold rounded-lg uppercase tracking-wide">{c}</span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block mb-0.5">Operational Open Time</span>
+                                                                <span className="text-gray-800 font-bold text-sm">09:00 AM</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-gray-400 font-semibold block mb-0.5">Operational Close Time</span>
+                                                                <span className="text-gray-800 font-bold text-sm">09:00 PM</span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-2">Store Images</span>
+                                                            {storePreviews.length > 0 ? (
+                                                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                                                                    {storePreviews.map((item, idx) => (
+                                                                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
+                                                                            <img src={item.url} alt={`Store Preview ${idx}`} className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-gray-500 italic">No images uploaded</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                id: 7,
+                                                label: "Bank Details",
+                                                icon: CreditCardIcon,
+                                                render: () => (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-gray-50/50 border-t border-gray-100 text-xs text-gray-800">
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Bank Name</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.bankDetails.bankName || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Account Number</span>
+                                                            <span className="text-gray-800 font-bold text-sm">{form.bankDetails.accountNumber || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">Account Holder Name</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.bankDetails.accountName || "—"}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-400 font-semibold block mb-0.5">IFSC Code</span>
+                                                            <span className="text-gray-800 font-bold text-sm uppercase">{form.bankDetails.ifscCode || "—"}</span>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
+                                        ].map((section, idx, arr) => {
+                                            const isOpen = expandedSection === section.id;
+                                            const SectionIcon = section.icon;
+                                            const isLast = idx === arr.length - 1;
+
+                                            return (
+                                                <div key={section.id} className={`${!isLast ? "border-b border-gray-200" : ""} transition-all duration-200`}>
+                                                    <div
+                                                        onClick={() => setExpandedSection(isOpen ? null : section.id)}
+                                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50/50 transition-colors select-none"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500">
+                                                                <SectionIcon className="w-4 h-4" />
+                                                            </div>
+                                                            <span className="text-sm font-bold text-gray-850">{section.label}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setStep(section.id);
+                                                                }}
+                                                                className="flex items-center gap-1 text-xs font-bold text-green-600 hover:text-green-700 bg-green-50/50 hover:bg-green-50 px-3 py-1.5 rounded-lg transition-colors"
+                                                            >
+                                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                                                </svg>
+                                                                Edit
+                                                            </button>
+                                                            {isOpen ? (
+                                                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                                                                </svg>
+                                                            ) : (
+                                                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {isOpen && (
+                                                        <div className="animate-in fade-in slide-in-from-top-3 duration-300 ease-out origin-top">
+                                                            {section.render()}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Agreements & Declarations Section */}
+                                <div className="space-y-4 pt-4">
+                                    <h3 className="text-sm font-bold text-gray-800">Agreements & Declarations</h3>
+                                    <div className="space-y-3">
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={agree1}
+                                                onChange={(e) => setAgree1(e.target.checked)}
+                                                className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500 mt-0.5 accent-green-600 shrink-0"
+                                            />
+                                            <span className="text-xs font-semibold text-gray-650 leading-relaxed group-hover:text-gray-900 transition-colors select-none">
+                                                I confirm that all the information provided is accurate and complete to the best of my knowledge.
                                             </span>
-                                        </div>
-                                        <div className="flex justify-between border-b border-gray-100 py-1.5">
-                                            <span className="text-gray-400 font-semibold">City:</span>
-                                            <span className="text-gray-800 font-bold">{form.address.components.city || "Selected on Map"}</span>
-                                        </div>
+                                        </label>
+
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={agree2}
+                                                onChange={(e) => setAgree2(e.target.checked)}
+                                                className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500 mt-0.5 accent-green-600 shrink-0"
+                                            />
+                                            <span className="text-xs font-semibold text-gray-655 leading-relaxed group-hover:text-gray-900 transition-colors select-none">
+                                                I agree to the Govigi Partner{" "}
+                                                <a href="/terms-and-conditions" target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-700 underline font-bold">Terms & Conditions</a>
+                                                {" "}and{" "}
+                                                <a href="/vendor-privacy-policy" target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-700 underline font-bold">Privacy Policy</a>.
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Safety Callout */}
+                                <div className="border border-green-100 bg-green-50/30 rounded-2xl p-4 flex items-start gap-3">
+                                    <ShieldCheckIcon className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                                    <div>
+                                        <h5 className="text-xs font-bold text-gray-800">Your data is safe with us.</h5>
+                                        <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                                            We use industry-standard encryption and security practices to protect your information.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1374,40 +1944,65 @@ export default function VendorOnboardingStepper() {
                                     <button 
                                         onClick={() => setStep(step - 1)} 
                                         type="button"
-                                        className="text-xs font-bold text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200/75 px-5 py-3 rounded-xl transition-all active:scale-98"
+                                        className="text-sm font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-6 py-3 rounded-xl transition-all active:scale-98 flex items-center gap-2"
                                     >
+                                        <ArrowLeftIcon className="w-4 h-4" />
                                         Back
                                     </button>
                                 ) : <div />}
                                 
-                                <button
-                                    onClick={() => {
-                                        if (step === 1 && isStep1Valid()) setStep(2);
-                                        else if (step === 2 && isStep2Valid()) setStep(3);
-                                        else if (step === 3 && isStep3Valid()) setStep(4);
-                                        else if (step === 4 && isStep4Valid()) setStep(5);
-                                        else if (step === 5 && isStep5Valid()) setStep(6);
-                                        else if (step === 6 && isStep6Valid()) setStep(7);
-                                        else if (step === 7 && isStep7Valid()) setStep(8);
-                                        else if (step === 8 && isStep8Valid()) submitForm();
-                                    }}
-                                    type="button"
-                                    disabled={
-                                        (step === 1 && !isStep1Valid()) ||
-                                        (step === 2 && !isStep2Valid()) ||
-                                        (step === 3 && !isStep3Valid()) ||
-                                        (step === 4 && !isStep4Valid()) ||
-                                        (step === 5 && !isStep5Valid()) ||
-                                        (step === 6 && !isStep6Valid()) ||
-                                        (step === 7 && !isStep7Valid()) ||
-                                        (step === 8 && !isStep8Valid()) ||
-                                        loading
-                                    }
-                                    className="flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-bold py-3 px-6 rounded-xl transition-all active:scale-98 shadow-md shadow-green-100"
-                                >
-                                    {loading && step === 8 ? (isEditing ? "Saving..." : "Submitting...") : step === 8 ? (isEditing ? "Save Changes" : "Submit Registration") : "Continue"}
-                                    <ChevronRightIcon className="w-3.5 h-3.5" strokeWidth={3} />
-                                </button>
+                                {step === 8 ? (
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                toast.success("Draft saved successfully!");
+                                                setTimeout(() => {
+                                                    window.location.href = "/";
+                                                }, 1000);
+                                            }}
+                                            className="text-sm font-bold text-gray-700 bg-white border border-gray-250 hover:bg-gray-50 px-6 py-3 rounded-xl transition-all active:scale-98"
+                                        >
+                                            Save & Exit
+                                        </button>
+                                        <button
+                                            onClick={submitForm}
+                                            type="button"
+                                            disabled={!isStep8Valid() || loading}
+                                            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-bold py-3 px-6 rounded-xl transition-all active:scale-98 shadow-md shadow-green-100"
+                                        >
+                                            {loading ? (isEditing ? "Saving..." : "Submitting...") : "Agree & Submit"}
+                                            <CheckIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            if (step === 1 && isStep1Valid()) setStep(2);
+                                            else if (step === 2 && isStep2Valid()) setStep(3);
+                                            else if (step === 3 && isStep3Valid()) setStep(4);
+                                            else if (step === 4 && isStep4Valid()) setStep(5);
+                                            else if (step === 5 && isStep5Valid()) setStep(6);
+                                            else if (step === 6 && isStep6Valid()) setStep(7);
+                                            else if (step === 7 && isStep7Valid()) setStep(8);
+                                        }}
+                                        type="button"
+                                        disabled={
+                                            (step === 1 && !isStep1Valid()) ||
+                                            (step === 2 && !isStep2Valid()) ||
+                                            (step === 3 && !isStep3Valid()) ||
+                                            (step === 4 && !isStep4Valid()) ||
+                                            (step === 5 && !isStep5Valid()) ||
+                                            (step === 6 && !isStep6Valid()) ||
+                                            (step === 7 && !isStep7Valid()) ||
+                                            loading
+                                        }
+                                        className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-bold py-3 px-6 rounded-xl transition-all active:scale-98 shadow-md shadow-green-100"
+                                    >
+                                        {step === 1 ? "Continue" : "Save & Continue"}
+                                        <ArrowRightIcon className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -1581,6 +2176,15 @@ export default function VendorOnboardingStepper() {
                     </div>
                 </div>
             )}
+            <LivenessCaptureModal
+                isOpen={isLivenessModalOpen}
+                onClose={() => setIsLivenessModalOpen(false)}
+                onCapture={(file, previewUrl) => {
+                    setImageFile(file);
+                    setImagePreview(previewUrl);
+                    setIsLivenessModalOpen(false);
+                }}
+            />
         </div>
     );
 }

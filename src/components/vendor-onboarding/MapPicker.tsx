@@ -316,7 +316,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
         }
 
         return (
-            <div className="w-full rounded-2xl overflow-hidden border border-gray-150 shadow-[0_4px_25px_rgba(0,0,0,0.02)] flex flex-col relative h-[380px] font-outfit">
+            <div className="w-full rounded-2xl overflow-hidden border border-gray-200 shadow-[0_4px_25px_rgba(0,0,0,0.02)] flex flex-col relative h-[380px] font-outfit">
                 {/* Map Area */}
                 <div className="flex-1 w-full bg-gray-50 relative overflow-hidden">
                     <GoogleMap
