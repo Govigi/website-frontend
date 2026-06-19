@@ -1,6 +1,6 @@
 "use client";
 
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useCart } from "../core/Cart/CartContext";

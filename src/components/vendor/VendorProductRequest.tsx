@@ -11,7 +11,7 @@ import {
     CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
-import { config } from "../../libs/utils/config";
+import { config } from "../../lib/utils/config";
 
 const BACKEND_URL = config.backend_url;
 

@@ -322,7 +322,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                     <GoogleMap
                         mapContainerStyle={{ width: '100%', height: '100%' }}
                         center={center}
-                        zoom={16}
+                        zoom={5}
                         onLoad={onLoad}
                         onUnmount={onUnmount}
                         onIdle={handleMapIdle}

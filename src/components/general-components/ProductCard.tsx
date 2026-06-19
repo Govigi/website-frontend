@@ -1,10 +1,10 @@
 // Corrected ProductCard with custom weight edit visibility fix
 "use client";
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../libs/context/AuthContext";
-import { useLoginModal } from "@/libs/context/LoginModalContext";
-import { useToast } from "../../libs/context/ToastContext";
+import { useAuth } from "../../lib/context/AuthContext";
+import { useLoginModal } from "@/lib/context/LoginModalContext";
+import { useToast } from "../../lib/context/ToastContext";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel/BottomPanelContext";
 import { Loader2 } from "lucide-react";
 import { XMarkIcon } from "@heroicons/react/24/outline";

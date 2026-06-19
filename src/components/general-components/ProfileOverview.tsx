@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useAuth } from "@/libs/context/AuthContext";
-import { useLoginModal } from "@/libs/context/LoginModalContext";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useLoginModal } from "@/lib/context/LoginModalContext";
 import {
     ShoppingCartSimple,
     Heart,

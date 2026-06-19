@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 
 export default function PriceList() {
   const [categories, setCategories] = useState([]);

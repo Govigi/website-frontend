@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useLoginModal } from "@/libs/context/LoginModalContext";
+import { useLoginModal } from "@/lib/context/LoginModalContext";
 import { UserIcon } from "@phosphor-icons/react";
 import { Label } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
