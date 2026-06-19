@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 import {
   ShoppingBagIcon,
   ChevronLeftIcon,

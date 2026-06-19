@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 import {
   CheckBadgeIcon,
   ClockIcon,

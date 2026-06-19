@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 import { useRouter } from "next/navigation";
 
 export default function CategoriesSection() {

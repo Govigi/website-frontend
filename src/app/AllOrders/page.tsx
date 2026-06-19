@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 
 export default function AllOrdersPage() {
   const router = useRouter();

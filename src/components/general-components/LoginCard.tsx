@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { useAuth } from "../../libs/context/AuthContext";
-import { useToast } from "../../libs/context/ToastContext";
-import { config } from "@/libs/utils/config";
+import { useAuth } from "../../lib/context/AuthContext";
+import { useToast } from "../../lib/context/ToastContext";
+import { config } from "@/lib/utils/config";
 
 export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
   const modalRef = useRef(null);

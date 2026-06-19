@@ -1,18 +1,18 @@
 "use client";
 
 import { useCart } from "../core/Cart/CartContext";
-import { useAuth } from "@/libs/context/AuthContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { Minus, Plus, X, MapPinArea } from "@phosphor-icons/react";
 import { ShoppingCartIcon, ChevronRightIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
 import axios from "axios";
-import { config } from "@/libs/utils/config";
-import { useToast } from "@/libs/context/ToastContext";
+import { config } from "@/lib/utils/config";
+import { useToast } from "@/lib/context/ToastContext";
 import { isAbsoluteUrl } from "next/dist/shared/lib/utils";
 import SquircleAlert from "@/components/general-components/SquircleAlert.svg";
-import { useLoginModal } from "@/libs/context/LoginModalContext";
+import { useLoginModal } from "@/lib/context/LoginModalContext";
 import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import AddressModal from "@/components/general-components/AddressModal";
 

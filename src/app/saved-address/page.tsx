@@ -2,10 +2,10 @@
 
 import { useState, useEffect, JSX } from "react";
 import axios from "axios";
-import { useAuth } from "../../libs/context/AuthContext";
+import { useAuth } from "../../lib/context/AuthContext";
 import { PencilIcon, TrashIcon, MapPinIcon, CheckCircleIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { useToast } from "../../libs/context/ToastContext";
-import { config } from "@/libs/utils/config";
+import { useToast } from "../../lib/context/ToastContext";
+import { config } from "@/lib/utils/config";
 import { useRouter } from "next/navigation";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
 import { AddressForm, AddressData } from "@/components/general-components/AddressForm";
