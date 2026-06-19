@@ -7,9 +7,9 @@ import Header from "../components/general-components/Header";
 import BottomNavbar from "../components/general-components/BottomNavbar";
 import ShoppingHeader from "@/components/general-components/ShoppingHeader";
 import { CartProvider } from "../components/core/Cart/CartContext";
-import { AuthProvider } from "../libs/context/AuthContext";
-import { ToastProvider } from "../libs/context/ToastContext";
-import { LoginModalProvider } from "@/libs/context/LoginModalContext";
+import { AuthProvider } from "../lib/context/AuthContext";
+import { ToastProvider } from "../lib/context/ToastContext";
+import { LoginModalProvider } from "@/lib/context/LoginModalContext";
 import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
@@ -49,6 +49,7 @@ export default function RootLayout({ children }) {
 
   const isProfilePage = pathname.startsWith("/profile");
   const isStandaloneRoute = 
+    pathname.startsWith("/onboarding") ||
     pathname.startsWith("/partner-with-us") ||
     pathname.startsWith("/vendor-product-request") ||
     pathname.startsWith("/privacy-policy") ||
@@ -79,7 +80,7 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#16a34a" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="description" content="Fresh organic products delivered to your doorstep" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -88,7 +89,6 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${poppins.className} ${outfit.variable} antialiased ${isStandaloneRoute ? '' : 'overflow-hidden md:overflow-auto'}`} style={isStandaloneRoute ? {} : { height: "100vh", display: "flex", flexDirection: "column" }}>
         <ServiceWorkerRegister />
-        <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>

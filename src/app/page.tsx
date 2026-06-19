@@ -10,7 +10,7 @@ import JoinSection from "../components/general-components/JoinSection";
 import SustainabilitySection from "../components/general-components/SustainabilitySection";
 import TestimonialCarousel from "../components/general-components/TestimonialCarousel";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../libs/context/AuthContext";
+import { useAuth } from "../lib/context/AuthContext";
 import React, { useEffect } from "react";
 
 export default function Home() {

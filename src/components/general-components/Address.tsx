@@ -2,8 +2,8 @@
 import axios from "axios";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../libs/context/AuthContext";
-import { config } from "../../libs/utils/config";
+import { useAuth } from "../../lib/context/AuthContext";
+import { config } from "../../lib/utils/config";
 
 export default function Address({ onLocationUpdate, isOpen, onClose }) {
   const [query, setQuery] = useState("");

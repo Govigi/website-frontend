@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { config } from "@/libs/utils/config";
-import { getAuthHeaders } from "@/libs/utils/address";
+import { config } from "@/lib/utils/config";
+import { getAuthHeaders } from "@/lib/utils/address";
 import {
   ShoppingBagIcon,
   ChevronLeftIcon,

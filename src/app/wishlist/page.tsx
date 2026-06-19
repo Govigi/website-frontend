@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../../libs/context/AuthContext";
+import { useAuth } from "../../lib/context/AuthContext";
 import { useCart } from "../../components/core/Cart/CartContext";
 import { LoaderCircle, Trash2 } from "lucide-react";
 import axios from "axios";
-import { config } from "@/libs/utils/config";
+import { config } from "@/lib/utils/config";
 
 export default function WishlistPage() {
   const [wishlist, setWishlist] = useState([]);

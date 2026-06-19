@@ -5,8 +5,8 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../components/core/Cart/CartContext";
 import ProductCard from "../../components/general-components/ProductCard";
-import { useAuth } from "../../libs/context/AuthContext";
-import { config } from "@/libs/utils/config";
+import { useAuth } from "../../lib/context/AuthContext";
+import { config } from "@/lib/utils/config";
 
 export default function SearchProPage() {
   const searchParams = useSearchParams();

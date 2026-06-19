@@ -16,12 +16,12 @@ import axios from "axios";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "../core/Cart/CartContext";
-import { useAuth } from "@/libs/context/AuthContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import ProfileOverview from "@/components/general-components/ProfileOverview";
 import CartComponent from "@/components/general-components/CartComponent";
 
-import { config } from "@/libs/utils/config";
-import { getAuthHeaders, normalizeAddresses } from "@/libs/utils/address";
+import { config } from "@/lib/utils/config";
+import { getAuthHeaders, normalizeAddresses } from "@/lib/utils/address";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
 export default function QuickPeekPanel({ type, data, onClose }) {
