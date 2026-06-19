@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../libs/context/AuthContext";
+import { useAuth } from "../../lib/context/AuthContext";
 import { Pencil } from "lucide-react";
-import { useToast } from "../../libs/context/ToastContext";
+import { useToast } from "../../lib/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../components/core/Cart/CartContext";
-import { config } from "@/libs/utils/config";
-import { getAuthHeaders, normalizeAddresses } from "@/libs/utils/address";
+import { config } from "@/lib/utils/config";
+import { getAuthHeaders, normalizeAddresses } from "@/lib/utils/address";
 
 import CartPage from "../cart/page";
 
@@ -234,13 +234,11 @@ export default function CheckoutPage() {
                 return (
                   <div
                     key={addr._id}
-                    className={`border rounded-xl p-5 shadow-sm bg-white relative overflow-hidden group transition-all duration-300 ${
-                      selectedAddressId?._id === addr._id
-                        ? "ring-2 ring-green-500 border-green-500"
-                        : "hover:shadow-md border-gray-200"
-                    } ${
-                      isEditing ? "h-auto" : "max-h-[200px] overflow-hidden" // Adjust max-height for non-editing state
-                    } transition-all duration-300 ease-in-out`}
+                    className={`border rounded-xl p-5 shadow-sm bg-white relative overflow-hidden group transition-all duration-300 ${selectedAddressId?._id === addr._id
+                      ? "ring-2 ring-green-500 border-green-500"
+                      : "hover:shadow-md border-gray-200"
+                      } ${isEditing ? "h-auto" : "max-h-[200px] overflow-hidden" // Adjust max-height for non-editing state
+                      } transition-all duration-300 ease-in-out`}
                   >
                     {/* Edit Button */}
                     <button
@@ -471,11 +469,10 @@ export default function CheckoutPage() {
             <button
               onClick={handleProceedToPayment}
               disabled={!selectedAddressId || cartItems.length === 0}
-              className={`px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 shadow-md hover:shadow-lg ${
-                selectedAddressId && cartItems.length > 0
-                  ? "bg-green-600 hover:bg-green-700 cursor-pointer"
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
+              className={`px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 shadow-md hover:shadow-lg ${selectedAddressId && cartItems.length > 0
+                ? "bg-green-600 hover:bg-green-700 cursor-pointer"
+                : "bg-gray-300 cursor-not-allowed"
+                }`}
             >
               Place Order
             </button>
