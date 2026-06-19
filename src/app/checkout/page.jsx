@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../libs/context/AuthContext";
+import { useAuth } from "../../lib/context/AuthContext";
 import { Pencil } from "lucide-react";
-import { useToast } from "../../libs/context/ToastContext";
+import { useToast } from "../../lib/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../components/core/Cart/CartContext";
 import { config } from "@/lib/utils/config";
