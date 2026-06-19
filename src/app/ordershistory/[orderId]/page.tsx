@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { config } from "@/lib/utils/config";
+import { getAuthHeaders } from "@/lib/utils/address";
 import {
   ShoppingBagIcon,
   ChevronLeftIcon,
@@ -68,6 +69,7 @@ export default function OrderDetailPage() {
   const orderId = params?.orderId;
 
   const [order, setOrder] = useState(null);
+  const [orderAddress, setOrderAddress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -83,12 +85,15 @@ export default function OrderDetailPage() {
 
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`${backendApi}/getOrder/${orderId}`);
+        const res = await fetch(`${backendApi}/getOrder/${orderId}`, {
+          headers: getAuthHeaders(),
+        });
 
         if (!res.ok) throw new Error("Failed to fetch order");
 
         const data = await res.json();
-        setOrder(data);
+        setOrder(data?.order || data);
+        setOrderAddress(data?.orderAddress || data?.address || null);
       } catch (err) {
         console.error("Error fetching order:", err);
         setError(err.message);
@@ -158,6 +163,9 @@ export default function OrderDetailPage() {
     (sum, item) => sum + getItemQuantity(item),
     0
   );
+  const orderIdLabel = order._id ? order._id.slice(-8) : String(orderId).slice(-8);
+  const totalAmount = Number(order.totalAmount || 0);
+  const deliveryAddress = orderAddress || order.address?.[0] || order.address || null;
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
@@ -174,7 +182,7 @@ export default function OrderDetailPage() {
                     <div className="w-1.5 h-10 bg-green-600 rounded-full"></div>
                     <div className="flex flex-col">
                       <h1 className="text-lg font-bold text-gray-900">
-                        Order #{order._id.slice(-8)}
+                        Order #{orderIdLabel}
                       </h1>
                       <p className="text-sm text-gray-500">
                         Placed on{" "}
@@ -234,14 +242,14 @@ export default function OrderDetailPage() {
                   <div className="flex justify-between">
                     <p className="text-gray-600">Subtotal</p>
                     <p className="font-medium text-gray-900">
-                      ₹{order.totalAmount.toFixed(2)}
+                      ₹{totalAmount.toFixed(2)}
                     </p>
                   </div>
 
                   <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-200">
                     <p>Total</p>
                     <p className="text-green-600">
-                      ₹{order.totalAmount.toFixed(2)}
+                      ₹{totalAmount.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -262,14 +270,19 @@ export default function OrderDetailPage() {
                   </p>
                   <p>{order.contact}</p>
 
-                  {order.address?.[0] && (
+                  {deliveryAddress && (
                     <>
-                      <p>{order.address[0].landmark}</p>
                       <p>
-                        {order.address[0].city}, {order.address[0].state} -{" "}
-                        {order.address[0].pincode}
+                        {deliveryAddress.landmark ||
+                          deliveryAddress.rawAddress ||
+                          deliveryAddress.formattedAddress}
                       </p>
-                      <p>{order.address[0].email}</p>
+                      <p>
+                        {deliveryAddress.city || deliveryAddress.components?.city},{" "}
+                        {deliveryAddress.state || deliveryAddress.components?.state} -{" "}
+                        {deliveryAddress.pincode || deliveryAddress.components?.postalCode}
+                      </p>
+                      {deliveryAddress.email && <p>{deliveryAddress.email}</p>}
                     </>
                   )}
                 </div>

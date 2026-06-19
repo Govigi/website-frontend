@@ -21,6 +21,7 @@ import ProfileOverview from "@/components/general-components/ProfileOverview";
 import CartComponent from "@/components/general-components/CartComponent";
 
 import { config } from "@/lib/utils/config";
+import { getAuthHeaders, normalizeAddresses } from "@/lib/utils/address";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
 export default function QuickPeekPanel({ type, data, onClose }) {
@@ -64,9 +65,6 @@ export default function QuickPeekPanel({ type, data, onClose }) {
     removeFromCart,
   } = useCart();
 
-  let token = localStorage.getItem("token");
-  if (token) token = JSON.parse(token);
-
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -78,9 +76,11 @@ export default function QuickPeekPanel({ type, data, onClose }) {
   useEffect(() => {
     if (type === "addresses") {
       axios
-        .post(`${backendApi}/getAddress`, { token })
+        .get(`${backendApi}/getAddress`, {
+          headers: getAuthHeaders(),
+        })
         .then((response) => {
-          setAddresses(response.data);
+          setAddresses(normalizeAddresses(response.data?.addresses || response.data?.data || []));
         })
         .catch((error) => {
           setError("Failed to fetch Addresses");

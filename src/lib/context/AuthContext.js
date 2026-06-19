@@ -4,6 +4,7 @@ import axios from "axios";
 import { useToast } from "../context/ToastContext";
 
 import { config } from "../utils/config";
+import { getAuthHeaders, normalizeAddress, toAddressPayload } from "../utils/address";
 
 const AuthContext = createContext();
 
@@ -50,15 +51,13 @@ export function AuthProvider({ children }) {
   //Address
   const updateAddress = async (address) => {
     try {
-      const token = JSON.parse(localStorage.getItem("token"));
-      const res = await axios.post(`${backendApi}/addAddress`, {
-        token,
-        address,
+      const res = await axios.post(`${backendApi}/addAddress`, toAddressPayload(address), {
+        headers: getAuthHeaders(),
       });
 
-      if (res.status === 200) {
+      if (res.status === 200 || res.status === 201) {
         showToast("Address saved successfully!", "success");
-        return res.data.user.addresses[res.data.user.addresses.length - 1];
+        return normalizeAddress(res.data?.data || address);
       } else {
         showToast(res.data.message || "Failed to save address", "error");
       }
@@ -68,33 +67,31 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const EditAddress_context = async (index, updatedAddress) => {
-    const token = JSON.parse(localStorage.getItem("token"));
+  const EditAddress_context = async (id, updatedAddress) => {
     try {
-      const res = await axios.patch(`${backendApi}/editAddress`, {
-        token,
-        index,
-        updatedAddress,
+      const res = await axios.patch(`${backendApi}/editAddress/${id}`, toAddressPayload(updatedAddress), {
+        headers: getAuthHeaders(),
       });
       showToast("Address Updated", "success");
-      return res.data;
+      return {
+        ...res.data,
+        data: normalizeAddress(res.data?.data || updatedAddress),
+      };
     } catch (err) {
       showToast("failed to update address", "red");
       console.log("edit address", err.message, err);
     }
   };
 
-  const deleteAddress_context = async (index) => {
-    const token = JSON.parse(localStorage.getItem("token"));
+  const deleteAddress_context = async (id) => {
     try {
-      const res = await axios.post(`${backendApi}/deleteAddress`, {
-        token,
-        index,
+      const res = await axios.delete(`${backendApi}/deleteAddress/${id}`, {
+        headers: getAuthHeaders(),
       });
 
       if (res.status === 200) {
         showToast("Address deleted successfully", "success");
-        return res.data.addresses;
+        return { deletedId: id };
       } else {
         showToast("Failed to delete address", "error");
       }

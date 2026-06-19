@@ -14,6 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import { config } from "@/lib/utils/config";
+import { getAuthHeaders } from "@/lib/utils/address";
 
 export default function AllOrdersPage() {
   const router = useRouter();
@@ -34,7 +35,10 @@ export default function AllOrdersPage() {
 
     (async () => {
       try {
-        const res = await fetch(API_URL, { signal });
+        const res = await fetch(API_URL, {
+          signal,
+          headers: getAuthHeaders(),
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setOrders(Array.isArray(data) ? data : []);

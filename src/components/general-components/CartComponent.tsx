@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
 import axios from "axios";
 import { config } from "@/lib/utils/config";
+import { getAuthHeaders, normalizeAddresses } from "@/lib/utils/address";
 import { useToast } from "@/lib/context/ToastContext";
 import { isAbsoluteUrl } from "next/dist/shared/lib/utils";
 import SquircleAlert from "@/components/general-components/SquircleAlert.svg";
@@ -48,9 +49,10 @@ export default function CartComponent() {
         try {
             const token = localStorage.getItem("token");
             if (token) {
-                const parsedToken = JSON.parse(token);
-                const res = await axios.post(`${backendApi}/getAddress`, { token: parsedToken });
-                const fetchedAddresses = res.data?.addresses || [];
+                const res = await axios.get(`${backendApi}/getAddress`, {
+                    headers: getAuthHeaders(),
+                });
+                const fetchedAddresses = normalizeAddresses(res.data?.addresses || res.data?.data || []);
                 setAddresses(fetchedAddresses);
                 // Set first address as default
                 if (fetchedAddresses.length > 0) {
@@ -167,6 +169,7 @@ export default function CartComponent() {
 
             const orderPayload = {
                 token: token ? JSON.parse(token) : null,
+                addressId: selectedAddr?._id,
                 phone: selectedAddr?.contact ?? "",
                 name: selectedAddr?.name ?? "",
                 email: selectedAddr?.email ?? "",
@@ -188,10 +191,11 @@ export default function CartComponent() {
                     (total, item) => total + getItemQuantity(item) * getItemPrice(item),
                     0
                 ),
-                scheduledDate: new Date().toISOString().split("T")[0],
             };
 
-            const res = await axios.post(`${backendApi}/createOrder`, orderPayload);
+            const res = await axios.post(`${backendApi}/placeCustomerOrder`, orderPayload, {
+                headers: getAuthHeaders(),
+            });
 
             if (res.status === 200 || res.status === 201) {
                 localStorage.removeItem("cart");

@@ -6,6 +6,7 @@ import { useAuth } from "../../lib/context/AuthContext";
 import { PencilIcon, TrashIcon, MapPinIcon, CheckCircleIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useToast } from "../../lib/context/ToastContext";
 import { config } from "@/lib/utils/config";
+import { getAuthHeaders, normalizeAddresses } from "@/lib/utils/address";
 import { useRouter } from "next/navigation";
 import { useGlobalBottomPanel } from "@/components/core/BottomPanel";
 import { AddressForm, AddressData } from "@/components/general-components/AddressForm";
@@ -71,9 +72,10 @@ export default function SavedAddress() {
     try {
       const token = localStorage.getItem("token");
       if (token) {
-        const parsedToken = JSON.parse(token);
-        const res = await axios.post(`${backendApi}/getAddress`, { token: parsedToken });
-        setAddresses(res.data?.addresses || []);
+        const res = await axios.get(`${backendApi}/getAddress`, {
+          headers: getAuthHeaders(),
+        });
+        setAddresses(normalizeAddresses(res.data?.addresses || res.data?.data || []));
         setLoading(false);
       } else {
         setLoading(false);
@@ -108,20 +110,27 @@ export default function SavedAddress() {
   };
 
 
-  const handleEditAddress = async (index, updatedAddress) => {
-    const data = await EditAddress_context(index, updatedAddress);
+  const handleEditAddress = async (id, updatedAddress) => {
+    const data = await EditAddress_context(id, updatedAddress);
     if (data?.addresses) {
       setAddresses(data.addresses);
+    } else if (data?.data) {
+      setAddresses((prev) => prev.map((addr) => (addr._id === id ? data.data : addr)));
+    }
+
+    if (data?.addresses || data?.data) {
       setEditAddressIndex(null);
       setEditAddress({});
       closePanel();
     }
   };
 
-  const handleDeleteAddress = async (index) => {
-    const updated = await deleteAddress_context(index);
-    if (updated) {
+  const handleDeleteAddress = async (id) => {
+    const updated = await deleteAddress_context(id);
+    if (Array.isArray(updated)) {
       setAddresses(updated);
+    } else if (updated?.deletedId) {
+      setAddresses((prev) => prev.filter((addr) => addr._id !== updated.deletedId));
     }
   };
 
@@ -292,7 +301,7 @@ export default function SavedAddress() {
                             <AddressForm
                               mode="edit"
                               initialData={addr}
-                              onSubmit={(data) => handleEditAddress(originalIndex, data)}
+                              onSubmit={(data) => handleEditAddress(addr._id, data)}
                               onCancel={closePanel}
                             />,
                             { maxHeight: "90vh" }
@@ -304,7 +313,7 @@ export default function SavedAddress() {
                       </button>
                       <button
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-md text-xs font-medium transition-colors active:scale-95"
-                        onClick={() => handleDeleteAddress(originalIndex)}
+                        onClick={() => handleDeleteAddress(addr._id)}
                       >
                         <TrashIcon className="w-4 h-4" />
                         Delete
