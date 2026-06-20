@@ -20,7 +20,7 @@ export const onboardingSchema = z.object({
     drugLicenseNumber: z.string().optional(),
     contactPerson: z.string().min(2, "Required"),
     role: z.string().min(1, "Required"),
-    email: z.string().email("Invalid email"),
+    email: z.email("Invalid email"),
     alternatePhone: z.string().optional(),
     panNumber: z.string().regex(PAN_REGEX, "Invalid PAN"),
 

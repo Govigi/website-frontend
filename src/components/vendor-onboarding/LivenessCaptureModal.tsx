@@ -50,6 +50,17 @@ export default function LivenessCaptureModal({ isOpen, onClose, onCapture }: Liv
     }, []);
 
     useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isOpen]);
+
+    useEffect(() => {
         if (!isOpen) return;
         initLiveness();
         return () => {
@@ -504,19 +515,27 @@ export default function LivenessCaptureModal({ isOpen, onClose, onCapture }: Liv
 
                         {!isLoadingLib && status === "blink" && (
                             <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-1">
-                                    <span className="text-5xl animate-bounce" style={{ animationDuration: '1.2s' }}>😉</span>
+                                <div className="flex flex-col items-center gap-2">
+                                    <svg className="w-16 h-16 text-white/90 animate-eye-blink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <span className="text-[10px] font-bold text-white/90 tracking-widest uppercase">Blink</span>
                                 </div>
                             </div>
                         )}
 
                         {!isLoadingLib && status === "turn" && (
                             <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
-                                <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-4">
                                     <svg className="w-8 h-8 text-white/80 animate-[pulse_1s_infinite]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                         <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
-                                    <span className="text-4xl">🙂</span>
+                                    <div className="animate-head-turn text-white/90">
+                                        <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                        </svg>
+                                    </div>
                                     <svg className="w-8 h-8 text-white/80 animate-[pulse_1s_infinite]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                         <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
@@ -526,10 +545,10 @@ export default function LivenessCaptureModal({ isOpen, onClose, onCapture }: Liv
 
                         {!isLoadingLib && status === "recenter" && (
                             <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-1">
-                                    <span className="text-5xl animate-pulse">😊</span>
-                                    <svg className="w-6 h-6 text-white/80 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                        <path d="M5 12h14M12 5v14" strokeLinecap="round" />
+                                <div className="relative w-20 h-20 flex items-center justify-center">
+                                    <div className="absolute inset-0 border-2 border-dashed border-green-400 rounded-full animate-[spin_10s_linear_infinite] opacity-60" />
+                                    <svg className="w-12 h-12 text-white/95 animate-target-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                                     </svg>
                                 </div>
                             </div>
@@ -598,7 +617,7 @@ export default function LivenessCaptureModal({ isOpen, onClose, onCapture }: Liv
                                 status === "success" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
                             }`}>
                                 {status === "success" && <CheckIcon className="w-3 h-3 stroke-[3]" />}
-                                📸
+                                Capture
                             </div>
                         </div>
                     )}
@@ -679,6 +698,32 @@ export default function LivenessCaptureModal({ isOpen, onClose, onCapture }: Liv
                         )}
                     </div>
                 </div>
+                <style dangerouslySetInnerHTML={{__html: `
+                    @keyframes eye-blink {
+                        0%, 80%, 100% { transform: scaleY(1); }
+                        90% { transform: scaleY(0.15); }
+                    }
+                    .animate-eye-blink {
+                        animation: eye-blink 1.8s infinite;
+                        transform-origin: center;
+                    }
+                    @keyframes head-turn {
+                        0%, 100% { transform: translateX(0) rotate(0deg); }
+                        25% { transform: translateX(-12px) rotate(-6deg); }
+                        75% { transform: translateX(12px) rotate(6deg); }
+                    }
+                    .animate-head-turn {
+                        animation: head-turn 2.5s infinite ease-in-out;
+                        transform-origin: center;
+                    }
+                    @keyframes target-pulse {
+                        0%, 100% { transform: scale(0.9); opacity: 0.7; }
+                        50% { transform: scale(1.1); opacity: 1; }
+                    }
+                    .animate-target-pulse {
+                        animation: target-pulse 1.5s infinite ease-in-out;
+                    }
+                `}} />
             </div>
         </div>
     );

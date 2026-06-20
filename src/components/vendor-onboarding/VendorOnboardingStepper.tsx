@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { onboardingSchema, OnboardingData } from "@/lib/validations/vendor-schema";
+import { onboardingSchema, OnboardingData } from "@/lib/validations/onboarding-schema";
 import Link from "next/link";
 
 import Step1Phone from "./Steps/Step1Phone";

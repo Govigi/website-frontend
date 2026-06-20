@@ -2,6 +2,7 @@
 import React from "react";
 import { useFormContext, get } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { 
   BuildingStorefrontIcon, 
   UserIcon, 
@@ -19,6 +20,7 @@ export default function Step5Review() {
   const searchParams = useSearchParams();
   const subParam = searchParams.get("sub");
   const activeSubStep = subParam ? parseInt(subParam, 10) : 1;
+  const resId = searchParams.get("resId");
 
   // Watch form values for read-only summary
   const businessType = watch("businessType");
@@ -68,10 +70,18 @@ export default function Step5Review() {
           
           {/* Card 1: Business Profile & Location */}
           <div className="border border-zinc-200 rounded-xl p-5 bg-white space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <BuildingStorefrontIcon className="w-4 h-4 text-green-600" />
-              Business Profile & Location
-            </h4>
+            <div className="flex justify-between items-center border-b border-zinc-100/60 pb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                <BuildingStorefrontIcon className="w-4 h-4 text-green-600" />
+                Business Profile & Location
+              </h4>
+              <Link 
+                href={`/onboarding/step1?sub=1${resId ? `&resId=${resId}` : ""}`}
+                className="text-[11px] font-bold text-green-600 hover:text-green-700 transition-colors"
+              >
+                Edit
+              </Link>
+            </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-zinc-400 block">Legal Entity Name</span>
@@ -103,10 +113,18 @@ export default function Step5Review() {
 
           {/* Card 2: Owner & Identity Details */}
           <div className="border border-zinc-200 rounded-xl p-5 bg-white space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <UserIcon className="w-4 h-4 text-green-600" />
-              Owner & Identity Details
-            </h4>
+            <div className="flex justify-between items-center border-b border-zinc-100/60 pb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                <UserIcon className="w-4 h-4 text-green-600" />
+                Owner & Identity Details
+              </h4>
+              <Link 
+                href={`/onboarding/step1?sub=2${resId ? `&resId=${resId}` : ""}`}
+                className="text-[11px] font-bold text-green-600 hover:text-green-700 transition-colors"
+              >
+                Edit
+              </Link>
+            </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-zinc-400 block">Full Name</span>
@@ -125,7 +143,9 @@ export default function Step5Review() {
                 <span className="font-semibold text-zinc-800">{alternatePhone || "—"}</span>
               </div>
               <div className="col-span-2 pt-2 border-t border-zinc-50">
-                <span className="text-zinc-500 block">PAN Identifier</span>
+                <span className="text-zinc-500 block">
+                  {legalEntityType === "SOLE_PROPRIETORSHIP" ? "Regular PAN Number" : "Business PAN Number"}
+                </span>
                 <span className="font-semibold text-zinc-800">{panNumber || "—"}</span>
               </div>
             </div>
@@ -133,10 +153,18 @@ export default function Step5Review() {
 
           {/* Card 3: Storefront Classification */}
           <div className="border border-zinc-200 rounded-xl p-5 bg-white space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <ClockIcon className="w-4 h-4 text-green-600" />
-              Store Setup & Timings
-            </h4>
+            <div className="flex justify-between items-center border-b border-zinc-100/60 pb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                <ClockIcon className="w-4 h-4 text-green-600" />
+                Store Setup & Timings
+              </h4>
+              <Link 
+                href={`/onboarding/step2${resId ? `?resId=${resId}` : ""}`}
+                className="text-[11px] font-bold text-green-600 hover:text-green-700 transition-colors"
+              >
+                Edit
+              </Link>
+            </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-zinc-400 block">Primary Category</span>
@@ -162,10 +190,27 @@ export default function Step5Review() {
 
           {/* Card 4: Settlements & Verification */}
           <div className="border border-zinc-200 rounded-xl p-5 bg-white space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <CreditCardIcon className="w-4 h-4 text-green-600" />
-              Settlements & Documents
-            </h4>
+            <div className="flex justify-between items-center border-b border-zinc-100/60 pb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                <CreditCardIcon className="w-4 h-4 text-green-600" />
+                Settlements & Documents
+              </h4>
+              <div className="flex items-center gap-1.5">
+                <Link 
+                  href={`/onboarding/step3${resId ? `?resId=${resId}` : ""}`}
+                  className="text-[11px] font-bold text-green-600 hover:text-green-700 transition-colors"
+                >
+                  Edit Bank
+                </Link>
+                <span className="text-zinc-200 text-xs">|</span>
+                <Link 
+                  href={`/onboarding/step4${resId ? `?resId=${resId}` : ""}`}
+                  className="text-[11px] font-bold text-green-600 hover:text-green-700 transition-colors"
+                >
+                  Edit Docs
+                </Link>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-zinc-400 block">Bank Name</span>

@@ -17,6 +17,11 @@ import FloatingSelect from "@/components/UI/FloationSelect";
 import MapPicker from "../MapPicker";
 import LivenessCaptureModal from "../LivenessCaptureModal";
 
+import {
+  BUSINESS_TYPES,
+  LEGAL_ENTITY_TYPES,
+} from "@/lib/constants/vendor/onboarding.options";
+
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 export default function Step1BusinessProfile() {
@@ -99,9 +104,11 @@ export default function Step1BusinessProfile() {
             value={watch("businessType")}
             {...register("businessType")}
           >
-            <option value="Retailer">Retailer</option>
-            <option value="Distributor">Distributor</option>
-            <option value="Manufacturer">Manufacturer</option>
+            {BUSINESS_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
           </FloatingSelect>
 
           <FloatingSelect
@@ -110,14 +117,11 @@ export default function Step1BusinessProfile() {
             value={watch("legalEntityType")}
             {...register("legalEntityType")}
           >
-            <option value="Individual">Individual</option>
-            <option value="Sole Proprietorship">Sole Proprietorship</option>
-            <option value="Partnership Firm">Partnership Firm</option>
-            <option value="LLP">LLP</option>
-            <option value="Private Limited Company">Private Limited Company</option>
-            <option value="One Person Company (OPC)">One Person Company (OPC)</option>
-            <option value="Public Limited Company">Public Limited Company</option>
-            <option value="Trust / NGO">Trust / NGO</option>
+            {LEGAL_ENTITY_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
           </FloatingSelect>
 
           <FloatingInput
@@ -188,7 +192,7 @@ export default function Step1BusinessProfile() {
             name="panNumber"
             render={({ field }) => (
               <FloatingInput
-                label="PAN Number *"
+                label={watch("legalEntityType") === "SOLE_PROPRIETORSHIP" ? "Regular PAN Number *" : "Business PAN Number *"}
                 maxLength={10}
                 error={errors.panNumber?.message as string}
                 value={field.value}
@@ -218,17 +222,6 @@ export default function Step1BusinessProfile() {
                   <CameraIcon className="w-4 h-4 text-green-600" />
                   Verify & Capture
                 </button>
-
-                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 border border-zinc-300 rounded-lg text-xs font-bold bg-white text-zinc-700 hover:bg-zinc-50 transition-colors shadow-sm">
-                  <ArrowUpTrayIcon className="w-4 h-4 text-zinc-500" />
-                  Upload Photo
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
 
                 {previewUrl && (
                   <button
@@ -263,7 +256,7 @@ export default function Step1BusinessProfile() {
         </div>
 
         <div className="space-y-4">
-          <div className="w-full h-[320px] rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50 relative shadow-sm z-10">
+          <div className="w-full h-[390px] rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50 relative shadow-sm z-10">
             <MapPicker
               inline={true}
               onConfirm={handleMapConfirm}
