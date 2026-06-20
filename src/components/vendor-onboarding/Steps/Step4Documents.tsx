@@ -15,7 +15,7 @@ export default function Step4Documents() {
   const subParam = searchParams.get("sub");
   const activeSubStep = subParam ? parseInt(subParam, 10) : 1;
 
-  const entityType = watch("legalEntityType") || "Private Limited Company";
+  const entityType = watch("legalEntityType") || "PRIVATE_LIMITED";
   const businessCategory = watch("businessCategory") || "";
 
   const isFoodCategory = [
@@ -24,13 +24,13 @@ export default function Step4Documents() {
 
   const isPharmacyCategory = businessCategory.toLowerCase() === "pharmacy";
 
-  const showGST = entityType !== "Individual";
-  const showCIN = ["Private Limited Company", "Public Limited Company", "One Person Company (OPC)"].includes(entityType);
-  const showLLPIN = entityType === "LLP";
+  const showGST = !["SOLE_PROPRIETORSHIP", "Sole Proprietorship", "Individual"].includes(entityType);
+  const showCIN = ["PRIVATE_LIMITED", "PUBLIC_LIMITED", "OPC", "Private Limited Company", "Public Limited Company", "One Person Company (OPC)"].includes(entityType);
+  const showLLPIN = ["LLP", "Limited Liability Partnership (LLP)"].includes(entityType);
   const showPAN = true;
-  const showMSME = ["Sole Proprietorship", "Partnership Firm", "LLP", "Private Limited Company", "Public Limited Company"].includes(entityType);
-  const showTrade = ["Sole Proprietorship", "Partnership Firm"].includes(entityType);
-  const showRegCert = entityType === "Trust / NGO";
+  const showMSME = ["SOLE_PROPRIETORSHIP", "PARTNERSHIP_FIRM", "LLP", "PRIVATE_LIMITED", "PUBLIC_LIMITED", "Sole Proprietorship", "Partnership Firm", "Limited Liability Partnership (LLP)", "Private Limited Company", "Public Limited Company"].includes(entityType);
+  const showTrade = ["SOLE_PROPRIETORSHIP", "PARTNERSHIP_FIRM", "LLP", "PRIVATE_LIMITED", "PUBLIC_LIMITED", "Sole Proprietorship", "Partnership Firm", "Limited Liability Partnership (LLP)", "Private Limited Company", "Public Limited Company"].includes(entityType);
+  const showRegCert = ["TRUST_NGO", "Trust / NGO"].includes(entityType);
   const showFSSAI = isFoodCategory;
   const showDrug = isPharmacyCategory;
 
