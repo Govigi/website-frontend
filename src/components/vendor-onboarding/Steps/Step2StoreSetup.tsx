@@ -55,21 +55,34 @@ export default function Step2StoreSetup() {
         const res = await axios.get(`${config.backend_url}/getAllCategories`);
         if (Array.isArray(res.data)) {
           const active = res.data.filter((c: any) => c.categoryStatus === "active");
-          if (active.length > 0) {
-            setCategories(active.map((c: any) => ({
-              name: c.categoryName,
-              desc: c.categoryDescription || `Products and items in ${c.categoryName}`,
-              image: c.categoryImage?.url || ""
-            })));
-          } else {
-            setCategories(FALLBACK_CATEGORIES);
+          const formatted = active.map((c: any) => ({
+            name: c.categoryName,
+            desc: c.categoryDescription || `Products and items in ${c.categoryName}`,
+            image: c.categoryImage?.url || ""
+          }));
+
+          if (!formatted.some((c: any) => c.name.toLowerCase() === "other")) {
+            formatted.push({
+              name: "Other",
+              desc: "Can't find your category? Add custom one",
+              image: ""
+            });
           }
+          setCategories(formatted);
         } else {
-          setCategories(FALLBACK_CATEGORIES);
+          const fallback = [...FALLBACK_CATEGORIES];
+          if (!fallback.some(c => c.name === "Other")) {
+            fallback.push({ name: "Other", desc: "Can't find your category? Add custom one", image: "" });
+          }
+          setCategories(fallback);
         }
       } catch (err) {
         console.error("Failed to fetch categories:", err);
-        setCategories(FALLBACK_CATEGORIES);
+        const fallback = [...FALLBACK_CATEGORIES];
+        if (!fallback.some(c => c.name === "Other")) {
+          fallback.push({ name: "Other", desc: "Can't find your category? Add custom one", image: "" });
+        }
+        setCategories(fallback);
       } finally {
         setLoading(false);
       }
@@ -81,6 +94,9 @@ export default function Step2StoreSetup() {
     let nextVal: string[] = [];
     if (supportedCategories.includes(name)) {
       nextVal = supportedCategories.filter((c: string) => c !== name);
+      if (name === "Other") {
+        setValue("customCategory", "", { shouldValidate: true });
+      }
     } else {
       nextVal = [...supportedCategories, name];
     }
@@ -177,7 +193,19 @@ export default function Step2StoreSetup() {
                 })}
               </div>
               {errors.supportedCategories && (
-                <p className="text-xs text-red-600 mt-2.5 font-semibold ml-1">{errors.supportedCategories.message as string}</p>
+                <p className="text-xs text-red-650 mt-2.5 font-semibold ml-1">{errors.supportedCategories.message as string}</p>
+              )}
+
+              {supportedCategories.includes("Other") && (
+                <div className="pt-4 max-w-md animate-in fade-in slide-in-from-top-1 duration-200">
+                  <FloatingInput
+                    label="Custom Category Name *"
+                    error={errors.customCategory?.message as string}
+                    {...register("customCategory", {
+                      required: "Please specify your custom category"
+                    })}
+                  />
+                </div>
               )}
             </div>
           </div>

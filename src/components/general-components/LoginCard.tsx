@@ -175,7 +175,10 @@ export default function LoginCard({ isOpen, onClose, onLoginSuccess }) {
         {!otpSent ? (
           <div className="animate-fade-in">
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <span className="px-3 text-gray-700 font-medium">+91</span>
+              <span className="px-3 text-gray-700 font-medium flex items-center gap-1.5 select-none">
+                <span>🇮🇳</span>
+                <span>+91</span>
+              </span>
               <input
                 type="tel"
                 placeholder="Enter mobile number"

@@ -2,17 +2,20 @@
 import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { onboardingSchema, OnboardingData } from "@/lib/validations/vendor-schema";
+import { onboardingSchema, OnboardingData } from "@/lib/validations/onboarding-schema";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon, DocumentTextIcon, PhoneIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon, DocumentTextIcon, PhoneIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { Modal } from "@/components/UI/Modal";
 
 import Sidebar from "@/components/vendor-onboarding/Sidebar";
+import Step1Phone from "@/components/vendor-onboarding/Steps/Step1Phone";
 import { config } from "@/lib/utils/config";
 import { cn } from "@/lib/utils/utils";
+import { onboardingDefaults } from "@/lib/constants/vendor/onboarding.defaults";
 
 const BACKEND_URL = config.backend_url;
 
@@ -64,7 +67,7 @@ const SUB_STEP_FIELDS: Record<number, Record<number, string[]>> = {
     3: ["address"]
   },
   2: {
-    1: ["businessCategory", "supportedCategories"],
+    1: ["businessCategory", "supportedCategories", "customCategory"],
     2: ["openTime", "closeTime"],
     3: ["storeFiles"]
   },
@@ -92,6 +95,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const activeSubStep = subParam ? parseInt(subParam, 10) : 1;
 
   const [showFormOnMobile, setShowFormOnMobile] = useState(!!subParam);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Sync mobile form view with search param
   useEffect(() => {
@@ -100,38 +104,29 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
 
   const [loading, setLoading] = useState(false);
   const [sessionValid, setSessionValid] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [validBanks, setValidBanks] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/getAllBanks`);
+        const names = Array.from(new Set(Object.values(response.data) as string[]));
+        setValidBanks(names);
+      } catch (error) {
+        console.error("Error loading banks in layout:", error);
+      }
+    };
+    fetchBanks();
+  }, []);
 
   // Initialize unified Form Context
   const methods = useForm<OnboardingData>({
     resolver: zodResolver(onboardingSchema),
     mode: "onChange",
-    defaultValues: {
-      businessType: "",
-      legalEntityType: "",
-      legalBusinessName: "",
-      businessName: "",
-      businessCategory: "",
-      gstin: "",
-      contactPerson: "",
-      role: "",
-      email: "",
-      alternatePhone: "",
-      panNumber: "",
-      fssaiNumber: "",
-      customCategory: "",
-      supportedCategories: [],
-      openTime: "09:00",
-      closeTime: "21:00",
-      address: {
-        formattedAddress: "",
-        components: { houseNumber: "", street: "", area: "", city: "", state: "", postalCode: "", country: "India" },
-        location: { type: "Point", coordinates: [0, 0] },
-      },
-      bankDetails: { bankName: "", accountNumber: "", accountName: "", ifscCode: "" },
-      agree1: false,
-      agree2: false,
-    },
+    defaultValues: onboardingDefaults
   });
 
   const { handleSubmit, trigger, reset, watch } = methods;
@@ -147,6 +142,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         console.error("Failed to parse saved onboarding draft:", e);
       }
     }
+    setDraftLoaded(true);
   }, [reset]);
 
   // Save draft on form values change
@@ -172,6 +168,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
     if (!token) {
       toast.error("Session expired or invalid. Please verify your mobile number.");
       router.push("/partner-with-us");
+      setCheckingSession(false);
       return;
     }
 
@@ -189,8 +186,67 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       toast.error("Invalid onboarding session token.");
       localStorage.removeItem("vendorToken");
       router.push("/partner-with-us");
+    } finally {
+      setCheckingSession(false);
     }
   }, [router]);
+
+  const checkStepValidity = (stepNum: number): boolean => {
+    const values = methods.getValues();
+    const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    const IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (stepNum === 1) {
+      if (!values.businessType || values.businessType.trim() === "") return false;
+      if (!values.legalEntityType || values.legalEntityType.trim() === "") return false;
+      if (!values.legalBusinessName || values.legalBusinessName.trim().length < 3) return false;
+      if (!values.businessName || values.businessName.trim().length < 2) return false;
+      if (!values.contactPerson || values.contactPerson.trim().length < 2) return false;
+      if (!values.role || values.role.trim() === "") return false;
+      if (!values.email || !EMAIL_REGEX.test(values.email)) return false;
+      if (!values.panNumber || !PAN_REGEX.test(values.panNumber)) return false;
+      if (!values.address?.formattedAddress || values.address.formattedAddress.trim().length < 5) return false;
+      if (!values.address?.location?.coordinates || values.address.location.coordinates.length !== 2) return false;
+      return true;
+    }
+
+    if (stepNum === 2) {
+      if (!values.businessCategory || values.businessCategory.trim() === "") return false;
+      if (!values.supportedCategories || values.supportedCategories.length < 1) return false;
+      if (values.supportedCategories.includes("Other") && (!values.customCategory || values.customCategory.trim() === "")) return false;
+      if (!values.openTime || values.openTime.trim() === "") return false;
+      if (!values.closeTime || values.closeTime.trim() === "") return false;
+      return true;
+    }
+
+    if (stepNum === 3) {
+      const bank = values.bankDetails;
+      if (!bank) return false;
+      if (!bank.bankName || bank.bankName.trim() === "") return false;
+      if (validBanks.length > 0 && !validBanks.includes(bank.bankName)) return false;
+      if (!bank.accountNumber || bank.accountNumber.trim().length < 9) return false;
+      if (!bank.accountName || bank.accountName.trim() === "") return false;
+      if (!bank.ifscCode || !IFSC_REGEX.test(bank.ifscCode)) return false;
+      return true;
+    }
+
+    return true;
+  };
+
+  // Redirect guard to prevent accessing future steps out of order
+  useEffect(() => {
+    if (!draftLoaded || !sessionValid) return;
+
+    // Check all steps prior to currentStepNum
+    for (let i = 1; i < currentStepNum; i++) {
+      if (!checkStepValidity(i)) {
+        toast.error(`Please complete Step ${i} first.`);
+        router.push(`/onboarding/${STEP_KEYS[i - 1]}${resId ? `?resId=${resId}` : ""}`);
+        break;
+      }
+    }
+  }, [currentStepNum, draftLoaded, sessionValid, router, resId]);
 
   const handleNextRoute = async () => {
     let fieldsToValidate: (keyof OnboardingData)[] = [];
@@ -210,7 +266,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
           "panNumber",
           "address"
         ],
-        2: ["businessCategory", "supportedCategories", "openTime", "closeTime"],
+        2: ["businessCategory", "supportedCategories", "customCategory", "openTime", "closeTime"],
         3: ["bankDetails"],
         4: [
           "gstin",
@@ -227,16 +283,17 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       fieldsToValidate = stepFields[currentStepNum] || [];
     }
 
-    if (fieldsToValidate.length > 0) {
-      const isStepValid = await trigger(fieldsToValidate);
-      if (!isStepValid) {
+    const maxSubSteps = SUB_STEP_COUNTS[currentStepNum] || 1;
+    const isLastSubStep = !showFormOnMobile || activeSubStep === maxSubSteps;
+
+    if (isLastSubStep) {
+      if (!checkStepValidity(currentStepNum)) {
         toast.error("Please fill all required fields correctly.");
         return;
       }
     }
 
     if (showFormOnMobile) {
-      const maxSubSteps = SUB_STEP_COUNTS[currentStepNum] || 1;
       if (activeSubStep < maxSubSteps) {
         router.push(`/onboarding/${STEP_KEYS[currentStepNum - 1]}?sub=${activeSubStep + 1}${resId ? `&resId=${resId}` : ""}`);
         return;
@@ -320,13 +377,15 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
 
   const currentYear = new Date().getFullYear();
 
-  if (!sessionValid) {
+  if (checkingSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center font-bold text-gray-400">
         Verifying onboarding session...
       </div>
     );
   }
+
+
 
   if (submittedSuccess) {
     return (
@@ -370,7 +429,6 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   return (
     <FormProvider {...methods}>
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-        <Toaster position="top-center" toastOptions={{ style: { fontSize: "14px", fontWeight: 650 } }} />
 
         {/* Global Onboarding Header (Desktop Only) */}
         <header className="hidden lg:flex bg-white border-b border-zinc-100 px-6 sm:px-12 h-18 items-center sticky top-0 z-45 shadow-[0_2px_15px_rgba(0,0,0,0.01)]">
@@ -379,10 +437,14 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
               <Image src="/LOGO-png 3.svg" alt="Govigi" width={80} height={32} priority />
               <span className="text-xs text-zinc-400 border-l border-zinc-200 pl-2 font-semibold">Partner</span>
             </Link>
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 cursor-pointer hover:text-zinc-800 transition-colors">
+            <button
+              type="button"
+              onClick={() => setHelpOpen(true)}
+              className="flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition-colors bg-transparent border-none cursor-pointer focus:outline-none"
+            >
               <QuestionMarkCircleIcon className="w-4.5 h-4.5 text-zinc-400" />
               <span>Help & Support</span>
-            </div>
+            </button>
           </div>
         </header>
 
@@ -401,7 +463,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
                     if (currentStepNum > 1) {
                       handleBackRoute();
                     } else {
-                      router.push("/partner-with-us");
+                      router.push("/");
                     }
                   }}
                   className="p-1 -ml-1 text-white hover:text-green-100 transition-colors flex items-center justify-center rounded-full hover:bg-white/10 w-8 h-8"
@@ -587,18 +649,55 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         {!showFormOnMobile && (
           <button
             type="button"
-            onClick={() => {
-              toast.success("Helpdesk support: support@govigi.com / +91 98765 43210", {
-                position: "bottom-center",
-                duration: 4000
-              });
-            }}
+            onClick={() => setHelpOpen(true)}
             className="lg:hidden fixed bottom-6 right-6 bg-[#1E293B] hover:bg-[#0F172A] text-white font-bold rounded-full py-3 px-5 shadow-lg flex items-center gap-1.5 active:scale-95 transition-all z-30 text-xs border border-slate-700"
           >
             <PhoneIcon className="w-4 h-4 text-white stroke-[2.5]" />
             <span>Help</span>
           </button>
         )}
+
+        {/* --- Help & Support Modal --- */}
+        <Modal open={helpOpen} onOpenChange={setHelpOpen}>
+          <Modal.Content className="max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-zinc-100 bg-white">
+            <Modal.Header onClose={() => setHelpOpen(false)} className="border-b border-zinc-100 pb-4">
+              <Modal.Title className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+                <QuestionMarkCircleIcon className="w-5 h-5 text-indigo-600" />
+                Help & Support
+              </Modal.Title>
+            </Modal.Header>
+            
+            <Modal.Body className="pt-5 pb-6 space-y-6">
+              <div>
+                <p className="text-sm text-zinc-500">
+                  Need assistance with your partner onboarding? Explore our resources or get in touch with our dedicated team.
+                </p>
+              </div>
+
+              {/* Direct Contact Section */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Contact Us</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <a href="mailto:support@govigi.com" className="flex flex-col items-start p-4 rounded-xl border border-zinc-100 hover:border-indigo-100 hover:bg-indigo-50/20 transition-all group">
+                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 group-hover:bg-indigo-100 mb-3">
+                      <EnvelopeIcon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-800">Email Support</span>
+                    <span className="text-xs text-zinc-400 mt-0.5">support@govigi.com</span>
+                  </a>
+
+                  <a href="tel:+919876543210" className="flex flex-col items-start p-4 rounded-xl border border-zinc-100 hover:border-emerald-100 hover:bg-emerald-50/20 transition-all group">
+                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 group-hover:bg-emerald-100 mb-3">
+                      <PhoneIcon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-800">Phone Support</span>
+                    <span className="text-xs text-zinc-400 mt-0.5">+91 9346928139</span>
+                  </a>
+                </div>
+              </div>
+            </Modal.Body>
+          </Modal.Content>
+        </Modal>
       </div>
     </FormProvider>
   );

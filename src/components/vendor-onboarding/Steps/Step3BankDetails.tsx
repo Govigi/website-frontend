@@ -17,7 +17,7 @@ import { config } from "@/lib/utils/config";
 const BACKEND_URL = config.backend_url;
 
 export default function Step3BankDetails() {
-  const { register, watch, setValue, formState: { errors } } = useFormContext();
+  const { register, watch, setValue, setError, clearErrors, formState: { errors } } = useFormContext();
   const searchParams = useSearchParams();
   const subParam = searchParams.get("sub");
   const activeSubStep = subParam ? parseInt(subParam, 10) : 1;
@@ -30,11 +30,25 @@ export default function Step3BankDetails() {
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [allBanks, setAllBanks] = useState<string[]>([]);
   const [verificationResult, setVerificationResult] = useState<{
     success: boolean;
     verifiedName?: string;
     message?: string;
   } | null>(null);
+
+  useEffect(() => {
+    const fetchAllBanks = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/getAllBanks`);
+        const names = Array.from(new Set(Object.values(response.data) as string[]));
+        setAllBanks(names);
+      } catch (error) {
+        console.error("Error fetching all banks:", error);
+      }
+    };
+    fetchAllBanks();
+  }, []);
 
   // Watch for input changes to reset verification if the values change
   useEffect(() => {
@@ -108,36 +122,43 @@ export default function Step3BankDetails() {
               error={bankNameError?.message as string}
               onFocus={() => setShowSuggestions(true)}
               {...register("bankDetails.bankName", {
-                onChange: async (e: any) => {
+                onChange: (e: any) => {
                   const val = e.target.value;
-                  if (val && val.length >= 2) {
-                    try {
-                      const response = await axios.get(`${BACKEND_URL}/getAllBanks?search=${val}`);
-                      const matches = Object.values(response.data) as string[];
-                      setSuggestions(matches);
-                      setShowSuggestions(true);
-                    } catch (error) {
-                      console.error("Error fetching banks:", error);
+                  if (val) {
+                    const query = val.toLowerCase();
+                    const filtered = allBanks.filter(b => b.toLowerCase().includes(query));
+                    setSuggestions(filtered);
+                    setShowSuggestions(true);
+
+                    if (allBanks.length > 0 && !allBanks.includes(val)) {
+                      setError("bankDetails.bankName", {
+                        type: "custom",
+                        message: "Please select a bank from the list only"
+                      });
+                    } else {
+                      clearErrors("bankDetails.bankName");
                     }
                   } else {
                     setSuggestions([]);
+                    clearErrors("bankDetails.bankName");
                   }
                 },
-                onBlur: async (e: any) => {
+                onBlur: (e: any) => {
                   const val = e.target.value;
-                  if (val && val.length >= 2) {
-                    try {
-                      const response = await axios.get(`${BACKEND_URL}/getAllBanks?search=${val}`);
-                      const matches = Object.values(response.data) as string[];
-                      if (matches.length === 1) {
-                        setValue("bankDetails.bankName", matches[0], { shouldValidate: true });
-                      }
-                    } catch (error) {
-                      console.error("Error fetching banks on blur:", error);
-                    }
-                  }
                   setTimeout(() => {
                     setShowSuggestions(false);
+                    if (val && allBanks.length > 0 && !allBanks.includes(val)) {
+                      const matches = allBanks.filter(b => b.toLowerCase().includes(val.toLowerCase()));
+                      if (matches.length === 1) {
+                        setValue("bankDetails.bankName", matches[0], { shouldValidate: true });
+                        clearErrors("bankDetails.bankName");
+                      } else {
+                        setError("bankDetails.bankName", {
+                          type: "custom",
+                          message: "Please select a bank from the list only"
+                        });
+                      }
+                    }
                   }, 200);
                 }
               })}
@@ -150,6 +171,7 @@ export default function Step3BankDetails() {
                     type="button"
                     onMouseDown={() => {
                       setValue("bankDetails.bankName", name, { shouldValidate: true });
+                      clearErrors("bankDetails.bankName");
                       setSuggestions([]);
                       setShowSuggestions(false);
                     }}
@@ -187,7 +209,7 @@ export default function Step3BankDetails() {
         {/* Verification Trigger and Alert */}
         <div className="pt-2 border-t border-zinc-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1">
-            {verificationResult ? (
+            {verificationResult && (
               verificationResult.success ? (
                 <div className="flex items-center gap-2 text-green-600 bg-green-50/50 border border-green-200 rounded-xl px-4 py-3 text-xs font-bold animate-in slide-in-from-top-2 duration-300">
                   <CheckBadgeIcon className="w-5 h-5 shrink-0" />
@@ -201,14 +223,10 @@ export default function Step3BankDetails() {
                   <XCircleIcon className="w-5 h-5 shrink-0" />
                   <div>
                     <p>Account Verification Failed</p>
-                    <p className="text-[10px] text-red-500 font-semibold mt-0.5">{verificationResult.message}</p>
+                    <p className="text-[10px] text-red-500 font-semibold mt-0.5">{verificationResult.message || "Please check details."}</p>
                   </div>
                 </div>
               )
-            ) : (
-              <p className="text-[11px] text-zinc-400 font-normal leading-relaxed">
-                Click "Verify Account" to authenticate bank details using our automated verification partner (PayU).
-              </p>
             )}
           </div>
 
@@ -219,10 +237,10 @@ export default function Step3BankDetails() {
               onClick={handleVerifyBank}
               className={cn(
                 "inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 border",
-                verificationResult?.success 
+                verificationResult?.success
                   ? "bg-green-50 border-green-300 text-green-700 pointer-events-none"
-                  : canVerify 
-                    ? "bg-green-600 hover:bg-green-700 border-green-600 text-white" 
+                  : canVerify
+                    ? "bg-green-600 hover:bg-green-700 border-green-600 text-white"
                     : "bg-white border-zinc-300 text-zinc-400 cursor-not-allowed"
               )}
             >

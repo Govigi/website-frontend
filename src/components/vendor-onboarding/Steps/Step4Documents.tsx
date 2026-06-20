@@ -41,7 +41,7 @@ export default function Step4Documents() {
       cards.push({
         id: "gstin",
         label: "GST Number",
-        subText: "Required",
+        subText: "Optional",
         icon: "GST",
         color: "bg-emerald-500"
       });
@@ -51,7 +51,7 @@ export default function Step4Documents() {
       cards.push({
         id: "cin",
         label: "CIN Number",
-        subText: "Required",
+        subText: "Optional",
         icon: "CIN",
         color: "bg-blue-500"
       });
@@ -61,7 +61,7 @@ export default function Step4Documents() {
       cards.push({
         id: "llpin",
         label: "LLPIN Number",
-        subText: "Required",
+        subText: "Optional",
         icon: "LLP",
         color: "bg-indigo-500"
       });
@@ -70,7 +70,7 @@ export default function Step4Documents() {
     if (showPAN) {
       cards.push({
         id: "panNumber",
-        label: "PAN Number",
+        label: entityType === "SOLE_PROPRIETORSHIP" ? "Regular PAN" : "Business PAN",
         subText: "Required",
         icon: "PAN",
         color: "bg-slate-500"
@@ -81,7 +81,7 @@ export default function Step4Documents() {
       cards.push({
         id: "regCertNumber",
         label: "Reg Certificate",
-        subText: "Required",
+        subText: "Optional",
         icon: "REG",
         color: "bg-amber-500"
       });
@@ -91,7 +91,7 @@ export default function Step4Documents() {
       cards.push({
         id: "udyamNumber",
         label: "MSME Number",
-        subText: "Required",
+        subText: "Optional",
         icon: "MSME",
         color: "bg-cyan-500"
       });
@@ -101,7 +101,7 @@ export default function Step4Documents() {
       cards.push({
         id: "tradeLicenseNumber",
         label: "Trade License",
-        subText: "Required",
+        subText: "Optional",
         icon: "TRADE",
         color: "bg-orange-500"
       });
@@ -111,7 +111,7 @@ export default function Step4Documents() {
       cards.push({
         id: "fssaiNumber",
         label: "FSSAI License",
-        subText: "Required",
+        subText: "Optional",
         icon: "FSSAI",
         color: "bg-green-600"
       });
@@ -121,7 +121,7 @@ export default function Step4Documents() {
       cards.push({
         id: "drugLicenseNumber",
         label: "Drug License",
-        subText: "Required",
+        subText: "Optional",
         icon: "DRUG",
         color: "bg-red-500"
       });
@@ -194,7 +194,7 @@ export default function Step4Documents() {
           {showGST && (
             <div className="space-y-1.5 max-w-2xl">
               <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                GST Number *
+                GST Number
               </label>
               <p className="text-[10px] text-zinc-400 font-normal">Enter 15-digit GST number registered under your business.</p>
               <input
@@ -206,7 +206,6 @@ export default function Step4Documents() {
                   errors.gstin ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                 )}
                 {...register("gstin", {
-                  required: "GST Number is required",
                   onChange: (e) => setValue("gstin", e.target.value.toUpperCase())
                 })}
               />
@@ -220,7 +219,7 @@ export default function Step4Documents() {
             
             {showCIN && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Company Corporate Identification Number (CIN) *</label>
+                <label className="text-xs font-bold text-zinc-700">Company Corporate Identification Number (CIN)</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Enter 21-digit CIN number issued by MCA.</p>
                 <input
                   type="text"
@@ -231,7 +230,6 @@ export default function Step4Documents() {
                     errors.cin ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("cin", {
-                    required: "CIN Number is required",
                     onChange: (e) => setValue("cin", e.target.value.toUpperCase())
                   })}
                 />
@@ -243,7 +241,7 @@ export default function Step4Documents() {
 
             {showLLPIN && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">LLP Identification Number (LLPIN) *</label>
+                <label className="text-xs font-bold text-zinc-700">LLP Identification Number (LLPIN)</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Enter LLP identification number.</p>
                 <input
                   type="text"
@@ -253,7 +251,6 @@ export default function Step4Documents() {
                     errors.llpin ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("llpin", {
-                    required: "LLPIN is required",
                     onChange: (e) => setValue("llpin", e.target.value.toUpperCase())
                   })}
                 />
@@ -265,8 +262,12 @@ export default function Step4Documents() {
 
             {showPAN && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">PAN Number *</label>
-                <p className="text-[10px] text-zinc-400 font-normal">Enter 10-character PAN number of the business.</p>
+                <label className="text-xs font-bold text-zinc-700">
+                  {entityType === "SOLE_PROPRIETORSHIP" ? "Regular PAN Number *" : "Business PAN Number *"}
+                </label>
+                <p className="text-[10px] text-zinc-400 font-normal">
+                  {entityType === "SOLE_PROPRIETORSHIP" ? "Enter 10-character Personal/Individual PAN number." : "Enter 10-character Business PAN number."}
+                </p>
                 <input
                   type="text"
                   maxLength={10}
@@ -288,7 +289,7 @@ export default function Step4Documents() {
 
             {showRegCert && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Registration Certificate Number *</label>
+                <label className="text-xs font-bold text-zinc-700">Registration Certificate Number</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Enter Registration Certificate number.</p>
                 <input
                   type="text"
@@ -298,7 +299,6 @@ export default function Step4Documents() {
                     errors.regCertNumber ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("regCertNumber", {
-                    required: "Registration Certificate is required",
                     onChange: (e) => setValue("regCertNumber", e.target.value.toUpperCase())
                   })}
                 />
@@ -310,7 +310,7 @@ export default function Step4Documents() {
 
             {showMSME && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Udyam / MSME Registration *</label>
+                <label className="text-xs font-bold text-zinc-700">Udyam / MSME Registration</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Enter MSME registration number.</p>
                 <input
                   type="text"
@@ -320,7 +320,6 @@ export default function Step4Documents() {
                     errors.udyamNumber ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("udyamNumber", {
-                    required: "MSME Registration is required",
                     onChange: (e) => setValue("udyamNumber", e.target.value.toUpperCase())
                   })}
                 />
@@ -332,7 +331,7 @@ export default function Step4Documents() {
 
             {showTrade && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Trade License Number *</label>
+                <label className="text-xs font-bold text-zinc-700">Trade License Number</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Enter trade license number issued by local authority.</p>
                 <input
                   type="text"
@@ -342,19 +341,18 @@ export default function Step4Documents() {
                     errors.tradeLicenseNumber ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("tradeLicenseNumber", {
-                    required: "Trade License is required",
                     onChange: (e) => setValue("tradeLicenseNumber", e.target.value.toUpperCase())
                   })}
                 />
                 {errors.tradeLicenseNumber && (
-                  <p className="text-[10px] text-red-600 font-semibold mt-1 ml-1">{errors.tradeLicenseNumber.message as string}</p>
+                  <p className="text-[10px] text-red-605 font-semibold mt-1 ml-1">{errors.tradeLicenseNumber.message as string}</p>
                 )}
               </div>
             )}
 
             {showFSSAI && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">FSSAI License Number *</label>
+                <label className="text-xs font-bold text-zinc-700">FSSAI License Number</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Only for businesses involved in food & beverages.</p>
                 <input
                   type="text"
@@ -365,7 +363,6 @@ export default function Step4Documents() {
                     errors.fssaiNumber ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("fssaiNumber", {
-                    required: "FSSAI License is required",
                     onChange: (e) => setValue("fssaiNumber", e.target.value.replace(/\D/g, ""))
                   })}
                 />
@@ -377,7 +374,7 @@ export default function Step4Documents() {
 
             {showDrug && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Drug License Number *</label>
+                <label className="text-xs font-bold text-zinc-700">Drug License Number</label>
                 <p className="text-[10px] text-zinc-400 font-normal">Only for pharmacies/medical retailers.</p>
                 <input
                   type="text"
@@ -387,7 +384,6 @@ export default function Step4Documents() {
                     errors.drugLicenseNumber ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-zinc-300 focus:ring-green-600 focus:border-green-600"
                   )}
                   {...register("drugLicenseNumber", {
-                    required: "Drug License is required",
                     onChange: (e) => setValue("drugLicenseNumber", e.target.value.toUpperCase())
                   })}
                 />
