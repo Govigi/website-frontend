@@ -170,7 +170,6 @@ export default function VendorProductRequest() {
 
     return (
         <div className="min-h-screen bg-white p-6 md:p-12 font-mono text-gray-900">
-            <Toaster position="top-center" />
             
             <div className="mb-10 pb-4 border-b border-gray-200">
                 <h1 className="text-xl font-bold uppercase tracking-[0.2em] text-[#10b981]">

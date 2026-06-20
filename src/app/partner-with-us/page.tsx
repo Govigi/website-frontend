@@ -38,10 +38,6 @@ export default function VendorOnboardingPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-            <Toaster 
-                position="top-center" 
-                toastOptions={{ style: { fontSize: "14px", fontWeight: 600 } }} 
-            />
 
             {/* --- Neat Help & Support Modal --- */}
             <Modal open={open} onOpenChange={setOpen}>
@@ -109,9 +105,9 @@ export default function VendorOnboardingPage() {
             
             <Header onOpenHelp={() => setOpen(true)} />
             
-            <main className="flex-1 w-full flex flex-col justify-start">
-                <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center font-semibold text-gray-500">Loading...</div>}>
-                    <Step1Phone onVerified={() => router.push("/onboarding/step1")} />
+            <main className="flex-1 w-full flex flex-col items-center justify-center p-4">
+                <Suspense fallback={<div className="p-8 text-center text-zinc-500 font-semibold">Loading...</div>}>
+                    <Step1Phone onVerified={() => router.push("/onboarding/step1")} isModal={true} />
                 </Suspense>
             </main>
         </div>

@@ -50,7 +50,7 @@ export default function Step4BusinessLocation() {
 
       {/* Map Picker Box */}
       <div className="space-y-4">
-        <div className="w-full h-[320px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 relative shadow-sm">
+        <div className="w-full h-[390px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 relative shadow-sm">
           <MapPicker
             inline={true}
             onConfirm={handleMapConfirm}

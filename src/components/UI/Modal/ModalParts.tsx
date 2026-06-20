@@ -14,7 +14,7 @@ export function Header({
 }: HeaderProps) {
     return (
         <div 
-            className={`border-b border-zinc-100 p-6 flex justify-between items-start ${className}`}
+            className={`border-b border-zinc-100 px-6 py-4 flex justify-between items-center ${className}`}
         >
             <div className="flex-1">{children}</div>
 

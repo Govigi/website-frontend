@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ModalContentProps } from "./types";
 import { useModal } from "./ModalContext";
 
@@ -19,6 +20,17 @@ export default function ModalContent({
 }: ModalContentProps) {
 
     const { open, onOpenChange } = useModal();
+
+    useEffect(() => {
+        if (open) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [open]);
 
     if (!open) return null;
 

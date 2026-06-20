@@ -37,6 +37,15 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
     const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
     const geocoder = useRef<google.maps.Geocoder | null>(null);
     const placesService = useRef<google.maps.places.PlacesService | null>(null);
+    const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (geocodeTimeoutRef.current) {
+                clearTimeout(geocodeTimeoutRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (isLoaded && !loadError) {
@@ -161,30 +170,42 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
         const newPos = { lat, lng };
         setMarkerPosition(newPos);
 
-        const fallbackPlace = {
-            place_id: "manual-pin",
-            formatted_address: "Pinned Location (Custom Map Pin)",
-            name: "Pinned Location",
-            address_components: [
-                { types: ["locality"], long_name: "Local Area" },
-                { types: ["administrative_area_level_1"], long_name: "Manual Location" }
-            ]
-        };
-        setSelectedPlace(fallbackPlace);
-        setSearchQuery(fallbackPlace.formatted_address);
-
-        if (geocoder.current) {
-            geocoder.current.geocode({ location: newPos }, (results, status) => {
-                if (status === "OK" && results && results[0]) {
-                    const place = results[0];
-                    setSelectedPlace(place);
-                    setSearchQuery(place.formatted_address);
-                    if (inline && shouldConfirm) {
-                        triggerConfirm(place, newPos);
-                    }
-                }
-            });
+        if (geocodeTimeoutRef.current) {
+            clearTimeout(geocodeTimeoutRef.current);
         }
+
+        setSearchQuery("Locating pin position...");
+
+        geocodeTimeoutRef.current = setTimeout(() => {
+            if (geocoder.current) {
+                geocoder.current.geocode({ location: newPos }, (results, status) => {
+                    if (status === "OK" && results && results[0]) {
+                        const place = results[0];
+                        setSelectedPlace(place);
+                        setSearchQuery(place.formatted_address);
+                        if (inline && shouldConfirm) {
+                            triggerConfirm(place, newPos);
+                        }
+                    } else {
+                        console.error("Geocoding failed with status:", status);
+                        const fallbackPlace = {
+                            place_id: "manual-pin",
+                            formatted_address: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+                            name: "Pinned Location",
+                            address_components: [
+                                { types: ["locality"], long_name: "Local Area" },
+                                { types: ["administrative_area_level_1"], long_name: "Manual Location" }
+                            ]
+                        };
+                        setSelectedPlace(fallbackPlace);
+                        setSearchQuery(fallbackPlace.formatted_address);
+                        if (inline && shouldConfirm) {
+                            triggerConfirm(fallbackPlace, newPos);
+                        }
+                    }
+                });
+            }
+        }, 500);
     };
 
     const handlePredictionSelect = (placeId: string, description: string) => {
@@ -250,7 +271,14 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
 
     const handleMapClick = (e: google.maps.MapMouseEvent) => {
         if (e.latLng) {
-            updateLocationFromCoordinates(e.latLng.lat(), e.latLng.lng());
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            if (inline) {
+                const newPos = { lat, lng };
+                setCenter(newPos);
+                map?.panTo(newPos);
+            }
+            updateLocationFromCoordinates(lat, lng);
         }
     };
 
@@ -316,17 +344,22 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
         }
 
         return (
-            <div className="w-full rounded-2xl overflow-hidden border border-gray-200 shadow-[0_4px_25px_rgba(0,0,0,0.02)] flex flex-col relative h-[380px] font-outfit">
+            <div className="w-full rounded-2xl overflow-hidden border border-gray-200 shadow-[0_4px_25px_rgba(0,0,0,0.02)] flex flex-col relative h-full font-outfit">
                 {/* Map Area */}
                 <div className="flex-1 w-full bg-gray-50 relative overflow-hidden">
                     <GoogleMap
                         mapContainerStyle={{ width: '100%', height: '100%' }}
                         center={center}
-                        zoom={5}
+                        zoom={13}
                         onLoad={onLoad}
                         onUnmount={onUnmount}
                         onIdle={handleMapIdle}
                         onClick={handleMapClick}
+                        onZoomChanged={() => {
+                            if (map && inline) {
+                                map.setCenter(markerPosition);
+                            }
+                        }}
                         options={{
                             disableDefaultUI: true,
                             zoomControl: false,
@@ -370,11 +403,11 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                     </div>
 
                     {/* Center Pin & Tooltip Overlay */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                        {/* Tooltip Wrapper */}
-                        <div className="flex flex-col items-center -translate-y-8">
+                    <div className="absolute top-1/2 left-1/2 pointer-events-none z-10">
+                        {/* Tooltip Wrapper - Anchored precisely at map center */}
+                        <div className="relative flex flex-col items-center" style={{ transform: 'translate(-50%, -100%)' }}>
                             {/* Tooltip */}
-                            <div className="bg-green-700 text-white px-4 py-2.5 rounded-[18px] flex flex-col items-center shadow-lg relative max-w-xs text-center">
+                            <div className="bg-green-700 text-white px-4 py-2.5 rounded-[18px] flex flex-col items-center shadow-lg relative max-w-xs text-center mb-2">
                                 <span className="text-[10px] font-extrabold tracking-tight whitespace-nowrap">Your orders will be picked up from here</span>
                                 <span className="text-[8px] text-green-100 font-semibold mt-0.5 whitespace-nowrap">Move pin to adjust exact location</span>
                                 {/* Arrow */}
@@ -382,7 +415,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                             </div>
                             
                             {/* Black Pin with white center */}
-                            <div className="mt-2 flex flex-col items-center">
+                            <div className="flex flex-col items-center">
                                 <div className="w-7 h-7 rounded-full bg-black border-[1.5px] border-white flex items-center justify-center shadow-md">
                                     <div className="w-2 h-2 rounded-full bg-white"></div>
                                 </div>
@@ -391,7 +424,7 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                             </div>
                         </div>
                         {/* Pulse / Shadow at the center */}
-                        <div className="w-4 h-1 bg-black/20 rounded-full blur-[1px] -mt-8"></div>
+                        <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-1 bg-black/20 rounded-full blur-[1px]"></div>
                     </div>
 
                     {/* Use Current Location Button */}
