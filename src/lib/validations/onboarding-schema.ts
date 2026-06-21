@@ -23,6 +23,10 @@ export const onboardingSchema = z.object({
     email: z.email("Invalid email"),
     alternatePhone: z.string().optional(),
     panNumber: z.string().regex(PAN_REGEX, "Invalid PAN"),
+    profileImage: z.any().refine(
+        (val) => val && (typeof window === "undefined" || val instanceof File || typeof val === "string"),
+        "Profile photo / face liveness check is required"
+    ),
 
     address: z.object({
         formattedAddress: z.string().min(5, "Address required"),
@@ -52,6 +56,7 @@ export const onboardingSchema = z.object({
         accountNumber: z.string().min(9, "Required"),
         accountName: z.string().min(1, "Required"),
         ifscCode: z.string().regex(IFSC_REGEX, "Invalid IFSC"),
+        isVerified: z.boolean().optional(),
     }),
 
     // Using boolean with refinement is safer for RHF types than literals

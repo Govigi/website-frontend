@@ -14,6 +14,7 @@ import {
   ExclamationTriangleIcon
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils/utils";
+import { LEGAL_ENTITY_TYPES, BUSINESS_TYPES } from "@/lib/constants/vendor/onboarding.options";
 
 export default function Step5Review() {
   const { register, watch, formState: { errors } } = useFormContext();
@@ -25,6 +26,16 @@ export default function Step5Review() {
   // Watch form values for read-only summary
   const businessType = watch("businessType");
   const legalEntityType = watch("legalEntityType");
+
+  const entityTypeOption = LEGAL_ENTITY_TYPES.find(
+    (opt) => opt.value === legalEntityType || opt.label === legalEntityType
+  );
+  const displayEntityType = entityTypeOption ? entityTypeOption.label : (legalEntityType || "").replace(/_/g, " ");
+
+  const businessTypeOption = BUSINESS_TYPES.find(
+    (opt) => opt.value === businessType || opt.label === businessType
+  );
+  const displayBusinessType = businessTypeOption ? businessTypeOption.label : (businessType || "").replace(/_/g, " ");
   const legalBusinessName = watch("legalBusinessName");
   const businessName = watch("businessName");
   const gstin = watch("gstin");
@@ -51,6 +62,7 @@ export default function Step5Review() {
   const logoFile = watch("logoFile") as File | null;
   const documentFile = watch("documentFile") as File | null;
   const storeFiles = (watch("storeFiles") || []) as File[];
+  const profileImage = watch("profileImage");
 
   return (
     <div className="space-y-10 animate-in fade-in duration-300">
@@ -93,7 +105,7 @@ export default function Step5Review() {
               </div>
               <div>
                 <span className="text-zinc-400 block">Entity Type</span>
-                <span className="font-semibold text-zinc-800">{legalEntityType} ({businessType})</span>
+                <span className="font-semibold text-zinc-800">{displayEntityType} ({displayBusinessType})</span>
               </div>
               <div>
                 <span className="text-zinc-400 block">GSTIN / FSSAI</span>
@@ -144,7 +156,7 @@ export default function Step5Review() {
               </div>
               <div className="col-span-2 pt-2 border-t border-zinc-50">
                 <span className="text-zinc-500 block">
-                  {legalEntityType === "SOLE_PROPRIETORSHIP" ? "Regular PAN Number" : "Business PAN Number"}
+                  {legalEntityType === "SOLE_PROPRIETORSHIP" || displayEntityType === "Sole Proprietorship" ? "Regular PAN Number" : "Business PAN Number"}
                 </span>
                 <span className="font-semibold text-zinc-800">{panNumber || "—"}</span>
               </div>
@@ -236,7 +248,7 @@ export default function Step5Review() {
                   Uploaded Media
                 </span>
                 <span className="font-semibold text-zinc-800 mt-1 block">
-                  Logo: {logoFile ? "Yes" : "No"} | Docs: {documentFile ? "Yes" : "No"} | Store Images: {storeFiles.length}
+                  Logo: {logoFile ? "Yes" : "No"} | Liveness: {profileImage ? "Verified" : "No"} | Docs: {documentFile ? "Yes" : "No"} | Store Images: {storeFiles.length}
                 </span>
               </div>
             </div>

@@ -28,6 +28,10 @@ export const BUSINESS_TYPES = [
         value: "SERVICE_PROVIDER"
     },
     {
+        label: "Farmer",
+        value: "FARMER"
+    },
+    {
         label: "Other",
         value: "OTHER"
     }
