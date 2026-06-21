@@ -23,6 +23,7 @@ export const onboardingDefaults: OnboardingData = {
     email: "",
     alternatePhone: "",
     panNumber: "",
+    profileImage: null as any,
 
     address: {
         formattedAddress: "",
@@ -53,6 +54,7 @@ export const onboardingDefaults: OnboardingData = {
         accountNumber: "",
         accountName: "",
         ifscCode: "",
+        isVerified: false,
     },
 
     agree1: false,

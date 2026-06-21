@@ -7,7 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon, DocumentTextIcon, PhoneIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon, DocumentTextIcon, PhoneIcon, EnvelopeIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { Modal } from "@/components/UI/Modal";
 
@@ -63,7 +63,7 @@ const SUB_STEP_LABELS: Record<number, Record<number, string>> = {
 const SUB_STEP_FIELDS: Record<number, Record<number, string[]>> = {
   1: {
     1: ["businessType", "legalEntityType", "legalBusinessName", "businessName"],
-    2: ["contactPerson", "role", "email", "panNumber"],
+    2: ["contactPerson", "role", "email", "panNumber", "profileImage"],
     3: ["address"]
   },
   2: {
@@ -106,6 +106,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const [sessionValid, setSessionValid] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [isAwaitingApproval, setIsAwaitingApproval] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [validBanks, setValidBanks] = useState<string[]>([]);
 
@@ -152,6 +153,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       delete (serializable as any).storeFiles;
       delete (serializable as any).logoFile;
       delete (serializable as any).documentFile;
+      delete (serializable as any).profileImage;
       localStorage.setItem("vendorOnboardingDraft", JSON.stringify(serializable));
     });
     return () => subscription.unsubscribe();
@@ -162,34 +164,103 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
     setShowFormOnMobile(false);
   }, [currentStepNum]);
 
-  // Session verification on mount
+  // Session verification and vendor data pre-filling on mount
   useEffect(() => {
-    const token = localStorage.getItem("vendorToken");
-    if (!token) {
-      toast.error("Session expired or invalid. Please verify your mobile number.");
-      router.push("/partner-with-us");
-      setCheckingSession(false);
-      return;
-    }
-
-    // Decode JWT payload to verify expiry
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      if (payload.exp * 1000 < Date.now()) {
-        toast.error("Session expired. Please verify your mobile number again.");
-        localStorage.removeItem("vendorToken");
+    const checkSessionAndLoadData = async () => {
+      const token = localStorage.getItem("vendorToken");
+      if (!token) {
+        toast.error("Session expired or invalid. Please verify your mobile number.");
         router.push("/partner-with-us");
-      } else {
-        setSessionValid(true);
+        setCheckingSession(false);
+        return;
       }
-    } catch {
-      toast.error("Invalid onboarding session token.");
-      localStorage.removeItem("vendorToken");
-      router.push("/partner-with-us");
-    } finally {
-      setCheckingSession(false);
-    }
-  }, [router]);
+
+      // Decode JWT payload to verify expiry
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (payload.exp * 1000 < Date.now()) {
+          toast.error("Session expired. Please verify your mobile number again.");
+          localStorage.removeItem("vendorToken");
+          router.push("/partner-with-us");
+          setCheckingSession(false);
+          return;
+        }
+        setSessionValid(true);
+
+        // Fetch vendor profile if it already exists
+        const res = await axios.get(`${BACKEND_URL}/vendors/refresh`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (res.data && res.data.vendor) {
+          const v = res.data.vendor;
+          
+          if (!v.isVerified) {
+            setIsAwaitingApproval(true);
+            setSubmittedSuccess(true);
+          }
+
+          // Map backend data to onboarding form structure
+          reset({
+            businessName: v.businessName || "",
+            contactPerson: v.contactPerson || "",
+            email: v.email || "",
+            alternatePhone: v.alternatePhone || "",
+            businessType: v.businessType || "",
+            legalEntityType: v.legalEntityType || "",
+            legalBusinessName: v.legalBusinessName || "",
+            businessCategory: v.businessCategory || "",
+            supportedCategories: v.supportedCategories || [],
+            openTime: v.openTime || "",
+            closeTime: v.closeTime || "",
+            address: v.address || {
+              formattedAddress: "",
+              components: { houseNumber: "", street: "", area: "", city: "", state: "", postalCode: "", country: "India" },
+              location: { type: "Point", coordinates: [0, 0] },
+            },
+            bankDetails: v.bankDetails ? {
+              accountName: v.bankDetails.accountName || "",
+              accountNumber: v.bankDetails.accountNumber || "",
+              bankName: v.bankDetails.bankName || "",
+              ifscCode: v.bankDetails.ifscCode || "",
+              isVerified: !!v.bankDetails.isVerified
+            } : { accountName: "", accountNumber: "", bankName: "", ifscCode: "", isVerified: false },
+            gstin: v.gstin || "",
+            panNumber: v.panNumber || "",
+            fssaiNumber: v.fssaiNumber || "",
+            profileImage: v.profileImage?.url || null,
+            logoFile: null,
+            documentFile: null,
+            storeFiles: [],
+            existingStoreImages: v.storeImages?.map((img: any) => img.url) || [],
+            agree1: true,
+            agree2: true,
+          } as any);
+
+          // Check if vendor is already verified/activated by admin
+          if (v.isVerified) {
+            toast.success("Your partner account is activated. Redirecting to dashboard...");
+            router.push("/vendor-dashboard");
+          }
+        }
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          console.log("No existing vendor profile found (new registration).");
+        } else {
+          console.error("Session verification/refresh failed:", err);
+          toast.error("Onboarding session invalid or expired.");
+          localStorage.removeItem("vendorToken");
+          router.push("/partner-with-us");
+        }
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    checkSessionAndLoadData();
+  }, [router, reset]);
 
   const checkStepValidity = (stepNum: number): boolean => {
     const values = methods.getValues();
@@ -206,6 +277,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       if (!values.role || values.role.trim() === "") return false;
       if (!values.email || !EMAIL_REGEX.test(values.email)) return false;
       if (!values.panNumber || !PAN_REGEX.test(values.panNumber)) return false;
+      if (!values.profileImage) return false;
       if (!values.address?.formattedAddress || values.address.formattedAddress.trim().length < 5) return false;
       if (!values.address?.location?.coordinates || values.address.location.coordinates.length !== 2) return false;
       return true;
@@ -223,6 +295,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
     if (stepNum === 3) {
       const bank = values.bankDetails;
       if (!bank) return false;
+      if (!bank.isVerified) return false;
       if (!bank.bankName || bank.bankName.trim() === "") return false;
       if (validBanks.length > 0 && !validBanks.includes(bank.bankName)) return false;
       if (!bank.accountNumber || bank.accountNumber.trim().length < 9) return false;
@@ -287,6 +360,13 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
     const isLastSubStep = !showFormOnMobile || activeSubStep === maxSubSteps;
 
     if (isLastSubStep) {
+      if (currentStepNum === 3) {
+        const bank = methods.getValues("bankDetails");
+        if (!bank || !bank.isVerified) {
+          toast.error("Please verify your bank details before proceeding.");
+          return;
+        }
+      }
       if (!checkStepValidity(currentStepNum)) {
         toast.error("Please fill all required fields correctly.");
         return;
@@ -322,6 +402,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       const logoFile = methods.getValues("logoFile" as any);
       const documentFile = methods.getValues("documentFile" as any);
       const storeFiles = methods.getValues("storeFiles" as any) || [];
+      const existingStoreImages = methods.getValues("existingStoreImages" as any) || [];
 
       // Construct FormData for multipart upload
       const formData = new FormData();
@@ -343,9 +424,14 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       if (data.alternatePhone) formData.append("alternatePhone", data.alternatePhone);
       formData.append("agree1", String(data.agree1));
       formData.append("agree2", String(data.agree2));
+      formData.append("existingStoreImages", JSON.stringify(existingStoreImages));
 
       if (logoFile) {
         formData.append("image", logoFile);
+      }
+      const profileImageFile = data.profileImage || methods.getValues("profileImage" as any);
+      if (profileImageFile) {
+        formData.append("profileImage", profileImageFile);
       }
       if (documentFile) {
         formData.append("document", documentFile);
@@ -409,13 +495,20 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
             </p>
           </div>
 
-          <div className="pt-4">
+          <div className="pt-4 flex flex-col sm:flex-row justify-center items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 text-sm"
+              className="inline-flex items-center justify-center px-6 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-all active:scale-95 text-sm"
             >
               Go to Homepage
             </Link>
+            <button
+              type="button"
+              onClick={() => setSubmittedSuccess(false)}
+              className="inline-flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 text-sm"
+            >
+              Edit Application
+            </button>
           </div>
         </main>
 
@@ -447,6 +540,13 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
             </button>
           </div>
         </header>
+
+        {isAwaitingApproval && (
+          <div className="bg-amber-50 border-b border-amber-200 py-3 px-6 text-center text-xs font-semibold text-amber-800 flex items-center justify-center gap-2 z-50 animate-in fade-in duration-300">
+            <ExclamationTriangleIcon className="w-4.5 h-4.5 text-amber-600 shrink-0" />
+            <span>Your application is currently awaiting admin approval. You can edit your details and resubmit if needed.</span>
+          </div>
+        )}
 
         {/* Premium Mobile Header Card */}
         <div className="lg:hidden w-full">

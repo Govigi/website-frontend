@@ -44,10 +44,36 @@ export default function Step2StoreSetup() {
   const businessCategory = watch("businessCategory");
   const supportedCategories = watch("supportedCategories") || [];
   const storeFiles = (watch("storeFiles") || []) as File[];
+  const existingStoreImages = (watch("existingStoreImages") || []) as string[];
 
-  const [storePreviews, setStorePreviews] = useState<string[]>(
-    storeFiles.map(f => URL.createObjectURL(f))
-  );
+  const [storePreviews, setStorePreviews] = useState<{ src: string; isExisting: boolean; indexInOriginal: number }[]>([]);
+
+  const existingSerialized = existingStoreImages.join(",");
+  const filesSerialized = storeFiles.map(f => f ? `${f.name}-${f.size}-${f.lastModified}` : "").join(",");
+
+  useEffect(() => {
+    const previews = [
+      ...existingStoreImages.map((url, idx) => ({ src: url, isExisting: true, indexInOriginal: idx })),
+      ...storeFiles.map((file, idx) => {
+        let src = "";
+        try {
+          src = URL.createObjectURL(file);
+        } catch (e) {
+          console.error(e);
+        }
+        return { src, isExisting: false, indexInOriginal: idx };
+      })
+    ];
+    setStorePreviews(previews);
+
+    return () => {
+      previews.forEach(p => {
+        if (!p.isExisting && p.src && p.src.startsWith("blob:")) {
+          URL.revokeObjectURL(p.src);
+        }
+      });
+    };
+  }, [existingSerialized, filesSerialized]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -107,24 +133,23 @@ export default function Step2StoreSetup() {
 
   const handleStoreImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const remainingSlots = 5 - storeFiles.length;
+    const remainingSlots = 5 - (existingStoreImages.length + storeFiles.length);
     const filesToUpload = files.slice(0, remainingSlots);
 
     if (filesToUpload.length > 0) {
       const nextFiles = [...storeFiles, ...filesToUpload];
       setValue("storeFiles", nextFiles, { shouldValidate: true });
-      
-      const newPreviews = filesToUpload.map(f => URL.createObjectURL(f));
-      setStorePreviews([...storePreviews, ...newPreviews]);
     }
   };
 
-  const removeStoreImage = (index: number) => {
-    const nextFiles = storeFiles.filter((_, i) => i !== index);
-    setValue("storeFiles", nextFiles);
-    
-    const nextPreviews = storePreviews.filter((_, i) => i !== index);
-    setStorePreviews(nextPreviews);
+  const removeStoreImage = (isExisting: boolean, indexInOriginal: number) => {
+    if (isExisting) {
+      const nextUrls = existingStoreImages.filter((_, i) => i !== indexInOriginal);
+      setValue("existingStoreImages", nextUrls);
+    } else {
+      const nextFiles = storeFiles.filter((_, i) => i !== indexInOriginal);
+      setValue("storeFiles", nextFiles);
+    }
   };
 
   return (
@@ -275,12 +300,12 @@ export default function Step2StoreSetup() {
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {storePreviews.map((src, i) => (
-              <div key={src} className="aspect-square border border-zinc-200 rounded-xl overflow-hidden relative group shadow-sm">
-                <img src={src} alt={`Store Preview ${i + 1}`} className="h-full w-full object-cover" />
+            {storePreviews.map((item, i) => (
+              <div key={item.src} className="aspect-square border border-zinc-200 rounded-xl overflow-hidden relative group shadow-sm">
+                <img src={item.src} alt={`Store Preview ${i + 1}`} className="h-full w-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => removeStoreImage(i)}
+                  onClick={() => removeStoreImage(item.isExisting, item.indexInOriginal)}
                   className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white text-red-600 rounded-lg shadow transition-colors"
                 >
                   <TrashIcon className="w-4 h-4" />
@@ -288,11 +313,11 @@ export default function Step2StoreSetup() {
               </div>
             ))}
 
-            {storeFiles.length < 5 && (
+            {(existingStoreImages.length + storeFiles.length) < 5 && (
               <label className="aspect-square border-2 border-dashed border-zinc-200 hover:border-green-500/70 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-zinc-50/20 hover:bg-zinc-50/40 transition-all group">
                 <DocumentArrowUpIcon className="w-7 h-7 text-zinc-400 group-hover:text-green-600 transition-colors mb-2" />
                 <span className="text-[10px] font-bold text-zinc-600 text-center px-1">Upload Store Image</span>
-                <span className="text-[9px] text-zinc-400 mt-1">{storeFiles.length}/5 uploaded</span>
+                <span className="text-[9px] text-zinc-400 mt-1">{(existingStoreImages.length + storeFiles.length)}/5 uploaded</span>
                 <input
                   type="file"
                   multiple
