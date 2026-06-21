@@ -8,6 +8,7 @@ import {
   DocumentTextIcon
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils/utils";
+import { LEGAL_ENTITY_TYPES } from "@/lib/constants/vendor/onboarding.options";
 
 export default function Step4Documents() {
   const { register, watch, setValue, formState: { errors } } = useFormContext();
@@ -17,6 +18,11 @@ export default function Step4Documents() {
 
   const entityType = watch("legalEntityType") || "PRIVATE_LIMITED";
   const businessCategory = watch("businessCategory") || "";
+
+  const entityTypeOption = LEGAL_ENTITY_TYPES.find(
+    (opt) => opt.value === entityType || opt.label === entityType
+  );
+  const displayEntityType = entityTypeOption.label;
 
   const isFoodCategory = [
     "grocery", "restaurant", "dairy", "bakery", "food manufacturer", "beverages"
@@ -158,7 +164,7 @@ export default function Step4Documents() {
           <p className="text-xs text-zinc-555">
             Business Structure
             <span className="block text-sm font-bold text-zinc-800 mt-0.5">
-              Selected Legal Entity Type: <span className="text-green-700 font-extrabold">{entityType}</span>
+              Selected Legal Entity Type: <span className="text-green-700 font-extrabold">{displayEntityType}</span>
             </span>
           </p>
 

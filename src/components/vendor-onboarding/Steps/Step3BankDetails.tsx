@@ -26,6 +26,7 @@ export default function Step3BankDetails() {
   const accountNumber = watch("bankDetails.accountNumber");
   const accountName = watch("bankDetails.accountName");
   const ifscCode = watch("bankDetails.ifscCode");
+  const isVerifiedField = watch("bankDetails.isVerified");
 
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -50,10 +51,16 @@ export default function Step3BankDetails() {
     fetchAllBanks();
   }, []);
 
-  // Watch for input changes to reset verification if the values change
+  // Sync state if form was pre-filled with verified details
   useEffect(() => {
-    setVerificationResult(null);
-  }, [bankName, accountNumber, accountName, ifscCode]);
+    if (isVerifiedField && !verificationResult) {
+      setVerificationResult({
+        success: true,
+        verifiedName: accountName || "Verified Account",
+        message: "Account verified successfully."
+      });
+    }
+  }, [isVerifiedField, accountName, verificationResult]);
 
   const handleVerifyBank = async () => {
     if (!accountNumber || !ifscCode || !accountName) {
@@ -69,12 +76,14 @@ export default function Step3BankDetails() {
       });
 
       if (response.data && response.data.success) {
+        setValue("bankDetails.isVerified", true, { shouldValidate: true });
         setVerificationResult({
           success: true,
           verifiedName: response.data.verifiedName,
           message: response.data.message || "Account verified successfully."
         });
       } else {
+        setValue("bankDetails.isVerified", false, { shouldValidate: true });
         setVerificationResult({
           success: false,
           message: response.data.message || "Verification failed."
@@ -82,6 +91,7 @@ export default function Step3BankDetails() {
       }
     } catch (error: any) {
       console.error("Bank details verification error:", error);
+      setValue("bankDetails.isVerified", false, { shouldValidate: true });
       setVerificationResult({
         success: false,
         message: error.response?.data?.message || "Verification failed. Please check details."
@@ -123,6 +133,8 @@ export default function Step3BankDetails() {
               onFocus={() => setShowSuggestions(true)}
               {...register("bankDetails.bankName", {
                 onChange: (e: any) => {
+                  setValue("bankDetails.isVerified", false, { shouldValidate: true });
+                  setVerificationResult(null);
                   const val = e.target.value;
                   if (val) {
                     const query = val.toLowerCase();
@@ -171,6 +183,8 @@ export default function Step3BankDetails() {
                     type="button"
                     onMouseDown={() => {
                       setValue("bankDetails.bankName", name, { shouldValidate: true });
+                      setValue("bankDetails.isVerified", false, { shouldValidate: true });
+                      setVerificationResult(null);
                       clearErrors("bankDetails.bankName");
                       setSuggestions([]);
                       setShowSuggestions(false);
@@ -186,15 +200,26 @@ export default function Step3BankDetails() {
 
           <FloatingInput
             label="Account Holder Name *"
+            type="text"
+            maxLength={50}
             error={accountNameError?.message as string}
             {...register("bankDetails.accountName")}
+            onChange={(e) => {
+              setValue("bankDetails.accountName", e.target.value.replace(/[^a-zA-Z ]/g, ""), { shouldValidate: true });
+              setValue("bankDetails.isVerified", false, { shouldValidate: true });
+              setVerificationResult(null);
+            }}
           />
 
           <FloatingInput
             label="Account Number *"
             error={accountNumberError?.message as string}
             {...register("bankDetails.accountNumber")}
-            onChange={(e) => setValue("bankDetails.accountNumber", e.target.value.replace(/\D/g, ""), { shouldValidate: true })}
+            onChange={(e) => {
+              setValue("bankDetails.accountNumber", e.target.value.replace(/\D/g, ""), { shouldValidate: true });
+              setValue("bankDetails.isVerified", false, { shouldValidate: true });
+              setVerificationResult(null);
+            }}
           />
 
           <FloatingInput
@@ -202,7 +227,11 @@ export default function Step3BankDetails() {
             maxLength={11}
             error={ifscCodeError?.message as string}
             {...register("bankDetails.ifscCode")}
-            onChange={(e) => setValue("bankDetails.ifscCode", e.target.value.toUpperCase(), { shouldValidate: true })}
+            onChange={(e) => {
+              setValue("bankDetails.ifscCode", e.target.value.toUpperCase(), { shouldValidate: true });
+              setValue("bankDetails.isVerified", false, { shouldValidate: true });
+              setVerificationResult(null);
+            }}
           />
         </div>
 
