@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { config } from "@/libs/utils/config";
-import { getAuthHeaders, getStoredToken } from "@/libs/utils/address";
+import { config } from "@/lib/utils/config";
+import { getAuthHeaders, getStoredToken } from "@/lib/utils/address";
 import {
   CheckBadgeIcon,
   ClockIcon,

@@ -11,15 +11,16 @@ const DEFAULT_CENTER = {
 const LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = ["places"];
 
 type MapPickerProps = {
-    isOpen: boolean;
-    onClose: () => void;
+    isOpen?: boolean;
+    onClose?: () => void;
     onConfirm: (locationData: any) => void;
-    apiKey: string;
+    apiKey: string;     
     initialLocation?: { lat: number; lng: number };
     initialAddress?: string;
+    inline?: boolean;
 };
 
-export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialLocation, initialAddress }: MapPickerProps) {
+export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialLocation, initialAddress, inline = false }: MapPickerProps) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: apiKey,
@@ -36,6 +37,15 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
     const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
     const geocoder = useRef<google.maps.Geocoder | null>(null);
     const placesService = useRef<google.maps.places.PlacesService | null>(null);
+    const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (geocodeTimeoutRef.current) {
+                clearTimeout(geocodeTimeoutRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (isLoaded && !loadError) {
@@ -51,13 +61,13 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
     }, [isLoaded, loadError]);
 
     useEffect(() => {
-        if (isOpen && isLoaded) {
+        if ((isOpen || inline) && isLoaded) {
             if (initialLocation && initialLocation.lat !== 0 && initialLocation.lng !== 0) {
                 setCenter(initialLocation);
                 setMarkerPosition(initialLocation);
                 const prevPlace = {
                     place_id: "initial-pin",
-                    formatted_address: initialAddress || `Latitude: ${initialLocation.lat.toFixed(6)}, Longitude: ${initialLocation.lng.toFixed(6)}`,
+                    formatted_address: initialAddress || "Pinned Location (Coordinates Set)",
                     name: "Selected Location",
                     address_components: []
                 };
@@ -72,21 +82,28 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                     });
                 }
             } else {
-                if (navigator.geolocation) {
+                let isSecure = true;
+                if (typeof window !== "undefined") {
+                    isSecure = window.location.protocol === "https:" || 
+                               window.location.hostname === "localhost" || 
+                               window.location.hostname === "127.0.0.1";
+                }
+
+                if (isSecure && navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const { latitude, longitude } = position.coords;
                             const newPos = { lat: latitude, lng: longitude };
                             setCenter(newPos);
-                            updateLocationFromCoordinates(latitude, longitude);
+                            updateLocationFromCoordinates(latitude, longitude, false);
                         },
                         (error) => {
                             console.error("Auto geolocation error:", error);
-                            updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+                            updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, false);
                         }
                     );
                 } else {
-                    updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+                    updateLocationFromCoordinates(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, false);
                 }
             }
         }
@@ -120,31 +137,75 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
         }
     };
 
-    const updateLocationFromCoordinates = (lat: number, lng: number) => {
+    const triggerConfirm = (result: any, pos: { lat: number; lng: number }) => {
+        const components: any = {};
+        if (result.address_components) {
+            result.address_components.forEach((c: any) => {
+                const types = c.types;
+                if (types.includes("street_number")) components.houseNumber = c.long_name;
+                if (types.includes("route")) components.street = c.long_name;
+                if (types.includes("sublocality") || types.includes("sublocality_level_1")) components.area = c.long_name;
+                if (types.includes("locality")) components.city = c.long_name;
+                if (types.includes("administrative_area_level_1")) components.state = c.long_name;
+                if (types.includes("postal_code")) components.postalCode = c.long_name;
+                if (types.includes("country")) components.country = c.long_name;
+            });
+        }
+        const formatted = result.formatted_address || result.name || "";
+        onConfirm({
+            placeId: result.place_id || "manual",
+            formattedAddress: formatted,
+            rawAddress: formatted,
+            components,
+            location: {
+                type: "Point",
+                coordinates: [pos.lng, pos.lat],
+            },
+            label: "Business",
+            isPrimary: true,
+        });
+    };
+
+    const updateLocationFromCoordinates = (lat: number, lng: number, shouldConfirm = true) => {
         const newPos = { lat, lng };
         setMarkerPosition(newPos);
 
-        const fallbackPlace = {
-            place_id: "manual-pin",
-            formatted_address: `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`,
-            name: "Pinned Location",
-            address_components: [
-                { types: ["locality"], long_name: "Local Area" },
-                { types: ["administrative_area_level_1"], long_name: "Manual Location" }
-            ]
-        };
-        setSelectedPlace(fallbackPlace);
-        setSearchQuery(fallbackPlace.formatted_address);
-
-        if (geocoder.current) {
-            geocoder.current.geocode({ location: newPos }, (results, status) => {
-                if (status === "OK" && results && results[0]) {
-                    const place = results[0];
-                    setSelectedPlace(place);
-                    setSearchQuery(place.formatted_address);
-                }
-            });
+        if (geocodeTimeoutRef.current) {
+            clearTimeout(geocodeTimeoutRef.current);
         }
+
+        setSearchQuery("Locating pin position...");
+
+        geocodeTimeoutRef.current = setTimeout(() => {
+            if (geocoder.current) {
+                geocoder.current.geocode({ location: newPos }, (results, status) => {
+                    if (status === "OK" && results && results[0]) {
+                        const place = results[0];
+                        setSelectedPlace(place);
+                        setSearchQuery(place.formatted_address);
+                        if (inline && shouldConfirm) {
+                            triggerConfirm(place, newPos);
+                        }
+                    } else {
+                        console.error("Geocoding failed with status:", status);
+                        const fallbackPlace = {
+                            place_id: "manual-pin",
+                            formatted_address: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+                            name: "Pinned Location",
+                            address_components: [
+                                { types: ["locality"], long_name: "Local Area" },
+                                { types: ["administrative_area_level_1"], long_name: "Manual Location" }
+                            ]
+                        };
+                        setSelectedPlace(fallbackPlace);
+                        setSearchQuery(fallbackPlace.formatted_address);
+                        if (inline && shouldConfirm) {
+                            triggerConfirm(fallbackPlace, newPos);
+                        }
+                    }
+                });
+            }
+        }, 500);
     };
 
     const handlePredictionSelect = (placeId: string, description: string) => {
@@ -164,12 +225,26 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
 
                     map?.panTo(newPos);
                     map?.setZoom(17);
+                    
+                    if (inline) {
+                        triggerConfirm(place, newPos);
+                    }
                 }
             });
         }
     };
 
     const handleLocateMe = () => {
+        if (typeof window !== "undefined") {
+            const isSecure = window.location.protocol === "https:" || 
+                             window.location.hostname === "localhost" || 
+                             window.location.hostname === "127.0.0.1";
+            if (!isSecure) {
+                alert("Location services are disabled on insecure origins (HTTP). Please access this page using 'http://localhost:3000' or configure HTTPS.");
+                return;
+            }
+        }
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -182,7 +257,11 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
-                    alert("Unable to retrieve your location. If you previously blocked location access, please click the lock/info settings icon next to the URL bar in your browser and toggle 'Location' back to allowed.");
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert("Location permission was denied. Please click the lock/settings icon in your browser URL bar, change 'Location' to 'Allow', and refresh the page.");
+                    } else {
+                        alert("Unable to retrieve your location: " + error.message);
+                    }
                 }
             );
         } else {
@@ -192,7 +271,28 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
 
     const handleMapClick = (e: google.maps.MapMouseEvent) => {
         if (e.latLng) {
-            updateLocationFromCoordinates(e.latLng.lat(), e.latLng.lng());
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            if (inline) {
+                const newPos = { lat, lng };
+                setCenter(newPos);
+                map?.panTo(newPos);
+            }
+            updateLocationFromCoordinates(lat, lng);
+        }
+    };
+
+    const handleMapIdle = () => {
+        if (map && inline) {
+            const currentCenter = map.getCenter();
+            if (currentCenter) {
+                const lat = currentCenter.lat();
+                const lng = currentCenter.lng();
+                const dist = Math.abs(lat - markerPosition.lat) + Math.abs(lng - markerPosition.lng);
+                if (dist > 0.0001) {
+                    updateLocationFromCoordinates(lat, lng);
+                }
+            }
         }
     };
 
@@ -233,6 +333,135 @@ export default function MapPicker({ isOpen, onClose, onConfirm, apiKey, initialL
         });
         onClose();
     };
+
+    if (inline) {
+        if (!isLoaded) {
+            return (
+                <div className="w-full h-[360px] rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 bg-gray-50/50">
+                    {loadError ? "Error loading Google Maps" : "Loading Map..."}
+                </div>
+            );
+        }
+
+        return (
+            <div className="w-full rounded-2xl overflow-hidden border border-gray-200 shadow-[0_4px_25px_rgba(0,0,0,0.02)] flex flex-col relative h-full font-outfit">
+                {/* Map Area */}
+                <div className="flex-1 w-full bg-gray-50 relative overflow-hidden">
+                    <GoogleMap
+                        mapContainerStyle={{ width: '100%', height: '100%' }}
+                        center={center}
+                        zoom={13}
+                        onLoad={onLoad}
+                        onUnmount={onUnmount}
+                        onIdle={handleMapIdle}
+                        onClick={handleMapClick}
+                        onZoomChanged={() => {
+                            if (map && inline) {
+                                map.setCenter(markerPosition);
+                            }
+                        }}
+                        options={{
+                            disableDefaultUI: true,
+                            zoomControl: false,
+                        }}
+                    />
+
+                    {/* Floating Search Bar */}
+                    <div className="absolute top-4 left-4 right-4 z-10">
+                        <div className="relative shadow-md rounded-full bg-white max-w-md mx-auto">
+                            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-green-600 stroke-[3]" />
+                            <input
+                                type="text"
+                                placeholder="Search for area, street name"
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                className="w-full pl-11 pr-10 py-3 rounded-full border-0 focus:ring-0 focus:outline-none bg-white text-xs font-semibold text-gray-800 placeholder-gray-400"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => { setSearchQuery(""); setPredictions([]); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    <XMarkIcon className="w-3.5 h-3.5 text-gray-400" />
+                                </button>
+                            )}
+                            {predictions.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl overflow-hidden max-h-60 overflow-y-auto z-20 border border-gray-100">
+                                    {predictions.map((p) => (
+                                        <button
+                                            key={p.place_id}
+                                            onClick={() => handlePredictionSelect(p.place_id, p.description)}
+                                            className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors"
+                                        >
+                                            <span className="font-bold block text-xs text-gray-800">{p.structured_formatting.main_text}</span>
+                                            <span className="text-[10px] text-gray-400 font-medium">{p.structured_formatting.secondary_text}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Center Pin & Tooltip Overlay */}
+                    <div className="absolute top-1/2 left-1/2 pointer-events-none z-10">
+                        {/* Tooltip Wrapper - Anchored precisely at map center */}
+                        <div className="relative flex flex-col items-center" style={{ transform: 'translate(-50%, -100%)' }}>
+                            {/* Tooltip */}
+                            <div className="bg-green-700 text-white px-4 py-2.5 rounded-[18px] flex flex-col items-center shadow-lg relative max-w-xs text-center mb-2">
+                                <span className="text-[10px] font-extrabold tracking-tight whitespace-nowrap">Your orders will be picked up from here</span>
+                                <span className="text-[8px] text-green-100 font-semibold mt-0.5 whitespace-nowrap">Move pin to adjust exact location</span>
+                                {/* Arrow */}
+                                <div className="w-2 h-2 bg-green-700 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                            </div>
+                            
+                            {/* Black Pin with white center */}
+                            <div className="flex flex-col items-center">
+                                <div className="w-7 h-7 rounded-full bg-black border-[1.5px] border-white flex items-center justify-center shadow-md">
+                                    <div className="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
+                                {/* Stem pointing to center */}
+                                <div className="w-0.5 h-2.5 bg-black -mt-0.5"></div>
+                            </div>
+                        </div>
+                        {/* Pulse / Shadow at the center */}
+                        <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-1 bg-black/20 rounded-full blur-[1px]"></div>
+                    </div>
+
+                    {/* Use Current Location Button */}
+                    <button
+                        type="button"
+                        onClick={handleLocateMe}
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white hover:bg-gray-50 border border-green-600 text-green-600 px-5 py-2.5 rounded-full shadow-lg font-bold text-[10px] flex items-center gap-1.5 transition-all active:scale-95 whitespace-nowrap"
+                    >
+                        <svg className="w-3.5 h-3.5 fill-none stroke-green-600 stroke-[2.5]" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                        </svg>
+                        <span>Use current location</span>
+                    </button>
+
+                    {/* Bottom Right Zoom Control */}
+                    <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+                        <button
+                            type="button"
+                            onClick={() => map?.setZoom((map.getZoom() || 16) + 1)}
+                            className="w-8 h-8 bg-white hover:bg-gray-50 border border-gray-100 rounded-xl shadow-md flex items-center justify-center font-bold text-gray-600 text-xs transition-all active:scale-95"
+                        >
+                            ＋
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => map?.setZoom((map.getZoom() || 16) - 1)}
+                            className="w-8 h-8 bg-white hover:bg-gray-50 border border-gray-100 rounded-xl shadow-md flex items-center justify-center font-bold text-gray-600 text-xs transition-all active:scale-95"
+                        >
+                            －
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (!isOpen) return null;
 

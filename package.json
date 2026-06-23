@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "npx concurrently \"npx ngrok http --url=gating-ungloved-sincerity.ngrok-free.dev 3000\" \"next dev --turbopack\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -13,8 +13,9 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@headlessui/react": "^2.2.4",
-    "@phosphor-icons/react": "^2.1.10",
     "@heroicons/react": "^2.1.1",
+    "@hookform/resolvers": "^5.4.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@react-google-maps/api": "^2.20.7",
     "axios": "^1.10.0",
     "dom-to-image-more": "^3.6.3",
@@ -32,12 +33,15 @@
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.79.0",
     "react-hot-toast": "^2.6.0",
     "react-slick": "^0.30.3",
     "react-toastify": "^11.0.5",
     "slick-carousel": "^1.8.1",
     "swiper": "^11.2.10",
-    "useref": "^1.4.4"
+    "tailwind-merge": "^3.6.0",
+    "useref": "^1.4.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

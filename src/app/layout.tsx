@@ -1,15 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Geist, Geist_Mono, Inter, Poppins } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Poppins, Outfit } from "next/font/google";
 import "./globals.css";
 import Header from "../components/general-components/Header";
 import BottomNavbar from "../components/general-components/BottomNavbar";
 import ShoppingHeader from "@/components/general-components/ShoppingHeader";
 import { CartProvider } from "../components/core/Cart/CartContext";
-import { AuthProvider } from "../libs/context/AuthContext";
-import { ToastProvider } from "../libs/context/ToastContext";
-import { LoginModalProvider } from "@/libs/context/LoginModalContext";
+import { AuthProvider } from "../lib/context/AuthContext";
+import { ToastProvider } from "../lib/context/ToastContext";
+import { LoginModalProvider } from "@/lib/context/LoginModalContext";
 import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
@@ -24,6 +24,12 @@ const poppins = Poppins({
   display: "swap",
   variable: "--font-poppins",
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
 export default function RootLayout({ children }) {
@@ -43,7 +49,8 @@ export default function RootLayout({ children }) {
 
   const isProfilePage = pathname.startsWith("/profile");
   const isStandaloneRoute = 
-    pathname.startsWith("/vendor-onboarding") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/partner-with-us") ||
     pathname.startsWith("/vendor-product-request") ||
     pathname.startsWith("/privacy-policy") ||
     pathname.startsWith("/terms-and-conditions") ||
@@ -73,16 +80,15 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#16a34a" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="description" content="Fresh organic products delivered to your doorstep" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Govigi" />
       </head>
-      <body className={`${poppins.className} antialiased ${isStandaloneRoute ? '' : 'overflow-hidden md:overflow-auto'}`} style={isStandaloneRoute ? {} : { height: "100vh", display: "flex", flexDirection: "column" }}>
+      <body className={`${poppins.className} ${outfit.variable} antialiased ${isStandaloneRoute ? '' : 'overflow-hidden md:overflow-auto'}`} style={isStandaloneRoute ? {} : { height: "100vh", display: "flex", flexDirection: "column" }}>
         <ServiceWorkerRegister />
-        <ProgressBar/>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>

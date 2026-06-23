@@ -13,8 +13,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
-import { config } from "@/libs/utils/config";
-import { getAuthHeaders } from "@/libs/utils/address";
+import { config } from "@/lib/utils/config";
+import { getAuthHeaders } from "@/lib/utils/address";
 
 export default function AllOrdersPage() {
   const router = useRouter();
