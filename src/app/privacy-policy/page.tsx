@@ -1,13 +1,19 @@
-"use client";
 import React from "react";
+
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | Govigi",
+  description: "Govigi Terms and Conditions",
+};
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans">
       <header className="fixed top-0 left-0 right-0 h-[80px] bg-white shadow-[0_2px_4px_0_rgba(0,0,0,0.08)] z-50">
-        <div className="max-w-[800px] mx-auto w-full h-full flex items-center px-[20px]">
+        <div className="max-w-[1080px] mx-auto w-full h-full flex items-center px-[20px]">
           <a href="/" className="flex items-center">
-            <img src="/AppLogo.png" alt="Govigi Logo" className="h-[48px] w-auto object-contain mr-[16px]" />
+            <img src="/AppLogo.png" alt="Govigi Logo" className="h-[48px] w-auto object-contain mr-[16px] rounded-lg" />
             <span className="text-[#686b78] font-[700] tracking-[0.5px] uppercase text-[14px]">
               PRIVACY POLICY
             </span>
@@ -15,7 +21,7 @@ export default function PrivacyPolicyPage() {
         </div>
       </header>
 
-      <main className="pt-[120px] pb-[60px] px-[20px] max-w-[800px] mx-auto">
+      <main className="pt-[120px] pb-[60px] px-[20px] max-w-[1080px] mx-auto">
         <h1 className="text-[24px] font-[800] text-[#282c3f] mb-[32px]">
           Privacy Policy
         </h1>

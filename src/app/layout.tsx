@@ -14,7 +14,6 @@ import { BottomPanelProvider } from "@/components/core/BottomPanel";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-progressbar";
 import ProgressBar from "@/components/general-components/ProgressBar";
-import ServiceWorkerRegister from "@/components/core/ServiceWorkerRegister";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
@@ -78,7 +77,7 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <link rel="icon" type="image/png" href="/LOGO-png 3.svg" />
+        <link rel="icon" type="image/png" href="/AppLogo.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="description" content="Fresh organic products delivered to your doorstep" />
@@ -87,8 +86,15 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Govigi" />
       </head>
-      <body className={`${poppins.className} ${outfit.variable} antialiased ${isStandaloneRoute ? '' : 'overflow-hidden md:overflow-auto'}`} style={isStandaloneRoute ? {} : { height: "100vh", display: "flex", flexDirection: "column" }}>
-        <ServiceWorkerRegister />
+      <body className={
+          `${poppins.className}
+          ${outfit.variable} 
+          antialiased 
+          ${isStandaloneRoute ? '' : 'overflow-hidden md:overflow-auto'}`
+        } 
+        style={
+          isStandaloneRoute ? {} : { height: "100vh", display: "flex", flexDirection: "column" }
+        }>
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
