@@ -19,45 +19,6 @@ export default function Footer() {
       className="bg-white text-sm text-gray-700 overflow-x-hidden"
       id="contact"
     >
-      {/* Newsletter Section */}
-      <div className="relative bg-[#2E7D32] max-w-[800px] text-white rounded-[20px] mt-10 px-4 sm:px-10 py-6 sm:py-8 flex flex-col justify-start gap-4 sm:gap-6 overflow-hidden mx-4 sm:mx-auto">
-        {/* Corner Decorations */}
-        <div className="absolute top-0 left-0 w-[120px] h-[120px] border-[6px] border-[#A5D6A7] rounded-full translate-x-[-50%] translate-y-[-50%] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[120px] h-[120px] border-[6px] border-[#A5D6A7] rounded-full translate-x-[50%] translate-y-[50%] pointer-events-none" />
-
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center z-10">
-          Subscribe to our newsletter
-        </h2>
-
-        <form className="flex flex-col sm:flex-row justify-end items-start gap-4 sm:mr-[50px] z-10">
-          <div className="flex flex-col w-full sm:w-auto">
-            <label htmlFor="name" className="text-sm mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              placeholder="First name"
-              className="bg-white text-black rounded-md px-4 py-2 w-full sm:w-[150px] focus:outline-none focus:ring-0"
-            />
-          </div>
-          <div className="flex flex-col w-full sm:w-auto">
-            <label htmlFor="email" className="text-sm mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              placeholder="Email address"
-              className="bg-white text-black rounded-md px-4 py-2 w-full sm:w-[280px] focus:outline-none focus:ring-0"
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-black text-white font-semibold px-6 py-2 rounded-md mt-2 sm:mt-6 w-full sm:w-auto"
-          >
-            Subscribe Now
-          </button>
-        </form>
-      </div>
 
       {/* Footer Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
@@ -154,13 +115,17 @@ export default function Footer() {
       <div className="border-t pt-4 pb-6 px-6 sm:px-16 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center text-gray-500">
         <p>Copyright © 2025 Go-vigi</p>
         <div className="flex gap-4 mt-2 sm:mt-0">
-          <Link href="#" className="text-blue-600 hover:underline">
+          <Link href="/terms-and-conditions" className="text-blue-600 hover:underline">
             Terms and Conditions
           </Link>
-          <Link href="#" className="text-blue-600 hover:underline">
+          <Link href="/privacy-policy" className="text-blue-600 hover:underline">
             Privacy Policy
           </Link>
         </div>
+      </div>
+
+      <div className="p-4 text-center text-sm text-gray-500">
+        Govigi is a brand owned and managed by <strong>Triizi Energy Pvt. Ltd.</strong>, a company committed to building innovative technology solutions that simplify everyday life.
       </div>
     </footer>
   );
