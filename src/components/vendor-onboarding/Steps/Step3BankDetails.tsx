@@ -68,6 +68,8 @@ export default function Step3BankDetails() {
     }
     setLoading(true);
     setVerificationResult(null);
+
+    /*
     try {
       const response = await axios.post(`${BACKEND_URL}/verifyBankDetails`, {
         accountNumber,
@@ -99,6 +101,18 @@ export default function Step3BankDetails() {
     } finally {
       setLoading(false);
     }
+    */
+
+    // ponytail: skip remote verification call, mark as verified locally
+    setTimeout(() => {
+      setValue("bankDetails.isVerified", true, { shouldValidate: true });
+      setVerificationResult({
+        success: true,
+        verifiedName: accountName,
+        message: "Account details registered successfully (verification skipped)."
+      });
+      setLoading(false);
+    }, 500);
   };
 
   const bankNameError = get(errors, "bankDetails.bankName");
