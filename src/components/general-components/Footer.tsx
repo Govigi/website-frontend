@@ -26,7 +26,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Image
-              src="/LOGO-png 3.svg"
+              src="/logo.svg"
               alt="Go-Vigi Logo"
               width={480}
               height={480}

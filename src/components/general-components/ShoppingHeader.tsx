@@ -97,7 +97,7 @@ export default function ShoppingHeader({ pageTitle = "", isWebApp = false }: Sho
                 <div className="hidden sm:flex items-center justify-between px-8 gap-4 rounded-b-4xl">
                     <Link href="/webapp">
                         <Image
-                            src="/LOGO-png 3.svg"
+                            src="/logo.svg"
                             alt="GoVigi Logo"
                             width={100}
                             height={40}
