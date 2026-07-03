@@ -49,7 +49,7 @@ export default function Header() {
             </button>
             <Link href="/" className="flex items-center space-x-2">
               <Image
-                src="/LOGO.svg"
+                src="/logo.svg"
                 alt="Go-Vigi Logo"
                 width={200}
                 height={200}

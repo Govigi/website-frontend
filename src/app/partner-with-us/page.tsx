@@ -118,7 +118,7 @@ function Header({ onOpenHelp }: { onOpenHelp: () => void }) {
     return (
         <header className="bg-white border-b border-zinc-100 px-6 sm:px-12 h-18 flex items-center justify-between sticky top-0 z-45 shadow-[0_2px_15px_rgba(0,0,0,0.01)]">
             <Link href="/" className="flex items-center gap-2">
-                <Image src="/LOGO-png 3.svg" alt="Govigi" width={80} height={32} priority />
+                <Image src="/logo.svg" alt="Govigi" width={80} height={32} priority />
                 <span className="text-xs text-zinc-400 border-l border-zinc-200 pl-2 font-medium">Partner</span>
             </Link>
             
