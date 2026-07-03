@@ -120,7 +120,13 @@ export default function ProductCard({
       {/* Details */}
       <div className="flex-1 text-left space-y-1.5">
         <h3 className="font-medium text-sm sm:text-base text-gray-900 line-clamp-2">{item.name}</h3>
-        <p className="text-gray-500 text-xs">1 Kg</p>
+        <p className="text-gray-500 text-xs">
+          {item.unit === "pack"
+            ? `Pack of ${item.piecesPerPack || 1} pcs`
+            : item.unit === "pcs"
+            ? "1 Piece"
+            : `1 ${item.unit || "Kg"}`}
+        </p>
 
         {/* Price */}
         <div className="flex items-baseline gap-1 pt-1">
