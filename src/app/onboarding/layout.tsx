@@ -482,7 +482,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between">
         <header className="bg-white border-b border-zinc-100 px-6 sm:px-12 h-18 flex items-center justify-between sticky top-0 z-45 shadow-sm">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/LOGO-png 3.svg" alt="Govigi" width={80} height={32} priority />
+            <Image src="/logo.svg" alt="Govigi" width={80} height={32} priority />
             <span className="text-xs text-zinc-400 border-l border-zinc-200 pl-2 font-semibold">Partner</span>
           </Link>
         </header>
@@ -531,7 +531,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         <header className="hidden lg:flex bg-white border-b border-zinc-100 px-6 sm:px-12 h-18 items-center sticky top-0 z-45 shadow-[0_2px_15px_rgba(0,0,0,0.01)]">
           <div className="max-w-[1200px] mx-auto w-full flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/LOGO-png 3.svg" alt="Govigi" width={80} height={32} priority />
+              <Image src="/logo-header.svg" alt="Govigi" width={80} height={32} priority />
               <span className="text-xs text-zinc-400 border-l border-zinc-200 pl-2 font-semibold">Partner</span>
             </Link>
             <button
