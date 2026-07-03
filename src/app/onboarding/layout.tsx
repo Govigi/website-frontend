@@ -295,7 +295,8 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
     if (stepNum === 3) {
       const bank = values.bankDetails;
       if (!bank) return false;
-      if (!bank.isVerified) return false;
+      // ponytail: skip verification check for now, but keep field
+      // if (!bank.isVerified) return false;
       if (!bank.bankName || bank.bankName.trim() === "") return false;
       if (validBanks.length > 0 && !validBanks.includes(bank.bankName)) return false;
       if (!bank.accountNumber || bank.accountNumber.trim().length < 9) return false;
@@ -361,11 +362,14 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
 
     if (isLastSubStep) {
       if (currentStepNum === 3) {
+        // ponytail: skip verification requirement
+        /*
         const bank = methods.getValues("bankDetails");
         if (!bank || !bank.isVerified) {
           toast.error("Please verify your bank details before proceeding.");
           return;
         }
+        */
       }
       if (!checkStepValidity(currentStepNum)) {
         toast.error("Please fill all required fields correctly.");
